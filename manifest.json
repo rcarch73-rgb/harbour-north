@@ -1,9 +1,9 @@
 {
   "name": "RyanOS",
   "short_name": "RyanOS",
-  "start_url": "./index.html",
+  "start_url": "./index.html?v=1.2",
   "display": "standalone",
   "background_color": "#f4f7fb",
   "theme_color": "#17365D",
-  "description": "Private financial and life planning app prototype."
+  "description": "RyanOS private financial and life-planning app v1.2."
 }
