@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 2.9.0</title>
+<title>RyanOS 2.9.1</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -48,7 +48,7 @@ input[type=range]{width:100%}
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>2.9.0 — RRSP-to-TFSA Drawdown</small></div>
+  <div><h1>RyanOS</h1><small>2.9.1 — Retirement Spending Audit</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -341,8 +341,13 @@ function renderMoney(){
  '<div class="card"><h3>Core annual spending</h3><div class="metric">'+money(estimate.annualizedCore)+'</div></div>'+
  '<div class="card"><h3>Total annualized spending</h3><div class="metric">'+money(estimate.annualizedTotal)+'</div></div>'+
  '<div class="card"><h3>Retirement spending estimate used by Retirement</h3><div class="metric">'+money(estimate.retirementEstimate)+'</div></div>'+
- '<div class="card"><h3>Months with data</h3><div class="metric">'+estimate.observedMonths+'</div></div></div>'+
- '<div class="notice">Core spending excludes Travel, Boat & Outdoor, Home & Garden, Vehicle, Income, Transfers, Investments, Debt and Bank Fees. The retirement estimate adds your annual irregular-spending allowance.</div></div>';
+ '<div class="card"><h3>Complete months used</h3><div class="metric">'+estimate.observedMonths+'</div></div></div>'+
+ '<div class="notice">Core spending excludes Travel, Boat & Outdoor, Home & Garden, Vehicle, Income, Transfers, Investments, Debt and Bank Fees. The current partial month is excluded. Method: <strong>'+estimate.method+'</strong>. The retirement estimate adds the annual irregular-spending allowance.</div></div>'+
+ '<div class="card" style="margin-top:12px"><h3>Spending-estimate audit</h3><table><tbody>'+
+ '<tr><td>Average monthly core spending</td><td>'+money(estimate.averageMonthlyCore)+'</td><td>Median monthly core spending</td><td>'+money(estimate.medianMonthlyCore)+'</td></tr>'+
+ '<tr><td>Selected monthly core amount</td><td>'+money(estimate.selectedMonthlyCore)+'</td><td>Annual irregular allowance</td><td>'+money(estimate.irregularAllowance)+'</td></tr>'+
+ '<tr><td><strong>Retirement spending used</strong></td><td colspan="3"><strong>'+money(estimate.retirementEstimate)+' per year in today’s dollars</strong></td></tr>'+
+ '</tbody></table><div class="notice '+(estimate.observedMonths<6?'bad':'good')+'">'+(estimate.observedMonths<6?'Warning: fewer than six complete months are being used, so the estimate may be unreliable.':'The estimate is based on at least six complete months.')+'</div></div>';
  document.getElementById("moneyMonth").onchange=function(){
   data.reportMonth=this.value;
   data.review.month=this.value;
@@ -564,23 +569,49 @@ function spendingEstimate(){
  var s=data.settings;
  var lookback=Math.max(1,Math.min(24,Number(s.spendingLookbackMonths||12)));
  var now=new Date();
- var start=new Date(now.getFullYear(),now.getMonth()-lookback+1,1);
- var end=new Date(now.getFullYear(),now.getMonth()+1,1);
- var total=0,core=0,monthsWithData={};
+ var currentMonthStart=new Date(now.getFullYear(),now.getMonth(),1);
+ var start=new Date(now.getFullYear(),now.getMonth()-lookback,1);
+ var monthly={};
+
  data.transactions.forEach(function(t){
   var d=txDateObj(t.date);
-  if(!d||d<start||d>=end||t.include!=="Yes")return;
+  if(!d||d<start||d>=currentMonthStart||t.include!=="Yes")return;
+  var key=monthKeyFromDate(d);
+  if(!monthly[key])monthly[key]={core:0,total:0,count:0};
   var amount=Math.abs(Number(t.amount||0));
-  total+=amount;
-  if(coreSpendingCategory(t.category))core+=amount;
-  monthsWithData[monthKeyFromDate(d)]=true;
+  monthly[key].total+=amount;
+  if(coreSpendingCategory(t.category))monthly[key].core+=amount;
+  monthly[key].count++;
  });
- var observedMonths=Object.keys(monthsWithData).length;
- var divisor=Math.max(1,observedMonths);
- var annualizedTotal=(total/divisor)*12;
- var annualizedCore=(core/divisor)*12;
+
+ var keys=Object.keys(monthly).sort();
+ var coreMonths=keys.map(function(k){return monthly[k].core;});
+ var totalMonths=keys.map(function(k){return monthly[k].total;});
+ function average(a){return a.length?a.reduce(function(x,y){return x+y;},0)/a.length:0;}
+ function median(a){
+  if(!a.length)return 0;
+  var b=a.slice().sort(function(x,y){return x-y;});
+  var mid=Math.floor(b.length/2);
+  return b.length%2?b[mid]:(b[mid-1]+b[mid])/2;
+ }
+
+ var avgCore=average(coreMonths);
+ var medCore=median(coreMonths);
+ var avgTotal=average(totalMonths);
+ var useMedian=coreMonths.length>=3;
+ var selectedMonthlyCore=useMedian?medCore:avgCore;
+ var annualizedCore=selectedMonthlyCore*12;
+ var annualizedTotal=avgTotal*12;
  var retirementEstimate=annualizedCore+Number(s.irregularAnnualAllowance||0);
- return{lookback:lookback,observedMonths:observedMonths,total:total,core:core,annualizedTotal:annualizedTotal,annualizedCore:annualizedCore,retirementEstimate:retirementEstimate};
+
+ return{
+  lookback:lookback,observedMonths:keys.length,monthKeys:keys,monthly:monthly,
+  averageMonthlyCore:avgCore,medianMonthlyCore:medCore,selectedMonthlyCore:selectedMonthlyCore,
+  annualizedTotal:annualizedTotal,annualizedCore:annualizedCore,
+  irregularAllowance:Number(s.irregularAnnualAllowance||0),
+  retirementEstimate:retirementEstimate,
+  method:useMedian?"Median of complete months":"Average of complete months"
+ };
 }
 function selectedRetirementSpending(){
  return spendingEstimate().retirementEstimate;
@@ -851,7 +882,25 @@ function renderRetirement(){
  '</tbody></table><div class="notice">CPP and OAS are definitely included. Entered CPP/OAS amounts are now treated as the amounts at their selected start ages and indexed only after they begin.</div></div>'+'<div class="card" style="margin-top:12px"><h3>Ending account balances — expected scenario</h3><table><thead><tr><th>Account</th><th>Balance at '+s.retirementEndAge+'</th></tr></thead><tbody>'+
  '<tr><td>RRSP</td><td>'+money(eSum.endAccounts.rrsp)+'</td></tr><tr><td>Your TFSA</td><td>'+money(eSum.endAccounts.userTfsa)+'</td></tr><tr><td>Wife RRSP</td><td>'+money(eSum.endAccounts.wifeRrsp)+'</td></tr><tr><td>Non-registered</td><td>'+money(eSum.endAccounts.nonReg)+'</td></tr>'+
  '</tbody></table></div>'+
- '<div class="card" style="margin-top:12px"><h3>Return scenarios</h3><table><thead><tr><th>Scenario</th><th>Return</th><th>Portfolio lasts to</th><th>Future balance</th><th>Today-dollar balance</th></tr></thead><tbody>'+
+  '<div class="card" style="margin-top:12px"><h3>Why the model may show depletion</h3>'+
+ (function(){
+   var e=spendingEstimate();
+   var age74=expected.find(function(x){return x.age===74;});
+   var depletion=eSum.depletedAge;
+   var warning=[];
+   if(e.observedMonths<6)warning.push("The spending estimate uses fewer than six complete months.");
+   if(e.retirementEstimate>90000)warning.push("Retirement spending is above $90,000 per year in today’s dollars.");
+   if(Number(s.inheritanceAmount||0)===0)warning.push("The inheritance amount is currently $0.");
+   if(Number(s.returnRate||0)>6)warning.push("The expected return is above 6%; use the conservative scenario for decisions.");
+   return'<table><tbody>'+
+    '<tr><td>Retirement spending used today</td><td><strong>'+money(e.retirementEstimate)+'</strong></td><td>Method</td><td>'+e.method+'</td></tr>'+
+    '<tr><td>Complete months used</td><td>'+e.observedMonths+'</td><td>Irregular allowance</td><td>'+money(e.irregularAllowance)+'</td></tr>'+
+    '<tr><td>Expected depletion age</td><td>'+(depletion||"Not depleted")+'</td><td>Inheritance included</td><td>'+money(s.inheritanceAmount)+'</td></tr>'+
+    (age74?'<tr><td>Age 74 spending</td><td>'+money(age74.spend)+'</td><td>Age 74 after-tax external income</td><td>'+money(age74.netExternal)+'</td></tr>':'')+
+    '</tbody></table>'+
+    '<div class="notice '+(warning.length?'bad':'good')+'">'+(warning.length?warning.join(" "):"No obvious input warning was detected.")+'</div>';
+  })()+
+ '</div>'+'<div class="card" style="margin-top:12px"><h3>Return scenarios</h3><table><thead><tr><th>Scenario</th><th>Return</th><th>Portfolio lasts to</th><th>Future balance</th><th>Today-dollar balance</th></tr></thead><tbody>'+
  '<tr><td>Conservative</td><td>'+Number(s.conservativeReturn).toFixed(1)+'%</td><td>'+(cSum.depletedAge?'Age '+cSum.depletedAge:'Age '+s.retirementEndAge+'+')+'</td><td>'+money(cSum.endBalance)+'</td><td>'+money(cSum.realEndBalance)+'</td></tr>'+
  '<tr><td>Expected</td><td>'+Number(s.returnRate).toFixed(1)+'%</td><td>'+(eSum.depletedAge?'Age '+eSum.depletedAge:'Age '+s.retirementEndAge+'+')+'</td><td>'+money(eSum.endBalance)+'</td><td>'+money(eSum.realEndBalance)+'</td></tr>'+
  '<tr><td>Optimistic</td><td>'+Number(s.optimisticReturn).toFixed(1)+'%</td><td>'+(oSum.depletedAge?'Age '+oSum.depletedAge:'Age '+s.retirementEndAge+'+')+'</td><td>'+money(oSum.endBalance)+'</td><td>'+money(oSum.realEndBalance)+'</td></tr>'+
@@ -859,7 +908,7 @@ function renderRetirement(){
  '<div class="card" style="margin-top:12px"><h3>Year-by-year expected withdrawals</h3><div style="overflow-x:auto"><table><thead><tr><th>Age</th><th>Start balance</th><th>After-tax income</th><th>Spending</th><th>RRSP for spending</th><th>Strategic RRSP</th><th>TFSA deposit</th><th>Your TFSA withdrawal</th><th>Wife RRSP</th><th>Non-reg.</th><th>Withdrawal tax</th><th>End balance</th></tr></thead><tbody>'+
  expected.map(function(x){return'<tr '+(x.age===scenarioUserAge?'style="font-weight:700;background:#edf3f9"':'')+'><td>'+x.age+'</td><td>'+money(x.startBalance)+'</td><td>'+money(x.netExternal)+'</td><td>'+money(x.spend+x.extraExpense)+'</td><td>'+money(x.rrspWithdrawal)+'</td><td>'+money(x.userTfsaWithdrawal)+'</td><td>'+money(x.wifeRrspWithdrawal)+'</td><td>'+money(x.nonRegWithdrawal)+'</td><td>'+money(x.withdrawalTax)+'</td><td class="'+(x.depleted?"bad":"")+'">'+money(x.endBalance)+'</td></tr>';}).join("")+
  '</tbody></table></div></div>'+
- '<div class="notice">CPP and OAS are included. The RRSP-to-TFSA strategy draws from your RRSP between the selected ages up to the editable taxable-income ceiling, pays estimated tax, deposits available excess into your TFSA, and sends any amount above TFSA room to the non-registered account. This remains a simplified planning model.</div>';
+ '<div class="notice">CPP and OAS are included. A depletion age near 74 is usually caused by the retirement-spending input, not missing benefits. RyanOS now excludes the current partial month and uses the median monthly core spending once at least three complete months are available.</div>';
 
  document.getElementById("scenarioUserAge").onchange=function(){
   data.settings.retirementScenarioUserAge=Math.max(Number(s.retireAge),Math.min(Number(this.value||s.retireAge),Number(s.retirementEndAge)-1));
@@ -1164,7 +1213,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.9.0-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.9.1-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){

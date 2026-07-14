@@ -1,9 +1,9 @@
 {
-  "name": "RyanOS 2.9.0",
+  "name": "RyanOS 2.9.1",
   "short_name": "RyanOS",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f3f6fa",
   "theme_color": "#17365d",
-  "description": "RyanOS with strategic RRSP drawdown and TFSA reinvestment."
+  "description": "RyanOS with robust retirement spending estimation and depletion diagnostics."
 }
