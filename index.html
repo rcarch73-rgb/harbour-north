@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 2.6.7</title>
+<title>RyanOS 2.6.8</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -48,7 +48,7 @@ input[type=range]{width:100%}
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>2.6.7 — Adjustable Retirement Ages</small></div>
+  <div><h1>RyanOS</h1><small>2.6.8 — Linked Annual Spending</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -75,7 +75,7 @@ var defaults={
  settings:{
   income1:5428.78,income2:5147.32,wcb:1352.34,investing:2600,bills:1200,chores:173,
   loc:23000,rate:5.19,months:24,investments:520000,age:52,retireAge:58,returnRate:7,
-  inflation:2.5,retireSpend:72000,wifePension:3200,wifeAgeDiff:7,wifeRetireAge:55,wifeEmploymentAnnual:110000,wifeWorkUntilUserAge:62,wifeEmploymentGrowth:0,userOasMonthly:751.97,userOasStart:65,wifeOasMonthly:751.97,wifeOasStart:65,spendingLookbackMonths:12,irregularAnnualAllowance:9000,useEstimatedRetirementSpending:0,retirementScenarioUserAge:58,retirementScenarioWifeAge:51,
+  inflation:2.5,retireSpend:72000,wifePension:3200,wifeAgeDiff:7,wifeRetireAge:55,wifeEmploymentAnnual:110000,wifeWorkUntilUserAge:62,wifeEmploymentGrowth:0,userOasMonthly:751.97,userOasStart:65,wifeOasMonthly:751.97,wifeOasStart:65,spendingLookbackMonths:12,irregularAnnualAllowance:9000,retirementScenarioUserAge:58,retirementScenarioWifeAge:51,
   userCpp65:1308.21,userCpp70:1857.66,userCppStart:70,wifeCpp60:878,wifeCpp65:1372,
   wifeCpp70:1948,wifeCppStart:65,home:650000,ns1:100000,ns2:40000,vehicles:25000,
   boat:18000,camper:15000,cash:0,ccDebt:0
@@ -175,7 +175,6 @@ if(!Array.isArray(data.goals))data.goals=clone(defaults.goals);
  ["wifeOasStart",65],
  ["spendingLookbackMonths",12],
  ["irregularAnnualAllowance",9000],
- ["useEstimatedRetirementSpending",0],
  ["retirementScenarioUserAge",58],
  ["retirementScenarioWifeAge",51]
 ].forEach(function(x){
@@ -313,7 +312,7 @@ function renderMoney(){
  '<div class="card" style="margin-top:12px"><h3>Annual spending estimate</h3><div class="grid">'+
  '<div class="card"><h3>Core annual spending</h3><div class="metric">'+money(estimate.annualizedCore)+'</div></div>'+
  '<div class="card"><h3>Total annualized spending</h3><div class="metric">'+money(estimate.annualizedTotal)+'</div></div>'+
- '<div class="card"><h3>Retirement spending estimate</h3><div class="metric">'+money(estimate.retirementEstimate)+'</div></div>'+
+ '<div class="card"><h3>Retirement spending estimate used by Retirement</h3><div class="metric">'+money(estimate.retirementEstimate)+'</div></div>'+
  '<div class="card"><h3>Months with data</h3><div class="metric">'+estimate.observedMonths+'</div></div></div>'+
  '<div class="notice">Core spending excludes Travel, Boat & Outdoor, Home & Garden, Vehicle, Income, Transfers, Investments, Debt and Bank Fees. The retirement estimate adds your annual irregular-spending allowance.</div></div>';
  document.getElementById("moneyMonth").onchange=function(){
@@ -556,8 +555,7 @@ function spendingEstimate(){
  return{lookback:lookback,observedMonths:observedMonths,total:total,core:core,annualizedTotal:annualizedTotal,annualizedCore:annualizedCore,retirementEstimate:retirementEstimate};
 }
 function selectedRetirementSpending(){
- var e=spendingEstimate();
- return Number(data.settings.useEstimatedRetirementSpending||0)===1?e.retirementEstimate:Number(data.settings.retireSpend||0);
+ return spendingEstimate().retirementEstimate;
 }
 function projection(age,wifeAgeOverride){
  var s=data.settings,y=age-s.age;
@@ -593,7 +591,7 @@ function renderRetirement(){
 
  document.getElementById("retirement").innerHTML=
  '<h2>Retirement</h2>'+
- '<div class="notice"><strong>Adjust the ages below to test any retirement-year scenario.</strong> The income breakdown recalculates using both your age and your wife’s age.</div>'+
+ '<div class="notice"><strong>Adjust the ages below to test any retirement-year scenario.</strong> The income breakdown recalculates using both ages. Annual spending is pulled directly from the Money page retirement spending estimate.</div>'+
  '<div class="card" style="margin-bottom:12px"><h3>Scenario ages</h3><div class="form-grid">'+
  '<label>Your age<input id="scenarioUserAge" type="number" min="'+s.age+'" max="90" step="1" value="'+scenarioUserAge+'"></label>'+
  '<label>Your wife’s age<input id="scenarioWifeAge" type="number" min="40" max="90" step="1" value="'+scenarioWifeAge+'"></label>'+
@@ -619,7 +617,7 @@ function renderRetirement(){
  '<div class="card" style="margin-top:12px"><h3>Assumptions currently being used</h3><table><tbody>'+
  '<tr><td>Current age</td><td>'+s.age+'</td><td>Current investments</td><td>'+money(s.investments)+'</td></tr>'+
  '<tr><td>Monthly investment contribution</td><td>'+money(s.investing)+'</td><td>Expected return</td><td>'+s.returnRate.toFixed(1)+'%</td></tr>'+
- '<tr><td>Annual retirement spending</td><td>'+money(selectedRetirementSpending())+' '+(Number(s.useEstimatedRetirementSpending||0)===1?'(transaction estimate)':'(manual)')+'</td><td>Inflation</td><td>'+s.inflation.toFixed(1)+'%</td></tr>'+
+ '<tr><td>Annual retirement spending</td><td>'+money(selectedRetirementSpending())+' (from Money page estimate)</td><td>Inflation</td><td>'+s.inflation.toFixed(1)+'%</td></tr>'+
  '<tr><td>Wife annual employment income</td><td>'+money(s.wifeEmploymentAnnual)+'</td><td>Wife works until your age</td><td>'+s.wifeWorkUntilUserAge+'</td></tr>'+
  '<tr><td>Wife pension</td><td>'+money(s.wifePension)+'/month</td><td>Wife pension age</td><td>'+s.wifeRetireAge+'</td></tr>'+
  '<tr><td>Your CPP</td><td>'+money(userCppAmount)+'/month at '+s.userCppStart+'</td><td>Wife CPP</td><td>'+money(wifeCppAmount)+'/month at '+s.wifeCppStart+'</td></tr>'+
@@ -858,7 +856,7 @@ function renderReports(){
  };
 }
 function renderSettings(){
- var s=data.settings,fields=[["income1","Yellowhead monthly income"],["income2","Province monthly income"],["wcb","WorkSafeBC monthly income"],["investing","Retirement investing"],["bills","Annual-bills reserve"],["chores","Son's chores"],["loc","LOC balance"],["rate","LOC rate (%)"],["months","LOC months"],["investments","Current investments"],["age","Current age"],["retireAge","Retirement age"],["retirementScenarioUserAge","Retirement page scenario: your age"],["retirementScenarioWifeAge","Retirement page scenario: wife age"],["returnRate","Expected return (%)"],["inflation","Inflation (%)"],["retireSpend","Annual retirement spending"],["wifePension","Wife monthly pension"],["wifeAgeDiff","Wife age difference"],["wifeRetireAge","Wife retirement age"],["wifeEmploymentAnnual","Wife annual employment income"],["wifeWorkUntilUserAge","Wife works until your age"],["wifeEmploymentGrowth","Wife salary growth (%)"],["userOasMonthly","Your monthly OAS"],["userOasStart","Your OAS start age"],["wifeOasMonthly","Wife monthly OAS"],["wifeOasStart","Wife OAS start age"],["spendingLookbackMonths","Spending estimate lookback months"],["irregularAnnualAllowance","Annual irregular-spending allowance"],["useEstimatedRetirementSpending","Use transaction retirement estimate? 1=yes, 0=no"],["userCpp65","User CPP at 65"],["userCpp70","User CPP at 70"],["userCppStart","User CPP start age"],["wifeCpp60","Wife CPP at 60"],["wifeCpp65","Wife CPP at 65"],["wifeCpp70","Wife CPP at 70"],["wifeCppStart","Wife CPP start age"],["home","Home value"],["ns1","NS property 1"],["ns2","NS property 2"],["vehicles","Vehicle value"],["boat","Boat value"],["camper","Camper value"],["cash","Cash"],["ccDebt","Credit-card debt"]];
+ var s=data.settings,fields=[["income1","Yellowhead monthly income"],["income2","Province monthly income"],["wcb","WorkSafeBC monthly income"],["investing","Retirement investing"],["bills","Annual-bills reserve"],["chores","Son's chores"],["loc","LOC balance"],["rate","LOC rate (%)"],["months","LOC months"],["investments","Current investments"],["age","Current age"],["retireAge","Retirement age"],["retirementScenarioUserAge","Retirement page scenario: your age"],["retirementScenarioWifeAge","Retirement page scenario: wife age"],["returnRate","Expected return (%)"],["inflation","Inflation (%)"],["retireSpend","Annual retirement spending"],["wifePension","Wife monthly pension"],["wifeAgeDiff","Wife age difference"],["wifeRetireAge","Wife retirement age"],["wifeEmploymentAnnual","Wife annual employment income"],["wifeWorkUntilUserAge","Wife works until your age"],["wifeEmploymentGrowth","Wife salary growth (%)"],["userOasMonthly","Your monthly OAS"],["userOasStart","Your OAS start age"],["wifeOasMonthly","Wife monthly OAS"],["wifeOasStart","Wife OAS start age"],["spendingLookbackMonths","Spending estimate lookback months"],["irregularAnnualAllowance","Annual irregular-spending allowance"],["userCpp65","User CPP at 65"],["userCpp70","User CPP at 70"],["userCppStart","User CPP start age"],["wifeCpp60","Wife CPP at 60"],["wifeCpp65","Wife CPP at 65"],["wifeCpp70","Wife CPP at 70"],["wifeCppStart","Wife CPP start age"],["home","Home value"],["ns1","NS property 1"],["ns2","NS property 2"],["vehicles","Vehicle value"],["boat","Boat value"],["camper","Camper value"],["cash","Cash"],["ccDebt","Credit-card debt"]];
  document.getElementById("settings").innerHTML='<h2>Settings</h2><div class="toolbar"><button id="importBackup">Import backup</button><input id="backupFile" type="file" accept=".json"><button class="secondary" id="repairTransactions">Repair Transactions</button><button class="danger" id="reset">Reset defaults</button></div><div class="card"><div class="form-grid">'+fields.map(function(f){return'<label>'+f[1]+'<input class="setting-input" data-k="'+f[0]+'" type="number" step="any" value="'+s[f[0]]+'"></label>';}).join("")+"</div></div>";
  document.querySelectorAll(".setting-input").forEach(function(el){el.onchange=function(){data.settings[el.dataset.k]=Number(el.value);save();};});
  document.getElementById("importBackup").onclick=function(){var f=document.getElementById("backupFile").files[0];if(!f){alert("Choose a JSON backup.");return;}var r=new FileReader();r.onload=function(){data=migrate(JSON.parse(r.result));save();};r.readAsText(f);};
@@ -910,7 +908,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.6.7-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.6.8-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){

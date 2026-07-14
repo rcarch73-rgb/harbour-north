@@ -1,9 +1,9 @@
 {
-  "name": "RyanOS 2.6.7",
+  "name": "RyanOS 2.6.8",
   "short_name": "RyanOS",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f3f6fa",
   "theme_color": "#17365d",
-  "description": "RyanOS retirement page with adjustable spouse ages."
+  "description": "RyanOS with Retirement linked to the Money page annual spending estimate."
 }
