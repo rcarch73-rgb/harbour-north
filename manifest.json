@@ -1,9 +1,9 @@
 {
-  "name": "RyanOS 2.0",
+  "name": "RyanOS 2.1",
   "short_name": "RyanOS",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f3f6fa",
   "theme_color": "#17365d",
-  "description": "Private financial and life planning app."
+  "description": "RyanOS with Today Dashboard."
 }

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 2.0</title>
+<title>RyanOS 2.1</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -27,11 +27,18 @@ input,select,textarea{border:1px solid #b8c5d1;border-radius:8px;padding:8px;bac
 .form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
 @media(max-width:900px){.shell{grid-template-columns:1fr}nav{position:static;height:auto;display:flex;overflow:auto;gap:4px}nav button{min-width:max-content}.grid,.grid.two,.form-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:620px){.grid,.grid.two,.form-grid{grid-template-columns:1fr}main{padding:12px}.metric{font-size:24px}}
+
+.today{background:linear-gradient(135deg,#17365d,#2d6ea6);color:white;border-radius:16px;padding:18px;margin-bottom:12px}
+.today h2{margin:0 0 4px}.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:12px 0}
+.kpi{background:white;border:1px solid var(--border);border-radius:12px;padding:12px}.kpi small{display:block;color:var(--muted)}.kpi strong{font-size:21px}
+.ring{width:112px;height:112px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--good) calc(var(--score)*1%),#e5e7eb 0);position:relative;margin:auto}
+.ring:after{content:"";position:absolute;width:82px;height:82px;border-radius:50%;background:white}.ring b{z-index:1;font-size:27px}
+@media(max-width:900px){.kpis{grid-template-columns:1fr 1fr 1fr}}@media(max-width:620px){.kpis{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>2.0 — rebuilt for reliability</small></div>
+  <div><h1>RyanOS</h1><small>2.1 — Today Dashboard</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -140,16 +147,29 @@ function nav(){
  document.getElementById("nav").innerHTML=items.map(function(x,i){return'<button data-page="'+x[0]+'" class="'+(i===0?"active":"")+'">'+x[1]+"</button>";}).join("");
  document.querySelectorAll("#nav button").forEach(function(b){b.addEventListener("click",function(){document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});document.querySelectorAll("#nav button").forEach(function(x){x.classList.remove("active");});document.getElementById(b.dataset.page).classList.add("active");b.classList.add("active");});});
 }
+function healthScore(){
+ var t=totals(),score=50;
+ if(t.surplus>=0)score+=20;else score-=10;
+ if(data.settings.loc<23000)score+=10;
+ if(actualSpend()<=t.spending)score+=10;
+ if(data.settings.investments>=520000)score+=10;
+ return Math.max(0,Math.min(100,score));
+}
 function renderHome(){
- var t=totals();
- document.getElementById("home").innerHTML='<h2>Home</h2><div class="grid">'+
- '<div class="card"><h3>Monthly income</h3><div class="metric">'+money(t.income)+'</div></div>'+
- '<div class="card"><h3>Monthly surplus</h3><div class="metric '+(t.surplus>=0?"good":"bad")+'">'+money(t.surplus)+'</div></div>'+
- '<div class="card"><h3>Net worth</h3><div class="metric">'+money(t.networth)+'</div></div>'+
- '<div class="card"><h3>Imported spending</h3><div class="metric">'+money(actualSpend())+'</div></div></div>'+
- '<div class="grid two" style="margin-top:12px"><div class="card"><h3>Priority goals</h3>'+
- data.goals.slice().sort(function(a,b){return a.priority-b.priority;}).map(function(g){var p=g.name==="LOC"?(1-g.current/g.target)*100:g.current/g.target*100;return"<p><strong>"+esc(g.priority+". "+g.name)+"</strong> — "+money(g.current)+" / "+money(g.target)+'</p><div class="progress"><span style="width:'+Math.max(0,Math.min(100,p))+'%"></span></div>';}).join("")+
- '</div><div class="card"><h3>Next actions</h3><div class="notice">Import transactions, update goal balances, and export a backup each month.</div><p>LOC target payment: <strong>'+money(t.locPayment)+'</strong></p><p>Target retirement age: <strong>'+data.settings.retireAge+'</strong></p></div></div>';
+ var t=totals(),score=healthScore(),days=Math.round(Math.max(0,data.settings.retireAge-data.settings.age)*365.25);
+ var goals=data.goals.slice().sort(function(a,b){return a.priority-b.priority;}).slice(0,4);
+ document.getElementById("home").innerHTML=
+ '<div class="today"><h2>Today Dashboard</h2><p>Your financial position and next actions.</p></div>'+
+ '<div class="kpis">'+
+ '<div class="kpi"><small>Net worth</small><strong>'+money(t.networth)+'</strong></div>'+
+ '<div class="kpi"><small>LOC balance</small><strong>'+money(data.settings.loc)+'</strong></div>'+
+ '<div class="kpi"><small>Monthly result</small><strong class="'+(t.surplus>=0?"good":"bad")+'">'+money(t.surplus)+'</strong></div>'+
+ '<div class="kpi"><small>Investments</small><strong>'+money(data.settings.investments)+'</strong></div>'+
+ '<div class="kpi"><small>Days to retirement</small><strong>'+days.toLocaleString()+'</strong></div></div>'+
+ '<div class="grid two"><div class="card"><h3>Financial health</h3><div class="ring" style="--score:'+score+'"><b>'+score+'</b></div><p style="text-align:center">Score out of 100</p></div>'+
+ '<div class="card"><h3>Priority goals</h3>'+goals.map(function(g){var p=g.name==="LOC"?(1-g.current/g.target)*100:g.current/g.target*100;return"<p><strong>"+esc(g.priority+". "+g.name)+"</strong> — "+money(g.current)+" / "+money(g.target)+'</p><div class="progress"><span style="width:'+Math.max(0,Math.min(100,p))+'%"></span></div>';}).join("")+'</div></div>'+
+ '<div class="grid two" style="margin-top:12px"><div class="card"><h3>This month</h3><p>Imported spending: <strong>'+money(actualSpend())+'</strong></p><p>Budget: <strong>'+money(t.spending)+'</strong></p><p>LOC target payment: <strong>'+money(t.locPayment)+'</strong></p></div>'+
+ '<div class="card"><h3>Next actions</h3><div class="notice">Import this month’s transactions.</div><p>Update LOC and goal balances.</p><p>Export a backup after your monthly review.</p></div></div>';
 }
 function renderMoney(){
  var t=totals(),cat=byCategory();
