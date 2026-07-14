@@ -1,9 +1,9 @@
 {
-  "name": "RyanOS 2.5.2",
+  "name": "RyanOS 2.5.3",
   "short_name": "RyanOS",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f3f6fa",
   "theme_color": "#17365d",
-  "description": "RyanOS monthly reports and optimizer fix."
+  "description": "RyanOS monthly review reporting fix."
 }

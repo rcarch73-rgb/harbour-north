@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 2.5.2</title>
+<title>RyanOS 2.5.3</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -48,7 +48,7 @@ input[type=range]{width:100%}
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>2.5.2 — Monthly Reports Fix</small></div>
+  <div><h1>RyanOS</h1><small>2.5.3 — Monthly Review Fix</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -401,9 +401,13 @@ function recurringCandidates(){
  return Object.values(counts).filter(function(x){return x.count>=2;}).sort(function(a,b){return b.count-a.count;}).slice(0,12);
 }
 function renderReview(){
- var t=totals(),cat=byCategory(),rec=recurringCandidates();
- document.getElementById("review").innerHTML='<h2>Monthly Review</h2><div class="grid two"><div class="card"><h3>Review controls</h3><label>Review month<input id="reviewMonth" type="month" value="'+esc(data.review.month)+'"></label><p>Transactions: <strong>'+data.transactions.length+'</strong></p><p>Imported spending: <strong>'+money(actualSpend())+'</strong></p><p>Monthly result: <strong class="'+(t.surplus>=0?"good":"bad")+'">'+money(t.surplus)+'</strong></p><div class="toolbar"><button id="saveNW">Save net-worth snapshot</button></div></div><div class="card"><h3>Decisions and notes</h3><textarea id="reviewNotes">'+esc(data.review.notes||"")+'</textarea></div></div>'+
- '<div class="grid two" style="margin-top:12px"><div class="card"><h3>Budget alerts</h3><table><thead><tr><th>Category</th><th>Budget</th><th>Actual</th><th>Status</th></tr></thead><tbody>'+
+ var month=data.review.month||new Date().toISOString().slice(0,7);
+ var t=totals(),cat=byCategoryForMonth(month),rec=recurringCandidates();
+ var monthTx=monthTransactions(month);
+ var monthSpend=monthTx.filter(function(x){return x.include==="Yes";}).reduce(function(a,x){return a+Math.abs(Number(x.amount||0));},0);
+ var monthNeedsReview=monthTx.filter(function(x){return !x.category||x.category==="Miscellaneous"||x.category==="Needs Review";}).length;
+ document.getElementById("review").innerHTML='<h2>Monthly Review</h2><div class="grid two"><div class="card"><h3>Review controls</h3><label>Review month<input id="reviewMonth" type="month" value="'+esc(month)+'"></label><p>Transactions this month: <strong>'+monthTx.length+'</strong></p><p>Included spending this month: <strong>'+money(monthSpend)+'</strong></p><p>Needs review this month: <strong>'+monthNeedsReview+'</strong></p><p>Monthly plan result: <strong class="'+(t.surplus>=0?"good":"bad")+'">'+money(t.surplus)+'</strong></p><div class="toolbar"><button id="saveNW">Save net-worth snapshot</button></div></div><div class="card"><h3>Decisions and notes</h3><textarea id="reviewNotes">'+esc(data.review.notes||"")+'</textarea></div></div>'+
+ '<div class="grid two" style="margin-top:12px"><div class="card"><h3>Budget alerts — '+esc(month)+'</h3><table><thead><tr><th>Category</th><th>Monthly budget</th><th>Actual</th><th>Status</th></tr></thead><tbody>'+
  data.budget.map(function(x){var a=cat[x[0]]||0;return'<tr><td>'+esc(x[0])+'</td><td>'+money(x[1])+'</td><td>'+money(a)+'</td><td class="'+(a<=x[1]?"good":"bad")+'">'+(a<=x[1]?"OK":"Over")+'</td></tr>';}).join("")+
  '</tbody></table></div><div class="card"><h3>Recurring bill candidates</h3><table><thead><tr><th>Merchant</th><th>Count</th><th>Average</th></tr></thead><tbody>'+
  rec.map(function(x){return'<tr><td>'+esc(x.description)+'</td><td>'+x.count+'</td><td>'+money(x.total/x.count)+'</td></tr>';}).join("")+
@@ -411,35 +415,15 @@ function renderReview(){
  '<div class="card" style="margin-top:12px"><h3>Net-worth history</h3><table><thead><tr><th>Month</th><th>Net worth</th></tr></thead><tbody>'+
  data.netWorthHistory.map(function(x){return'<tr><td>'+esc(x.month)+'</td><td>'+money(x.value)+'</td></tr>';}).join("")+
  '</tbody></table></div>'+
- '<div class="notice">Checklist: import transactions, review Miscellaneous, update LOC and goal balances, save a net-worth snapshot, write notes, then export a backup.</div>';
- document.getElementById("reviewMonth").onchange=function(){data.review.month=this.value;save();};
- document.getElementById("reviewNotes").onchange=function(){data.review.notes=this.value;save();};
+ '<div class="notice">This page now uses only the selected month for transaction counts, spending totals, Needs Review items, and budget alerts.</div>';
+ document.getElementById("reviewMonth").onchange=function(){
+  data.review.month=this.value;
+  data.reportMonth=this.value;
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+  renderReview();
+ };
+ document.getElementById("reviewNotes").onchange=function(){data.review.notes=this.value;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));};
  document.getElementById("saveNW").onclick=saveNetWorthSnapshot;
-}
-function txDateObj(v){
- var s=String(v||"").trim();
- if(/^\d{4}-\d{2}-\d{2}$/.test(s))return new Date(s+"T12:00:00");
- if(/^\d{8}$/.test(s))return new Date(s.slice(0,4)+"-"+s.slice(4,6)+"-"+s.slice(6,8)+"T12:00:00");
- var d=new Date(s);return isNaN(d)?null:d;
-}
-function monthKeyFromDate(d){
- return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
-}
-function monthlyHistory(count){
- var out=[],now=new Date();
- for(var i=count-1;i>=0;i--){
-  var d=new Date(now.getFullYear(),now.getMonth()-i,1),key=monthKeyFromDate(d);
-  var spend=0,income=0;
-  data.transactions.forEach(function(t){
-   var td=txDateObj(t.date);
-   if(!td||monthKeyFromDate(td)!==key)return;
-   var amt=Number(t.amount||0);
-   if(t.include==="Yes")spend+=Math.abs(amt);
-   if(t.category==="Income")income+=Math.abs(amt);
-  });
-  out.push({key:key,label:d.toLocaleString("en-CA",{month:"short"}),spend:spend,income:income});
- }
- return out;
 }
 function transactionMonth(t){
  var d=txDateObj(t.date);
@@ -530,7 +514,7 @@ function renderSettings(){
  document.getElementById("reset").onclick=function(){if(confirm("Reset all data?")){data=clone(defaults);save();}};
 }
 function render(){renderHome();renderMoney();renderTransactions();renderGoals();renderRetirement();renderNetWorth();renderLife();renderReview();renderReports();renderSettings();}
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.5.2-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.5.3-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  data.transactions.forEach(function(t){
   var r=categorize(t.description);
