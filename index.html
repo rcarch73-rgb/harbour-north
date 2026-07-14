@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 2.5.3</title>
+<title>RyanOS 2.5.4</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -48,7 +48,7 @@ input[type=range]{width:100%}
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>2.5.3 — Monthly Review Fix</small></div>
+  <div><h1>RyanOS</h1><small>2.5.4 — Monthly Pages Runtime Fix</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -380,6 +380,32 @@ function renderLife(){
  [[".l-name","name",String],[".l-target","target",Number],[".l-saved","saved",Number],[".l-year","year",Number],[".l-notes","notes",String]].forEach(function(cfg){document.querySelectorAll(cfg[0]).forEach(function(el){el.onchange=function(){data.life[Number(el.dataset.i)][cfg[1]]=cfg[2](el.value);save();};});});
  document.querySelectorAll(".l-del").forEach(function(el){el.onclick=function(){data.life.splice(Number(el.dataset.i),1);save();};});
 }
+function txDateObj(v){
+ var s=String(v||"").trim();
+ if(/^\d{4}-\d{2}-\d{2}$/.test(s))return new Date(s+"T12:00:00");
+ if(/^\d{8}$/.test(s))return new Date(s.slice(0,4)+"-"+s.slice(4,6)+"-"+s.slice(6,8)+"T12:00:00");
+ var d=new Date(s);
+ return isNaN(d.getTime())?null:d;
+}
+function monthKeyFromDate(d){
+ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+}
+function monthlyHistory(count){
+ var out=[],now=new Date();
+ for(var i=count-1;i>=0;i--){
+  var d=new Date(now.getFullYear(),now.getMonth()-i,1);
+  var key=monthKeyFromDate(d),spend=0,income=0;
+  data.transactions.forEach(function(t){
+   var td=txDateObj(t.date);
+   if(!td||monthKeyFromDate(td)!==key)return;
+   var amt=Number(t.amount||0);
+   if(t.include==="Yes")spend+=Math.abs(amt);
+   if(t.category==="Income")income+=Math.abs(amt);
+  });
+  out.push({key:key,label:d.toLocaleString("en-CA",{month:"short"}),spend:spend,income:income});
+ }
+ return out;
+}
 function currentNetWorth(){
  return totals().networth;
 }
@@ -514,7 +540,7 @@ function renderSettings(){
  document.getElementById("reset").onclick=function(){if(confirm("Reset all data?")){data=clone(defaults);save();}};
 }
 function render(){renderHome();renderMoney();renderTransactions();renderGoals();renderRetirement();renderNetWorth();renderLife();renderReview();renderReports();renderSettings();}
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.5.3-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.5.4-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  data.transactions.forEach(function(t){
   var r=categorize(t.description);
