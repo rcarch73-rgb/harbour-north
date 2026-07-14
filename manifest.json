@@ -1,9 +1,9 @@
 {
-  "name": "RyanOS 3.6.0",
+  "name": "RyanOS 3.7.0",
   "short_name": "RyanOS",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f3f6fa",
   "theme_color": "#17365d",
-  "description": "RyanOS with retirement spending guardrails."
+  "description": "RyanOS with spouse-by-spouse progressive tax auditing."
 }
