@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 2.5.5</title>
+<title>RyanOS 2.5.6</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -48,7 +48,7 @@ input[type=range]{width:100%}
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>2.5.5 — Money Page Monthly Fix</small></div>
+  <div><h1>RyanOS</h1><small>2.5.6 — Startup Data Repair</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -141,6 +141,32 @@ if(!data.review)data.review={month:new Date().toISOString().slice(0,7),notes:"",
 if(!Array.isArray(data.netWorthHistory))data.netWorthHistory=[];
 if(data.optimizerExtra===undefined)data.optimizerExtra=0;
 if(!data.reportMonth)data.reportMonth=data.review.month||new Date().toISOString().slice(0,7);
+if(!data.review||typeof data.review!=="object")data.review={month:new Date().toISOString().slice(0,7),notes:"",lastBackup:""};
+if(!data.review.month)data.review.month=new Date().toISOString().slice(0,7);
+if(!Array.isArray(data.transactions))data.transactions=[];
+data.transactions=data.transactions.filter(function(t){return t&&typeof t==="object";}).map(function(t){
+ return{
+  date:t.date||"",
+  description:t.description||t.desc||"",
+  merchant:t.merchant||"",
+  amount:Number(t.amount||0),
+  category:t.category||t.cat||"Needs Review",
+  include:t.include||t.inc||"Yes",
+  confidence:t.confidence||""
+ };
+});
+if(!Array.isArray(data.rules))data.rules=[];
+data.rules=data.rules.filter(function(r){return r&&typeof r==="object";}).map(function(r){
+ return{
+  keyword:String(r.keyword||r.key||""),
+  category:String(r.category||r.cat||"Needs Review"),
+  include:String(r.include||r.inc||"Yes")
+ };
+});
+if(!Array.isArray(data.budget))data.budget=clone(defaults.budget);
+if(!Array.isArray(data.goals))data.goals=clone(defaults.goals);
+if(!Array.isArray(data.life))data.life=clone(defaults.life);
+
 
 
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));render();}
@@ -213,8 +239,9 @@ function categorize(desc){
  var d=cleanDescription(desc),matches=[];
  smartRules.forEach(function(r){if(d.indexOf(r[0])>=0)matches.push({keyword:r[0],category:r[1],include:"Yes",source:"smart"});});
  data.rules.forEach(function(r){
+  if(!r||typeof r!=="object")return;
   var k=String(r.keyword||"").toUpperCase().trim();
-  if(k&&d.indexOf(k)>=0)matches.push({keyword:k,category:r.category||"Miscellaneous",include:r.include||"Yes",source:"user"});
+  if(k&&d.indexOf(k)>=0)matches.push({keyword:k,category:r.category||"Needs Review",include:r.include||"Yes",source:"user"});
  });
  if(!matches.length)return{category:"Needs Review",include:"Yes",confidence:"low"};
  matches.sort(function(a,b){
@@ -481,18 +508,42 @@ function renderSettings(){
  document.getElementById("importBackup").onclick=function(){var f=document.getElementById("backupFile").files[0];if(!f){alert("Choose a JSON backup.");return;}var r=new FileReader();r.onload=function(){data=migrate(JSON.parse(r.result));save();};r.readAsText(f);};
  document.getElementById("reset").onclick=function(){if(confirm("Reset all data?")){data=clone(defaults);save();}};
 }
-function render(){renderHome();renderMoney();renderTransactions();renderGoals();renderRetirement();renderNetWorth();renderLife();renderReview();renderReports();renderSettings();}
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.5.5-backup.json";a.click();};
+function safeRender(id,fn){
+ try{fn();}
+ catch(err){
+  console.error(id+" render failed:",err);
+  var el=document.getElementById(id);
+  if(el)el.innerHTML='<h2>'+id.replace(/^\w/,function(c){return c.toUpperCase();})+'</h2><div class="notice">This page could not load because some saved data was malformed. Export a backup, then use Settings → Import Backup after installing this repair.</div>';
+ }
+}
+function render(){
+ safeRender("home",renderHome);
+ safeRender("money",renderMoney);
+ safeRender("transactions",renderTransactions);
+ safeRender("goals",renderGoals);
+ safeRender("retirement",renderRetirement);
+ safeRender("networth",renderNetWorth);
+ safeRender("life",renderLife);
+ safeRender("review",renderReview);
+ safeRender("reports",renderReports);
+ safeRender("settings",renderSettings);
+}
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.5.6-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
- data.transactions.forEach(function(t){
-  var r=categorize(t.description);
-  t.merchant=cleanDescription(t.description);
-  t.category=r.category;
-  t.include=r.include;
-  t.confidence=r.confidence;
- });
- data.categorizationVersion=25;
- localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+ try{
+  data.transactions.forEach(function(t){
+   if(!t)return;
+   var r=categorize(t.description||"");
+   t.merchant=cleanDescription(t.description||"");
+   t.category=r.category;
+   t.include=r.include;
+   t.confidence=r.confidence;
+  });
+  data.categorizationVersion=25;
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+ }catch(err){
+  console.error("Categorization migration skipped:",err);
+ }
 }
 
 nav();render();

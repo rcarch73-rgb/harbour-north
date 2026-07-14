@@ -1,9 +1,9 @@
 {
-  "name": "RyanOS 2.5.5",
+  "name": "RyanOS 2.5.6",
   "short_name": "RyanOS",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f3f6fa",
   "theme_color": "#17365d",
-  "description": "RyanOS monthly Money page fix."
+  "description": "RyanOS startup data repair and monthly Money page."
 }
