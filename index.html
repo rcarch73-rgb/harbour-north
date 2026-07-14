@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 3.4.0</title>
+<title>RyanOS 3.5.0</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -48,7 +48,7 @@ input[type=range]{width:100%}
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>3.4.0 — Retirement Scenario Comparison</small></div>
+  <div><h1>RyanOS</h1><small>3.5.0 — Future Expense Schedule</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -99,6 +99,11 @@ var defaults={
   {name:"Caribbean trip",target:15000,saved:0,year:2028,notes:"Backpacking and sail crewing"},
   {name:"Desolation Sound",target:6000,saved:0,year:2027,notes:"Sailing trip"}
  ],
+ futureExpenses:[
+  {name:"Wife replacement vehicle",age:58,amount:45000,inflates:1,account:"nonReg",include:1},
+  {name:"Fence",age:56,amount:6000,inflates:1,account:"nonReg",include:1},
+  {name:"Major travel",age:60,amount:15000,inflates:1,account:"tfsa",include:1}
+ ],
  transactions:[],
  rules:[
   {keyword:"YELLOWHEAD",category:"Income",include:"No"},{keyword:"PROVINCE",category:"Income",include:"No"},
@@ -130,7 +135,11 @@ function migrate(raw){
  if(Array.isArray(raw.goals))out.goals=raw.goals;
  if(Array.isArray(raw.life))out.life=raw.life;
  if(Array.isArray(raw.lifePlans))out.life=raw.lifePlans.map(function(p){return{name:p.name||"Goal",target:Number(p.target||0),saved:Number(p.saved||0),year:Number(p.targetYear||p.year||new Date().getFullYear()+1),notes:p.notes||""};});
- if(Array.isArray(raw.transactions))out.transactions=raw.transactions.map(function(t){return{date:t.date||"",description:t.description||t.desc||"",amount:Number(t.amount||0),category:t.category||t.cat||"Miscellaneous",include:t.include||t.inc||"Yes"};});
+ if(Array.isArray(raw.futureExpenses))out.futureExpenses=raw.futureExpenses.map(function(x){return{
+  name:x.name||"Future expense",age:Number(x.age||60),amount:Number(x.amount||0),
+  inflates:Number(x.inflates)===0?0:1,account:x.account||"nonReg",include:Number(x.include)===0?0:1
+ };});
+  if(Array.isArray(raw.transactions))out.transactions=raw.transactions.map(function(t){return{date:t.date||"",description:t.description||t.desc||"",amount:Number(t.amount||0),category:t.category||t.cat||"Miscellaneous",include:t.include||t.inc||"Yes"};});
  if(Array.isArray(raw.tx))out.transactions=raw.tx.map(function(t){return{date:t.date||"",description:t.description||t.desc||"",amount:Number(t.amount||0),category:t.category||t.cat||"Miscellaneous",include:t.include||t.inc||"Yes"};});
  if(Array.isArray(raw.rules))out.rules=raw.rules.map(function(r){return{keyword:r.keyword||r.key||"",category:r.category||r.cat||"Miscellaneous",include:r.include||r.inc||"Yes"};});
  return out;
@@ -139,6 +148,7 @@ function migrate(raw){
 var data=migrate(JSON.parse(localStorage.getItem(STORAGE_KEY)||localStorage.getItem("ryanos-data")||"null"));
 if(!data.review)data.review={month:new Date().toISOString().slice(0,7),notes:"",lastBackup:""};
 if(!Array.isArray(data.netWorthHistory))data.netWorthHistory=[];
+if(!Array.isArray(data.futureExpenses))data.futureExpenses=clone(defaults.futureExpenses);
 if(data.optimizerExtra===undefined)data.optimizerExtra=0;
 if(!data.reportMonth)data.reportMonth=data.review.month||new Date().toISOString().slice(0,7);
 if(!data.review||typeof data.review!=="object")data.review={month:new Date().toISOString().slice(0,7),notes:"",lastBackup:""};
@@ -711,7 +721,9 @@ function retirementPlan(returnRate,wifeAgeDifferenceOverride,stressType){
   var startBalance=start.rrsp+start.userTfsa+start.wifeRrsp+start.nonReg;
   if(age>Math.ceil(Number(s.retireAge)))tfsaRoom+=Math.max(0,Number(s.tfsaAnnualLimit||0));
   var inheritance=age===Number(s.inheritanceAge)?Number(s.inheritanceAmount||0):0; account.nonReg+=inheritance;
-  var extraExpense=age===Number(s.oneTimeExpenseAge)?Number(s.oneTimeExpenseAmount||0):0;
+  var legacyExpense=age===Number(s.oneTimeExpenseAge)?Number(s.oneTimeExpenseAmount||0):0;
+  var scheduledExpenses=futureExpensesAtAge(age);
+  var extraExpense=legacyExpense+scheduledExpenses.reduce(function(a,x){return a+x.amount;},0);
   var spend=retirementSpendingForAge(age);
   if(stressType==="highInflation"){
    var baseMode=Number(s.retirementSpendingMode||1);
@@ -726,10 +738,17 @@ function retirementPlan(returnRate,wifeAgeDifferenceOverride,stressType){
   }
   if(stressType==="spendingShock"&&age>=Math.ceil(Number(s.retireAge))&&age<Math.ceil(Number(s.retireAge))+5)spend*=1.20;
   var inc=retirementIncomeAtAge(age,wifeAge),taxable=inc.pension+inc.cpp+inc.wcpp+inc.oas+inc.woas;
-  var netExternal=inc.wifeEmploymentNet+inc.wcb+taxable*(1-pensionTax),need=Math.max(0,spend+extraExpense-netExternal);
+  var netExternal=inc.wifeEmploymentNet+inc.wcb+taxable*(1-pensionTax),need=Math.max(0,spend+legacyExpense-netExternal);
   var w={rrsp:0,userTfsa:0,wifeRrsp:0,nonReg:0,tax:0,net:0};
   var order=Number(s.withdrawalStrategy)===2?["userTfsa","nonReg","rrsp","wifeRrsp"]:Number(s.withdrawalStrategy)===3?["nonReg","rrsp","wifeRrsp","userTfsa"]:["rrsp","wifeRrsp","nonReg","userTfsa"];
   order.forEach(function(key){if(need<=.01)return;var tax=(key==="rrsp"||key==="wifeRrsp")?pensionTax:(key==="nonReg"?nonRegTax:0);var r=takeFromAccount(account,key,need,tax);w[key]+=r.gross;w.tax+=r.tax;w.net+=r.net;need=Math.max(0,need-r.net);});
+  var futureExpenseGross=0,futureExpenseTax=0,futureExpenseUnfunded=0,futureExpenseDetails=[];
+  scheduledExpenses.forEach(function(exp){
+   var paid=payFutureExpense(account,exp.account,exp.amount,pensionTax);
+   futureExpenseGross+=paid.gross;futureExpenseTax+=paid.tax;futureExpenseUnfunded+=paid.unfunded;
+   futureExpenseDetails.push({name:exp.name,amount:exp.amount,account:exp.account,gross:paid.gross,tax:paid.tax,unfunded:paid.unfunded});
+  });
+  need+=futureExpenseUnfunded;
   var strategicGross=0,strategicTax=0,tfsaDeposit=0,nonRegDeposit=0;
   if(Number(s.rrspDrawdownEnabled||0)===1&&age>=Number(s.rrspDrawdownStartAge||55)&&age<Number(s.rrspDrawdownEndAge||70)&&account.rrsp>0){
    var room=Math.max(0,Number(s.lowestTaxBracketCeiling||0)-(inc.cpp+inc.oas+w.rrsp));
@@ -740,11 +759,11 @@ function retirementPlan(returnRate,wifeAgeDifferenceOverride,stressType){
   var growth={rrsp:account.rrsp*annualRate,userTfsa:account.userTfsa*annualRate,wifeRrsp:account.wifeRrsp*annualRate,nonReg:account.nonReg*annualRate};
   account.rrsp+=growth.rrsp;account.userTfsa+=growth.userTfsa;account.wifeRrsp+=growth.wifeRrsp;account.nonReg+=growth.nonReg;
   var endBalance=account.rrsp+account.userTfsa+account.wifeRrsp+account.nonReg;
-  rows.push({age:age,wifeAge:wifeAge,startBalance:startBalance,startAccounts:start,inheritance:inheritance,extraExpense:extraExpense,spend:spend,wifeEmployment:inc.wifeEmploymentNet,pension:inc.pension,wcb:inc.wcb,cpp:inc.cpp,wcpp:inc.wcpp,oas:inc.oas,woas:inc.woas,netExternal:netExternal,rrspWithdrawal:w.rrsp,userTfsaWithdrawal:w.userTfsa,wifeRrspWithdrawal:w.wifeRrsp,nonRegWithdrawal:w.nonReg,withdrawalTax:w.tax+strategicTax,withdrawal:w.rrsp+w.userTfsa+w.wifeRrsp+w.nonReg+strategicGross,netWithdrawal:w.net,strategicRrspWithdrawal:strategicGross,strategicRrspTax:strategicTax,tfsaDeposit:tfsaDeposit,nonRegDeposit:nonRegDeposit,growth:growth.rrsp+growth.userTfsa+growth.wifeRrsp+growth.nonReg,endAccounts:{rrsp:account.rrsp,userTfsa:account.userTfsa,wifeRrsp:account.wifeRrsp,nonReg:account.nonReg},annualReturn:annualRate*100,endBalance:endBalance,
+  rows.push({age:age,wifeAge:wifeAge,startBalance:startBalance,startAccounts:start,inheritance:inheritance,extraExpense:extraExpense,legacyExpense:legacyExpense,scheduledExpense:extraExpense-legacyExpense,futureExpenseDetails:futureExpenseDetails,spend:spend,wifeEmployment:inc.wifeEmploymentNet,pension:inc.pension,wcb:inc.wcb,cpp:inc.cpp,wcpp:inc.wcpp,oas:inc.oas,woas:inc.woas,netExternal:netExternal,rrspWithdrawal:w.rrsp,userTfsaWithdrawal:w.userTfsa,wifeRrspWithdrawal:w.wifeRrsp,nonRegWithdrawal:w.nonReg,futureExpenseWithdrawal:futureExpenseGross,futureExpenseTax:futureExpenseTax,withdrawalTax:w.tax+strategicTax+futureExpenseTax,withdrawal:w.rrsp+w.userTfsa+w.wifeRrsp+w.nonReg+futureExpenseGross+strategicGross,netWithdrawal:w.net,strategicRrspWithdrawal:strategicGross,strategicRrspTax:strategicTax,tfsaDeposit:tfsaDeposit,nonRegDeposit:nonRegDeposit,growth:growth.rrsp+growth.userTfsa+growth.wifeRrsp+growth.nonReg,endAccounts:{rrsp:account.rrsp,userTfsa:account.userTfsa,wifeRrsp:account.wifeRrsp,nonReg:account.nonReg},annualReturn:annualRate*100,endBalance:endBalance,
    expectedEnd:startBalance+inheritance+growth.rrsp+growth.userTfsa+growth.wifeRrsp+growth.nonReg
-    -w.rrsp-w.userTfsa-w.wifeRrsp-w.nonReg-strategicTax,
+    -w.rrsp-w.userTfsa-w.wifeRrsp-w.nonReg-futureExpenseGross-strategicTax,
    reconciliationDifference:endBalance-(startBalance+inheritance+growth.rrsp+growth.userTfsa+growth.wifeRrsp+growth.nonReg
-    -w.rrsp-w.userTfsa-w.wifeRrsp-w.nonReg-strategicTax),
+    -w.rrsp-w.userTfsa-w.wifeRrsp-w.nonReg-futureExpenseGross-strategicTax),
    depleted:need>.01,unfunded:need});
  }
  return rows;
@@ -767,6 +786,28 @@ function projection(age,wifeAgeOverride){
 }
 
 
+
+function futureExpensesAtAge(age){
+ var s=data.settings;
+ return (data.futureExpenses||[]).filter(function(x){
+  return Number(x.include)!==0&&Math.round(Number(x.age||0))===Math.round(Number(age));
+ }).map(function(x){
+  var amount=Math.max(0,Number(x.amount||0));
+  if(Number(x.inflates)!==0)amount*=Math.pow(1+Number(s.inflation||0)/100,Math.max(0,Number(age)-Number(s.age)));
+  return{name:x.name||"Future expense",amount:amount,account:x.account||"nonReg"};
+ });
+}
+function payFutureExpense(account,key,amount,taxRate){
+ var remaining=Math.max(0,Number(amount||0)),gross=0,tax=0,net=0;
+ var order=[key,"nonReg","userTfsa","rrsp","wifeRrsp"].filter(function(v,i,a){return a.indexOf(v)===i;});
+ order.forEach(function(k){
+  if(remaining<=.01)return;
+  var rate=(k==="rrsp"||k==="wifeRrsp")?taxRate:(k==="nonReg"?Math.max(0,Math.min(.6,Number(data.settings.nonRegisteredWithdrawalTaxRate||0)/100)):0);
+  var r=takeFromAccount(account,k,remaining,rate);
+  gross+=r.gross;tax+=r.tax;net+=r.net;remaining=Math.max(0,remaining-r.net);
+ });
+ return{gross:gross,tax:tax,net:net,unfunded:remaining};
+}
 function retirementPlanAtAge(retireAge,returnRate){
  var original=data.settings.retireAge;
  data.settings.retireAge=Number(retireAge);
@@ -869,12 +910,16 @@ function renderRetirement(){
  });
  var detailed=Number(s.rrspBalance||0)+Number(s.userTfsaBalance||0)+Number(s.wifeRrspBalance||0)+Number(s.nonRegisteredBalance||0),mismatch=Number(s.investments||0)-detailed;
  var mode=Number(s.retirementSpendingMode||1),spending=mode===2?data.budget.reduce(function(a,x){return a+Number(x[1]||0);},0)*12:mode===3?spendingEstimate().retirementEstimate:Number(s.retireSpend||0);
+ var futureExpenseTotal=(data.futureExpenses||[]).filter(function(x){return Number(x.include)!==0;}).reduce(function(a,x){return a+Number(x.amount||0);},0);
+ var futureExpenseYears={};
+ (data.futureExpenses||[]).filter(function(x){return Number(x.include)!==0;}).forEach(function(x){var y=Number(x.age||0);futureExpenseYears[y]=(futureExpenseYears[y]||0)+Number(x.amount||0);});
+ var clusteredYears=Object.keys(futureExpenseYears).filter(function(y){return futureExpenseYears[y]>=50000;});
  document.getElementById("retirement").innerHTML=
  '<h2>Retirement — rebuilt engine</h2><div class="notice"><strong>Repair complete.</strong> Only the retirement functions were replaced. All other app pages were preserved.</div>'+
  '<div class="card"><h3>Core assumptions</h3><div class="form-grid"><label>Current age<input class="ret-repair" data-k="age" type="number" step="0.1" value="'+s.age+'"></label><label>Retirement age<input class="ret-repair" data-k="retireAge" type="number" step="0.1" value="'+s.retireAge+'"></label><label>Plan through age<input class="ret-repair" data-k="retirementEndAge" type="number" step="1" value="'+s.retirementEndAge+'"></label><label>Spending method<select id="retirementSpendingMode"><option value="1" '+(mode===1?'selected':'')+'>Manual target</option><option value="2" '+(mode===2?'selected':'')+'>Current budget</option><option value="3" '+(mode===3?'selected':'')+'>Imported transactions</option></select></label><label>Manual annual spending<input class="ret-repair" data-k="retireSpend" type="number" step="1000" value="'+s.retireSpend+'"></label><label>Annual spending used<input value="'+money(spending)+'" disabled></label><label>Spending phases<select id="retirementSpendingPhasesEnabled"><option value="1" '+(Number(s.retirementSpendingPhasesEnabled)===1?'selected':'')+'>Enabled</option><option value="0" '+(Number(s.retirementSpendingPhasesEnabled)===0?'selected':'')+'>Disabled</option></select></label><label>Active phase ends at age<input class="ret-repair" data-k="activeSpendingEndAge" type="number" step="1" value="'+s.activeSpendingEndAge+'"></label><label>Mid phase ends at age<input class="ret-repair" data-k="midSpendingEndAge" type="number" step="1" value="'+s.midSpendingEndAge+'"></label><label>Mid phase spending (%)<input class="ret-repair" data-k="midSpendingPercent" type="number" step="1" value="'+s.midSpendingPercent+'"></label><label>Late phase spending (%)<input class="ret-repair" data-k="lateSpendingPercent" type="number" step="1" value="'+s.lateSpendingPercent+'"></label></div><div class="notice">Active spending uses 100% of the base target. Mid and late phases use the percentages above, then continue to rise with inflation.</div></div>'+
  '<div class="grid" style="margin-top:12px"><div class="card"><h3>Expected</h3><div class="metric '+(e.d?'bad':'good')+'">'+(e.d?'Shortfall at '+e.d:'Funded through '+s.retirementEndAge)+'</div><p>'+money(e.end)+' ending balance</p></div><div class="card"><h3>Conservative</h3><div class="metric '+(c.d?'bad':'good')+'">'+(c.d?'Shortfall at '+c.d:'Funded through '+s.retirementEndAge)+'</div><p>'+money(c.end)+' ending balance</p></div><div class="card"><h3>Balance at retirement</h3><div class="metric">'+money(at.total)+'</div></div><div class="card"><h3>Expected ending balance today</h3><div class="metric">'+money(e.real)+'</div></div></div>'+
  '<div class="card" style="margin-top:12px"><h3>Account check</h3><table><tbody><tr><td>Your RRSP</td><td>'+money(s.rrspBalance)+'</td></tr><tr><td>Wife RRSP</td><td>'+money(s.wifeRrspBalance)+'</td></tr><tr><td>Your TFSA</td><td>'+money(s.userTfsaBalance)+'</td></tr><tr><td>Non-registered</td><td>'+money(s.nonRegisteredBalance)+'</td></tr><tr><td><strong>Detailed total</strong></td><td><strong>'+money(detailed)+'</strong></td></tr><tr><td>Older aggregate setting</td><td>'+money(s.investments)+'</td></tr></tbody></table><div class="notice '+(Math.abs(mismatch)>1?'bad':'good')+'">Difference: '+money(mismatch)+'. The model uses detailed accounts.</div></div>'+
- '<div class="card" style="margin-top:12px"><h3>Retirement age comparison</h3><div class="form-grid"><label>Scenario 1 retirement age<input class="scenario-age" data-k="scenarioRetireAge1" type="number" step="0.5" value="'+s.scenarioRetireAge1+'"></label><label>Scenario 2 retirement age<input class="scenario-age" data-k="scenarioRetireAge2" type="number" step="0.5" value="'+s.scenarioRetireAge2+'"></label><label>Scenario 3 retirement age<input class="scenario-age" data-k="scenarioRetireAge3" type="number" step="0.5" value="'+s.scenarioRetireAge3+'"></label></div><table><thead><tr><th>Retirement age</th><th>Balance at retirement</th><th>First-year withdrawals</th><th>Lowest portfolio balance</th><th>Result</th><th>Ending balance</th><th>Today-dollar ending balance</th></tr></thead><tbody>'+retirementScenarios.map(function(x){return'<tr><td><strong>'+x.age.toFixed(1)+'</strong></td><td>'+money(x.retirementBalance)+'</td><td>'+money(x.firstWithdrawal)+'</td><td>'+money(x.lowestBalance)+'</td><td class="'+(x.depleted?'bad':'good')+'">'+(x.depleted?'Shortfall at age '+x.depleted:'Funded through '+s.retirementEndAge)+'</td><td>'+money(x.end)+'</td><td>'+money(x.real)+'</td></tr>';}).join("")+'</tbody></table><div class="notice">Each scenario uses the same spending, return, inflation, CPP, OAS, pension and withdrawal assumptions. Only the retirement age changes.</div></div>'+'<div class="card" style="margin-top:12px"><h3>Investment balances over retirement</h3><div style="overflow-x:auto"><canvas id="retirementAccountChart" style="width:100%;min-width:700px;height:360px"></canvas></div><div class="notice">The chart shows the separate ending balance of each account for every retirement year, plus the combined portfolio total.</div></div>'+'<div class="card" style="margin-top:12px"><h3>Retirement stress tests</h3><div class="metric '+(stressPasses===stressResults.length?'good':stressPasses>=3?'':'bad')+'">'+stressPasses+' of '+stressResults.length+' passed</div><table><thead><tr><th>Stress test</th><th>Result</th><th>Ending balance</th></tr></thead><tbody>'+stressResults.map(function(x){return'<tr><td>'+x.name+'</td><td class="'+(x.depleted?'bad':'good')+'">'+(x.depleted?'Shortfall at age '+x.depleted:'Funded through '+s.retirementEndAge)+'</td><td>'+money(x.end)+'</td></tr>';}).join("")+'</tbody></table><div class="notice">These tests are intentionally harsh. They help expose sequence-of-returns risk, inflation risk and overspending risk rather than predict one exact future.</div></div>'+'<div class="card" style="margin-top:12px"><h3>Annual income audit — expected return</h3><div style="overflow-x:auto"><table><thead><tr><th>Age</th><th>Wife age</th><th>Wife employment</th><th>WorkSafeBC</th><th>Wife pension</th><th>Your CPP</th><th>Wife CPP</th><th>Your OAS</th><th>Wife OAS</th><th>After-tax external income</th><th>Spending phase</th><th>Annual spending</th></tr></thead><tbody>'+expected.map(function(r){var phase=Number(s.retirementSpendingPhasesEnabled)!==1?'Single phase':r.age>=Number(s.midSpendingEndAge)?'Late':r.age>=Number(s.activeSpendingEndAge)?'Mid':'Active';return'<tr><td>'+r.age+'</td><td>'+r.wifeAge+'</td><td>'+money(r.wifeEmployment)+'</td><td>'+money(r.wcb)+'</td><td>'+money(r.pension)+'</td><td>'+money(r.cpp)+'</td><td>'+money(r.wcpp)+'</td><td>'+money(r.oas)+'</td><td>'+money(r.woas)+'</td><td><strong>'+money(r.netExternal)+'</strong></td><td>'+phase+'</td><td>'+money(r.spend)+'</td></tr>';}).join("")+'</tbody></table></div></div>'+'<div class="card" style="margin-top:12px"><h3>Year-by-year reconciliation</h3><div class="notice"><strong>Transfers stay inside the portfolio.</strong> Strategic RRSP withdrawals are moved to TFSA and non-registered accounts after tax. They are not counted as spending.</div><div style="overflow-x:auto"><table><thead><tr><th>Age</th><th>Start total</th><th>Net income</th><th>Spending</th><th>RRSP for spending</th><th>Wife RRSP for spending</th><th>TFSA withdrawal</th><th>Non-reg withdrawal</th><th>Strategic RRSP transfer</th><th>To TFSA</th><th>To non-reg</th><th>Total tax</th><th>Return used</th><th>Growth</th><th>End RRSP</th><th>End wife RRSP</th><th>End TFSA</th><th>End non-reg</th><th>End total</th><th>Reconciliation</th><th>Unfunded</th></tr></thead><tbody>'+expected.map(function(r){var ok=Math.abs(r.reconciliationDifference)<1;return'<tr><td>'+r.age+'</td><td>'+money(r.startBalance)+'</td><td>'+money(r.netExternal)+'</td><td>'+money(r.spend+r.extraExpense)+'</td><td>'+money(r.rrspWithdrawal)+'</td><td>'+money(r.wifeRrspWithdrawal)+'</td><td>'+money(r.userTfsaWithdrawal)+'</td><td>'+money(r.nonRegWithdrawal)+'</td><td>'+money(r.strategicRrspWithdrawal)+'</td><td>'+money(r.tfsaDeposit)+'</td><td>'+money(r.nonRegDeposit)+'</td><td>'+money(r.withdrawalTax)+'</td><td>'+money(r.growth)+'</td><td>'+money(r.endAccounts.rrsp)+'</td><td>'+money(r.endAccounts.wifeRrsp)+'</td><td>'+money(r.endAccounts.userTfsa)+'</td><td>'+money(r.endAccounts.nonReg)+'</td><td><strong>'+money(r.endBalance)+'</strong></td><td class="'+(ok?'good':'bad')+'">'+(ok?'OK':money(r.reconciliationDifference))+'</td><td class="'+(r.unfunded>0?'bad':'')+'">'+money(r.unfunded)+'</td></tr>';}).join("")+'</tbody></table></div></div>'+
+ '<div class="card" style="margin-top:12px"><h3>Future expense schedule</h3><div class="form-grid"><label>Expense name<input id="newFutureExpenseName" value=""></label><label>Your age when paid<input id="newFutureExpenseAge" type="number" step="1" value="'+Math.ceil(Number(s.retireAge)+2)+'"></label><label>Amount in today’s dollars<input id="newFutureExpenseAmount" type="number" step="1000" value="10000"></label><label>Inflation treatment<select id="newFutureExpenseInflates"><option value="1">Inflate from today</option><option value="0">Use exact future amount</option></select></label><label>Preferred account<select id="newFutureExpenseAccount"><option value="nonReg">Non-registered</option><option value="userTfsa">Your TFSA</option><option value="rrsp">Your RRSP</option><option value="wifeRrsp">Wife RRSP</option></select></label><label>&nbsp;<button id="addFutureExpense" type="button">Add expense</button></label></div><table><thead><tr><th>Include</th><th>Expense</th><th>Age</th><th>Today’s amount</th><th>Inflates</th><th>Preferred account</th><th>Remove</th></tr></thead><tbody>'+((data.futureExpenses||[]).length?(data.futureExpenses||[]).map(function(x,i){return'<tr><td><input class="future-expense-toggle" data-i="'+i+'" type="checkbox" '+(Number(x.include)!==0?'checked':'')+'></td><td><input class="future-expense-field" data-i="'+i+'" data-k="name" value="'+esc(x.name||"")+'"></td><td><input class="future-expense-field" data-i="'+i+'" data-k="age" type="number" step="1" value="'+Number(x.age||0)+'"></td><td><input class="future-expense-field" data-i="'+i+'" data-k="amount" type="number" step="1000" value="'+Number(x.amount||0)+'"></td><td><select class="future-expense-field" data-i="'+i+'" data-k="inflates"><option value="1" '+(Number(x.inflates)!==0?'selected':'')+'>Yes</option><option value="0" '+(Number(x.inflates)===0?'selected':'')+'>No</option></select></td><td><select class="future-expense-field" data-i="'+i+'" data-k="account"><option value="nonReg" '+(x.account==="nonReg"?'selected':'')+'>Non-registered</option><option value="userTfsa" '+(x.account==="userTfsa"?'selected':'')+'>Your TFSA</option><option value="rrsp" '+(x.account==="rrsp"?'selected':'')+'>Your RRSP</option><option value="wifeRrsp" '+(x.account==="wifeRrsp"?'selected':'')+'>Wife RRSP</option></select></td><td><button class="remove-future-expense" data-i="'+i+'" type="button">Remove</button></td></tr>';}).join(""):'<tr><td colspan="7">No future expenses entered.</td></tr>')+'</tbody></table><div class="notice '+(clusteredYears.length?'bad':'good')+'">Included expenses total '+money(futureExpenseTotal)+'. '+(clusteredYears.length?'Warning: $50,000 or more is scheduled at age '+clusteredYears.join(", ")+'.':'No expense-year clustering warning.')+'</div></div>'+'<div class="card" style="margin-top:12px"><h3>Retirement age comparison</h3><div class="form-grid"><label>Scenario 1 retirement age<input class="scenario-age" data-k="scenarioRetireAge1" type="number" step="0.5" value="'+s.scenarioRetireAge1+'"></label><label>Scenario 2 retirement age<input class="scenario-age" data-k="scenarioRetireAge2" type="number" step="0.5" value="'+s.scenarioRetireAge2+'"></label><label>Scenario 3 retirement age<input class="scenario-age" data-k="scenarioRetireAge3" type="number" step="0.5" value="'+s.scenarioRetireAge3+'"></label></div><table><thead><tr><th>Retirement age</th><th>Balance at retirement</th><th>First-year withdrawals</th><th>Lowest portfolio balance</th><th>Result</th><th>Ending balance</th><th>Today-dollar ending balance</th></tr></thead><tbody>'+retirementScenarios.map(function(x){return'<tr><td><strong>'+x.age.toFixed(1)+'</strong></td><td>'+money(x.retirementBalance)+'</td><td>'+money(x.firstWithdrawal)+'</td><td>'+money(x.lowestBalance)+'</td><td class="'+(x.depleted?'bad':'good')+'">'+(x.depleted?'Shortfall at age '+x.depleted:'Funded through '+s.retirementEndAge)+'</td><td>'+money(x.end)+'</td><td>'+money(x.real)+'</td></tr>';}).join("")+'</tbody></table><div class="notice">Each scenario uses the same spending, return, inflation, CPP, OAS, pension and withdrawal assumptions. Only the retirement age changes.</div></div>'+'<div class="card" style="margin-top:12px"><h3>Investment balances over retirement</h3><div style="overflow-x:auto"><canvas id="retirementAccountChart" style="width:100%;min-width:700px;height:360px"></canvas></div><div class="notice">The chart shows the separate ending balance of each account for every retirement year, plus the combined portfolio total.</div></div>'+'<div class="card" style="margin-top:12px"><h3>Retirement stress tests</h3><div class="metric '+(stressPasses===stressResults.length?'good':stressPasses>=3?'':'bad')+'">'+stressPasses+' of '+stressResults.length+' passed</div><table><thead><tr><th>Stress test</th><th>Result</th><th>Ending balance</th></tr></thead><tbody>'+stressResults.map(function(x){return'<tr><td>'+x.name+'</td><td class="'+(x.depleted?'bad':'good')+'">'+(x.depleted?'Shortfall at age '+x.depleted:'Funded through '+s.retirementEndAge)+'</td><td>'+money(x.end)+'</td></tr>';}).join("")+'</tbody></table><div class="notice">These tests are intentionally harsh. They help expose sequence-of-returns risk, inflation risk and overspending risk rather than predict one exact future.</div></div>'+'<div class="card" style="margin-top:12px"><h3>Future expense impact — expected return</h3><table><thead><tr><th>Age</th><th>Expense</th><th>Inflation-adjusted amount</th><th>Preferred account</th><th>Gross withdrawal</th><th>Tax</th><th>Unfunded</th></tr></thead><tbody>'+expected.reduce(function(rows,r){(r.futureExpenseDetails||[]).forEach(function(x){rows.push('<tr><td>'+r.age+'</td><td>'+esc(x.name)+'</td><td>'+money(x.amount)+'</td><td>'+x.account+'</td><td>'+money(x.gross)+'</td><td>'+money(x.tax)+'</td><td class="'+(x.unfunded>0?'bad':'')+'">'+money(x.unfunded)+'</td></tr>');});return rows;},[]).join("")+'</tbody></table><div class="notice">Each scheduled expense is paid from its preferred account first, then other accounts are used if needed.</div></div>'+'<div class="card" style="margin-top:12px"><h3>Annual income audit — expected return</h3><div style="overflow-x:auto"><table><thead><tr><th>Age</th><th>Wife age</th><th>Wife employment</th><th>WorkSafeBC</th><th>Wife pension</th><th>Your CPP</th><th>Wife CPP</th><th>Your OAS</th><th>Wife OAS</th><th>After-tax external income</th><th>Spending phase</th><th>Annual spending</th></tr></thead><tbody>'+expected.map(function(r){var phase=Number(s.retirementSpendingPhasesEnabled)!==1?'Single phase':r.age>=Number(s.midSpendingEndAge)?'Late':r.age>=Number(s.activeSpendingEndAge)?'Mid':'Active';return'<tr><td>'+r.age+'</td><td>'+r.wifeAge+'</td><td>'+money(r.wifeEmployment)+'</td><td>'+money(r.wcb)+'</td><td>'+money(r.pension)+'</td><td>'+money(r.cpp)+'</td><td>'+money(r.wcpp)+'</td><td>'+money(r.oas)+'</td><td>'+money(r.woas)+'</td><td><strong>'+money(r.netExternal)+'</strong></td><td>'+phase+'</td><td>'+money(r.spend)+'</td></tr>';}).join("")+'</tbody></table></div></div>'+'<div class="card" style="margin-top:12px"><h3>Year-by-year reconciliation</h3><div class="notice"><strong>Transfers stay inside the portfolio.</strong> Strategic RRSP withdrawals are moved to TFSA and non-registered accounts after tax. They are not counted as spending.</div><div style="overflow-x:auto"><table><thead><tr><th>Age</th><th>Start total</th><th>Net income</th><th>Spending</th><th>Scheduled expenses</th><th>RRSP for spending</th><th>Wife RRSP for spending</th><th>TFSA withdrawal</th><th>Non-reg withdrawal</th><th>Strategic RRSP transfer</th><th>To TFSA</th><th>To non-reg</th><th>Future-expense withdrawal</th><th>Total tax</th><th>Return used</th><th>Growth</th><th>End RRSP</th><th>End wife RRSP</th><th>End TFSA</th><th>End non-reg</th><th>End total</th><th>Reconciliation</th><th>Unfunded</th></tr></thead><tbody>'+expected.map(function(r){var ok=Math.abs(r.reconciliationDifference)<1;return'<tr><td>'+r.age+'</td><td>'+money(r.startBalance)+'</td><td>'+money(r.netExternal)+'</td><td>'+money(r.spend+r.extraExpense)+'</td><td>'+money(r.rrspWithdrawal)+'</td><td>'+money(r.wifeRrspWithdrawal)+'</td><td>'+money(r.userTfsaWithdrawal)+'</td><td>'+money(r.nonRegWithdrawal)+'</td><td>'+money(r.strategicRrspWithdrawal)+'</td><td>'+money(r.tfsaDeposit)+'</td><td>'+money(r.nonRegDeposit)+'</td><td>'+money(r.withdrawalTax)+'</td><td>'+money(r.growth)+'</td><td>'+money(r.endAccounts.rrsp)+'</td><td>'+money(r.endAccounts.wifeRrsp)+'</td><td>'+money(r.endAccounts.userTfsa)+'</td><td>'+money(r.endAccounts.nonReg)+'</td><td><strong>'+money(r.endBalance)+'</strong></td><td class="'+(ok?'good':'bad')+'">'+(ok?'OK':money(r.reconciliationDifference))+'</td><td class="'+(r.unfunded>0?'bad':'')+'">'+money(r.unfunded)+'</td></tr>';}).join("")+'</tbody></table></div></div>'+
  '<div class="card" style="margin-top:12px"><h3>Reconciliation integrity check</h3>'+
  (function(){var bad=expected.filter(function(r){return Math.abs(r.reconciliationDifference)>=1;});var maxDiff=expected.reduce(function(m,r){return Math.max(m,Math.abs(r.reconciliationDifference));},0);return'<div class="metric '+(bad.length?'bad':'good')+'">'+(bad.length?bad.length+' problem year(s)':'All years reconcile')+'</div><p>Largest difference: <strong>'+money(maxDiff)+'</strong></p><div class="notice">Each year is checked using: starting balance + inheritance + growth − spending withdrawals − tax leaving the portfolio = ending balance. RRSP-to-TFSA and RRSP-to-non-registered transfers cancel within the portfolio.</div>';})()+
  '</div>'+'<div class="card" style="margin-top:12px"><h3>How a strategic RRSP transfer works</h3>'+
@@ -885,6 +930,28 @@ function renderRetirement(){
  document.getElementById("retirementSpendingMode").onchange=function(){data.settings.retirementSpendingMode=Number(this.value);localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderRetirement();};
  document.getElementById("retirementSpendingPhasesEnabled").onchange=function(){data.settings.retirementSpendingPhasesEnabled=Number(this.value);localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderRetirement();};
  document.querySelectorAll(".scenario-age").forEach(function(el){el.onchange=function(){data.settings[el.dataset.k]=Number(el.value||0);localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderRetirement();};});
+ document.getElementById("addFutureExpense").onclick=function(){
+  var name=document.getElementById("newFutureExpenseName").value.trim()||"Future expense";
+  var age=Number(document.getElementById("newFutureExpenseAge").value||60);
+  var amount=Math.max(0,Number(document.getElementById("newFutureExpenseAmount").value||0));
+  var inflates=Number(document.getElementById("newFutureExpenseInflates").value);
+  var account=document.getElementById("newFutureExpenseAccount").value;
+  data.futureExpenses.push({name:name,age:age,amount:amount,inflates:inflates,account:account,include:1});
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderRetirement();
+ };
+ document.querySelectorAll(".future-expense-toggle").forEach(function(el){el.onchange=function(){
+  data.futureExpenses[Number(el.dataset.i)].include=el.checked?1:0;
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderRetirement();
+ };});
+ document.querySelectorAll(".future-expense-field").forEach(function(el){el.onchange=function(){
+  var item=data.futureExpenses[Number(el.dataset.i)],k=el.dataset.k;
+  item[k]=(k==="name"||k==="account")?el.value:Number(el.value||0);
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderRetirement();
+ };});
+ document.querySelectorAll(".remove-future-expense").forEach(function(el){el.onclick=function(){
+  data.futureExpenses.splice(Number(el.dataset.i),1);
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderRetirement();
+ };});
 }
 function renderNetWorth(){
  var t=totals(),s=data.settings,assets=[["Primary home",s.home],["NS property 1",s.ns1],["NS property 2",s.ns2],["Investments",s.investments],["Cash",s.cash],["Vehicles",s.vehicles],["Boat",s.boat],["Camper",s.camper]];
@@ -1155,7 +1222,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-3.4.0-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-3.5.0-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
