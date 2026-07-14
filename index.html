@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 2.8.1</title>
+<title>RyanOS 2.8.3</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -48,7 +48,7 @@ input[type=range]{width:100%}
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>2.8.1 — Wife RRSP Correction</small></div>
+  <div><h1>RyanOS</h1><small>2.8.3 — CPP & OAS Audit</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -583,12 +583,19 @@ function retirementIncomeAtAge(age,wifeAge){
  var wifeWorking=age<s.wifeWorkUntilUserAge;
  var wifeEmploymentNet=wifeWorking?Number(s.wifeEmploymentNetAnnual||0):0;
  var indexFactor=Math.pow(1+s.inflation/100,years);
- var pension=(!wifeWorking&&wifeAge>=s.wifeRetireAge)?s.wifePension*12*indexFactor:0;
+ var pensionYears=Math.max(0,wifeAge-s.wifeRetireAge);
+ var pension=(!wifeWorking&&wifeAge>=s.wifeRetireAge)?s.wifePension*12*Math.pow(1+s.inflation/100,pensionYears):0;
  var wcb=age<65?s.wcb*12:0;
- var cpp=age>=s.userCppStart?(s.userCppStart===70?s.userCpp70:s.userCpp65)*12*indexFactor:0;
- var wcpp=wifeAge>=s.wifeCppStart?(s.wifeCppStart===60?s.wifeCpp60:s.wifeCppStart===70?s.wifeCpp70:s.wifeCpp65)*12*indexFactor:0;
- var oas=age>=s.userOasStart?s.userOasMonthly*12*indexFactor:0;
- var woas=wifeAge>=s.wifeOasStart?s.wifeOasMonthly*12*indexFactor:0;
+ var userCppBase=s.userCppStart===70?s.userCpp70:s.userCpp65;
+ var wifeCppBase=s.wifeCppStart===60?s.wifeCpp60:s.wifeCppStart===70?s.wifeCpp70:s.wifeCpp65;
+ var cppYears=Math.max(0,age-s.userCppStart);
+ var wifeCppYears=Math.max(0,wifeAge-s.wifeCppStart);
+ var userOasYears=Math.max(0,age-s.userOasStart);
+ var wifeOasYears=Math.max(0,wifeAge-s.wifeOasStart);
+ var cpp=age>=s.userCppStart?userCppBase*12*Math.pow(1+s.inflation/100,cppYears):0;
+ var wcpp=wifeAge>=s.wifeCppStart?wifeCppBase*12*Math.pow(1+s.inflation/100,wifeCppYears):0;
+ var oas=age>=s.userOasStart?s.userOasMonthly*12*Math.pow(1+s.inflation/100,userOasYears):0;
+ var woas=wifeAge>=s.wifeOasStart?s.wifeOasMonthly*12*Math.pow(1+s.inflation/100,wifeOasYears):0;
  return{wifeEmploymentNet:wifeEmploymentNet,pension:pension,wcb:wcb,cpp:cpp,wcpp:wcpp,oas:oas,woas:woas};
 }
 function accountBalancesAtRetirement(returnRate){
@@ -738,7 +745,7 @@ function renderRetirement(){
 
  document.getElementById("retirement").innerHTML=
  '<h2>Retirement</h2>'+
- '<div class="notice"><strong>Accounts are now modelled separately.</strong> Both your RRSP and your wife’s RRSP are taxable on withdrawal, your TFSA is tax-free, and non-registered withdrawals use their own simplified tax rate.</div>'+
+ '<div class="notice"><strong>Accounts are now modelled separately.</strong> Both your RRSP and your wife’s RRSP are taxable on withdrawal, your TFSA is tax-free, and non-registered withdrawals use their own simplified tax rate. Your wife’s pension now starts at the entered amount when it begins and is indexed only from that point forward.</div>'+
  '<div class="card" style="margin-bottom:12px"><h3>Scenario ages and contributions</h3><div class="form-grid">'+
  '<label>Your age<input id="scenarioUserAge" type="number" min="'+s.retireAge+'" max="'+(s.retirementEndAge-1)+'" step="1" value="'+scenarioUserAge+'"></label>'+
  '<label>Your wife’s age<input id="scenarioWifeAge" type="number" min="35" max="'+s.retirementEndAge+'" step="1" value="'+scenarioWifeAge+'"></label>'+
@@ -766,19 +773,28 @@ function renderRetirement(){
  '<tr><td>Wife RRSP</td><td>'+money(atRetirement.wifeRrsp)+'</td><td>Taxable on withdrawal</td></tr>'+
  '<tr><td>Non-registered</td><td>'+money(atRetirement.nonReg)+'</td><td>Simplified '+Number(s.nonRegisteredWithdrawalTaxRate).toFixed(1)+'% withdrawal tax</td></tr>'+
  '</tbody></table></div>'+
- '<div class="card" style="margin-top:12px"><h3>Income and withdrawals during age '+scenarioUserAge+'</h3><table><thead><tr><th>Source</th><th>Amount</th></tr></thead><tbody>'+
- '<tr><td>After-tax external income</td><td>'+money(selected.netExternal)+'</td></tr>'+
- '<tr><td>RRSP withdrawal</td><td>'+money(selected.rrspWithdrawal)+'</td></tr>'+
- '<tr><td>Your TFSA withdrawal</td><td>'+money(selected.userTfsaWithdrawal)+'</td></tr>'+
- '<tr><td>Wife RRSP withdrawal</td><td>'+money(selected.wifeRrspWithdrawal)+'</td></tr>'+
- '<tr><td>Non-registered withdrawal</td><td>'+money(selected.nonRegWithdrawal)+'</td></tr>'+
- '<tr><td>Estimated withdrawal tax</td><td>'+money(selected.withdrawalTax)+'</td></tr>'+
- '<tr><td><strong>Net available</strong></td><td><strong>'+money(selectedAvailable)+'</strong></td></tr>'+
- '<tr><td>Inflation-adjusted spending</td><td>'+money(selected.spend)+'</td></tr>'+
- '<tr><td>Special expense</td><td>'+money(selected.extraExpense)+'</td></tr>'+
- '<tr><td><strong>Annual surplus / gap</strong></td><td class="'+(selectedGap>=0?"good":"bad")+'"><strong>'+money(selectedGap)+'</strong></td></tr>'+
+  '<div class="card" style="margin-top:12px"><h3>Income and withdrawals during age '+scenarioUserAge+'</h3><table><thead><tr><th>Source</th><th>Annual amount</th><th>Status</th></tr></thead><tbody>'+
+ '<tr><td>Wife take-home employment income</td><td>'+money(selected.wifeEmployment)+'</td><td>'+(selected.wifeEmployment>0?'Included until your age '+s.wifeWorkUntilUserAge:'Not active')+'</td></tr>'+
+ '<tr><td>Wife indexed pension</td><td>'+money(selected.pension)+'</td><td>'+(selected.pension>0?'Included':'Starts when wife retires')+'</td></tr>'+
+ '<tr><td>WorkSafeBC</td><td>'+money(selected.wcb)+'</td><td>'+(selected.wcb>0?'Included through age 64':'Ended')+'</td></tr>'+
+ '<tr><td>Your CPP</td><td>'+money(selected.cpp)+'</td><td>'+(selected.cpp>0?'Included':'Starts at '+s.userCppStart)+'</td></tr>'+
+ '<tr><td>Wife CPP</td><td>'+money(selected.wcpp)+'</td><td>'+(selected.wcpp>0?'Included':'Starts when wife is '+s.wifeCppStart)+'</td></tr>'+
+ '<tr><td>Your OAS</td><td>'+money(selected.oas)+'</td><td>'+(selected.oas>0?'Included':'Starts at '+s.userOasStart)+'</td></tr>'+
+ '<tr><td>Wife OAS</td><td>'+money(selected.woas)+'</td><td>'+(selected.woas>0?'Included':'Starts when wife is '+s.wifeOasStart)+'</td></tr>'+
+ '<tr><td><strong>After-tax external income</strong></td><td><strong>'+money(selected.netExternal)+'</strong></td><td></td></tr>'+
+ '<tr><td>RRSP withdrawal</td><td>'+money(selected.rrspWithdrawal)+'</td><td>Taxable</td></tr>'+
+ '<tr><td>Your TFSA withdrawal</td><td>'+money(selected.userTfsaWithdrawal)+'</td><td>Tax-free</td></tr>'+
+ '<tr><td>Wife RRSP withdrawal</td><td>'+money(selected.wifeRrspWithdrawal)+'</td><td>Taxable</td></tr>'+
+ '<tr><td>Non-registered withdrawal</td><td>'+money(selected.nonRegWithdrawal)+'</td><td>Simplified tax estimate</td></tr>'+
+ '<tr><td>Estimated withdrawal tax</td><td>'+money(selected.withdrawalTax)+'</td><td></td></tr>'+
+ '<tr><td><strong>Net available</strong></td><td><strong>'+money(selectedAvailable)+'</strong></td><td></td></tr>'+
+ '<tr><td>Inflation-adjusted spending</td><td>'+money(selected.spend)+'</td><td>From Money page estimate</td></tr>'+
+ '<tr><td>Special expense</td><td>'+money(selected.extraExpense)+'</td><td></td></tr>'+
+ '<tr><td><strong>Annual surplus / gap</strong></td><td class="'+(selectedGap>=0?"good":"bad")+'"><strong>'+money(selectedGap)+'</strong></td><td></td></tr>'+
  '</tbody></table></div>'+
- '<div class="card" style="margin-top:12px"><h3>Ending account balances — expected scenario</h3><table><thead><tr><th>Account</th><th>Balance at '+s.retirementEndAge+'</th></tr></thead><tbody>'+
+  '<div class="card" style="margin-top:12px"><h3>CPP, OAS and pension audit</h3><table><thead><tr><th>Your age</th><th>Wife age</th><th>Wife pension</th><th>Your CPP</th><th>Wife CPP</th><th>Your OAS</th><th>Wife OAS</th><th>Total gross benefits</th></tr></thead><tbody>'+
+ [s.retireAge,62,65,70,72,75,80,84].filter(function(a,i,arr){return a>=s.retireAge&&a<s.retirementEndAge&&arr.indexOf(a)===i;}).map(function(a){var wa=a-wifeDiff,inc=retirementIncomeAtAge(a,wa),total=inc.pension+inc.cpp+inc.wcpp+inc.oas+inc.woas;return'<tr><td>'+a+'</td><td>'+wa+'</td><td>'+money(inc.pension)+'</td><td>'+money(inc.cpp)+'</td><td>'+money(inc.wcpp)+'</td><td>'+money(inc.oas)+'</td><td>'+money(inc.woas)+'</td><td><strong>'+money(total)+'</strong></td></tr>';}).join("")+
+ '</tbody></table><div class="notice">CPP and OAS are definitely included. Entered CPP/OAS amounts are now treated as the amounts at their selected start ages and indexed only after they begin.</div></div>'+'<div class="card" style="margin-top:12px"><h3>Ending account balances — expected scenario</h3><table><thead><tr><th>Account</th><th>Balance at '+s.retirementEndAge+'</th></tr></thead><tbody>'+
  '<tr><td>RRSP</td><td>'+money(eSum.endAccounts.rrsp)+'</td></tr><tr><td>Your TFSA</td><td>'+money(eSum.endAccounts.userTfsa)+'</td></tr><tr><td>Wife RRSP</td><td>'+money(eSum.endAccounts.wifeRrsp)+'</td></tr><tr><td>Non-registered</td><td>'+money(eSum.endAccounts.nonReg)+'</td></tr>'+
  '</tbody></table></div>'+
  '<div class="card" style="margin-top:12px"><h3>Return scenarios</h3><table><thead><tr><th>Scenario</th><th>Return</th><th>Portfolio lasts to</th><th>Future balance</th><th>Today-dollar balance</th></tr></thead><tbody>'+
@@ -789,7 +805,7 @@ function renderRetirement(){
  '<div class="card" style="margin-top:12px"><h3>Year-by-year expected withdrawals</h3><div style="overflow-x:auto"><table><thead><tr><th>Age</th><th>Start balance</th><th>After-tax income</th><th>Spending</th><th>RRSP</th><th>Your TFSA</th><th>Wife RRSP</th><th>Non-reg.</th><th>Withdrawal tax</th><th>End balance</th></tr></thead><tbody>'+
  expected.map(function(x){return'<tr '+(x.age===scenarioUserAge?'style="font-weight:700;background:#edf3f9"':'')+'><td>'+x.age+'</td><td>'+money(x.startBalance)+'</td><td>'+money(x.netExternal)+'</td><td>'+money(x.spend+x.extraExpense)+'</td><td>'+money(x.rrspWithdrawal)+'</td><td>'+money(x.userTfsaWithdrawal)+'</td><td>'+money(x.wifeRrspWithdrawal)+'</td><td>'+money(x.nonRegWithdrawal)+'</td><td>'+money(x.withdrawalTax)+'</td><td class="'+(x.depleted?"bad":"")+'">'+money(x.endBalance)+'</td></tr>';}).join("")+
  '</tbody></table></div></div>'+
- '<div class="notice">This is still a simplified tax model. It does not calculate actual Canadian tax brackets, RRIF minimums, capital-gains inclusion, pension splitting, TFSA room, or OAS recovery tax.</div>';
+ '<div class="notice">CPP and OAS are included. If the portfolio still depletes near age 84, check the Money page retirement spending estimate, retirement tax rate, return assumption, inheritance amount (currently entered separately), account balances, and benefit start ages. This remains a simplified tax model.</div>';
 
  document.getElementById("scenarioUserAge").onchange=function(){
   data.settings.retirementScenarioUserAge=Math.max(Number(s.retireAge),Math.min(Number(this.value||s.retireAge),Number(s.retirementEndAge)-1));
@@ -1086,7 +1102,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.8.1-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.8.3-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
