@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 2.5.7</title>
+<title>RyanOS 2.5.8</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -48,7 +48,7 @@ input[type=range]{width:100%}
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>2.5.7 — Financial Health Score</small></div>
+  <div><h1>RyanOS</h1><small>2.5.8 — Transaction Data Repair</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -349,32 +349,46 @@ function parseCsv(text){
  });
  return imported;
 }
+function safeTransactionRow(t,i){
+ try{
+  var date=esc(String(t&&t.date||""));
+  var description=String(t&&t.description||"");
+  var merchant=esc(String(t&&t.merchant||cleanDescription(description)||"Unknown"));
+  var amount=money(Number(t&&t.amount||0));
+  var category=esc(String(t&&t.category||"Needs Review"));
+  var confidence=esc(String(t&&t.confidence||""));
+  var include=String(t&&t.include||"Yes");
+  return'<tr><td>'+date+'</td><td title="'+esc(description)+'">'+merchant+'</td><td>'+amount+'</td><td><input class="tx-cat" data-i="'+i+'" value="'+category+'"></td><td>'+confidence+'</td><td><select class="tx-inc" data-i="'+i+'"><option '+(include==="Yes"?"selected":"")+'>Yes</option><option '+(include!=="Yes"?"selected":"")+'>No</option></select></td><td><button class="secondary tx-learn" data-i="'+i+'">Learn Rule</button> <button class="danger tx-del" data-i="'+i+'">Delete</button></td></tr>';
+ }catch(err){
+  console.error("Skipping malformed transaction row",i,err);
+  return'<tr class="alert-row"><td colspan="7">Skipped malformed transaction #'+(i+1)+'. Use Settings → Repair Transactions.</td></tr>';
+ }
+}
 function renderTransactions(){
- document.getElementById("transactions").innerHTML='<h2>Transactions</h2><div class="toolbar"><input type="file" id="csvFile" accept=".csv"><button id="importCsv">Import CSV</button><button class="secondary" id="applyRules">Re-categorize All</button><button class="danger" id="clearTx">Clear</button></div><div class="notice">RyanOS now cleans BMO prefixes, excludes transfers and card payments, recognizes more merchants, and sends uncertain items to Needs Review.</div><div id="importStatus"></div><div class="card"><table><thead><tr><th>Date</th><th>Merchant</th><th>Amount</th><th>Category</th><th>Confidence</th><th>Include?</th><th></th></tr></thead><tbody>'+
- data.transactions.map(function(t,i){return'<tr><td>'+esc(t.date)+'</td><td title="'+esc(t.description)+'">'+esc(t.merchant||cleanDescription(t.description))+'</td><td>'+money(t.amount)+'</td><td><input class="tx-cat" data-i="'+i+'" value="'+esc(t.category)+'"></td><td>'+esc(t.confidence||"")+'</td><td><select class="tx-inc" data-i="'+i+'"><option '+(t.include==="Yes"?"selected":"")+'>Yes</option><option '+(t.include!=="Yes"?"selected":"")+'>No</option></select></td><td><button class="secondary tx-learn" data-i="'+i+'">Learn Rule</button> <button class="danger tx-del" data-i="'+i+'">Delete</button></td></tr>';}).join("")+
- '</tbody></table></div>';
+ var rows="";
+ for(var i=0;i<data.transactions.length;i++)rows+=safeTransactionRow(data.transactions[i],i);
+ document.getElementById("transactions").innerHTML='<h2>Transactions</h2><div class="toolbar"><input type="file" id="csvFile" accept=".csv"><button id="importCsv">Import CSV</button><button class="secondary" id="applyRules">Re-categorize All</button><button class="danger" id="clearTx">Clear</button></div><div class="notice">RyanOS now skips malformed transaction rows instead of blanking the whole page. Use Settings → Repair Transactions if this page reports skipped rows.</div><div id="importStatus"></div><div class="card"><table><thead><tr><th>Date</th><th>Merchant</th><th>Amount</th><th>Category</th><th>Confidence</th><th>Include?</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
  document.getElementById("importCsv").onclick=function(){
   var f=document.getElementById("csvFile").files[0];if(!f){alert("Choose a CSV file first.");return;}
-  var before=data.transactions.length,r=new FileReader();
+  var r=new FileReader();
   r.onload=function(){
    var rawLines=r.result.replace(/^\uFEFF/,"").split(/\r?\n/);
-   var possibleRows=Math.max(0,rawLines.length-findHeaderRow(rawLines)-1);
    var added=parseCsv(r.result);
    if(added.length===0&&findHeaderRow(rawLines)<0){alert("RyanOS could not find the transaction header row in this CSV.");return;}
    data.transactions=data.transactions.concat(added);
    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
    render();
-   setTimeout(function(){
-    var el=document.getElementById("importStatus");
-    if(el)el.innerHTML='<div class="notice">Imported <strong>'+added.length+'</strong> new transactions. Duplicate or blank rows were skipped automatically.</div>';
-   },0);
   };
   r.readAsText(f);
  };
- document.getElementById("applyRules").onclick=function(){data.transactions.forEach(function(t){var r=categorize(t.description);t.merchant=cleanDescription(t.description);t.category=r.category;t.include=r.include;t.confidence=r.confidence;});save();};
+ document.getElementById("applyRules").onclick=function(){
+  data.transactions=data.transactions.filter(function(t){return t&&typeof t==="object";});
+  data.transactions.forEach(function(t){var r=categorize(t.description||"");t.merchant=cleanDescription(t.description||"");t.category=r.category;t.include=r.include;t.confidence=r.confidence;});
+  save();
+ };
  document.getElementById("clearTx").onclick=function(){if(confirm("Clear all transactions?")){data.transactions=[];save();}};
- document.querySelectorAll(".tx-cat").forEach(function(el){el.onchange=function(){data.transactions[Number(el.dataset.i)].category=el.value;save();};});
- document.querySelectorAll(".tx-inc").forEach(function(el){el.onchange=function(){data.transactions[Number(el.dataset.i)].include=el.value;save();};});
+ document.querySelectorAll(".tx-cat").forEach(function(el){el.onchange=function(){var t=data.transactions[Number(el.dataset.i)];if(t)t.category=el.value;save();};});
+ document.querySelectorAll(".tx-inc").forEach(function(el){el.onchange=function(){var t=data.transactions[Number(el.dataset.i)];if(t)t.include=el.value;save();};});
  document.querySelectorAll(".tx-learn").forEach(function(el){el.onclick=function(){learnRuleFromTransaction(Number(el.dataset.i));};});
  document.querySelectorAll(".tx-del").forEach(function(el){el.onclick=function(){data.transactions.splice(Number(el.dataset.i),1);save();};});
 }
@@ -565,10 +579,36 @@ function renderReports(){
 }
 function renderSettings(){
  var s=data.settings,fields=[["income1","Yellowhead monthly income"],["income2","Province monthly income"],["wcb","WorkSafeBC monthly income"],["investing","Retirement investing"],["bills","Annual-bills reserve"],["chores","Son's chores"],["loc","LOC balance"],["rate","LOC rate (%)"],["months","LOC months"],["investments","Current investments"],["age","Current age"],["retireAge","Retirement age"],["returnRate","Expected return (%)"],["inflation","Inflation (%)"],["retireSpend","Annual retirement spending"],["wifePension","Wife monthly pension"],["wifeAgeDiff","Wife age difference"],["wifeRetireAge","Wife retirement age"],["userCpp65","User CPP at 65"],["userCpp70","User CPP at 70"],["userCppStart","User CPP start age"],["wifeCpp60","Wife CPP at 60"],["wifeCpp65","Wife CPP at 65"],["wifeCpp70","Wife CPP at 70"],["wifeCppStart","Wife CPP start age"],["home","Home value"],["ns1","NS property 1"],["ns2","NS property 2"],["vehicles","Vehicle value"],["boat","Boat value"],["camper","Camper value"],["cash","Cash"],["ccDebt","Credit-card debt"]];
- document.getElementById("settings").innerHTML='<h2>Settings</h2><div class="toolbar"><button id="importBackup">Import backup</button><input id="backupFile" type="file" accept=".json"><button class="danger" id="reset">Reset defaults</button></div><div class="card"><div class="form-grid">'+fields.map(function(f){return'<label>'+f[1]+'<input class="setting-input" data-k="'+f[0]+'" type="number" step="any" value="'+s[f[0]]+'"></label>';}).join("")+"</div></div>";
+ document.getElementById("settings").innerHTML='<h2>Settings</h2><div class="toolbar"><button id="importBackup">Import backup</button><input id="backupFile" type="file" accept=".json"><button class="secondary" id="repairTransactions">Repair Transactions</button><button class="danger" id="reset">Reset defaults</button></div><div class="card"><div class="form-grid">'+fields.map(function(f){return'<label>'+f[1]+'<input class="setting-input" data-k="'+f[0]+'" type="number" step="any" value="'+s[f[0]]+'"></label>';}).join("")+"</div></div>";
  document.querySelectorAll(".setting-input").forEach(function(el){el.onchange=function(){data.settings[el.dataset.k]=Number(el.value);save();};});
  document.getElementById("importBackup").onclick=function(){var f=document.getElementById("backupFile").files[0];if(!f){alert("Choose a JSON backup.");return;}var r=new FileReader();r.onload=function(){data=migrate(JSON.parse(r.result));save();};r.readAsText(f);};
- document.getElementById("reset").onclick=function(){if(confirm("Reset all data?")){data=clone(defaults);save();}};
+ document.getElementById("repairTransactions").onclick=function(){
+ if(!confirm("Repair the transaction database? This preserves settings, goals, budgets and life plans. Malformed transactions will be removed. Learned merchant rules will be preserved where possible."))return;
+ var repaired=[];
+ data.transactions.forEach(function(t){
+  try{
+   if(!t||typeof t!=="object")return;
+   var desc=String(t.description||t.desc||"");
+   if(!desc)return;
+   var r=categorize(desc);
+   repaired.push({
+    date:String(t.date||""),
+    description:desc,
+    merchant:cleanDescription(desc),
+    amount:Number(t.amount||0),
+    category:String(t.category||r.category||"Needs Review"),
+    include:String(t.include||r.include||"Yes"),
+    confidence:String(t.confidence||r.confidence||"")
+   });
+  }catch(err){console.error("Removed malformed transaction",err);}
+ });
+ data.transactions=repaired;
+ data.rules=(Array.isArray(data.rules)?data.rules:[]).filter(function(r){return r&&typeof r==="object"&&String(r.keyword||"").trim();}).map(function(r){return{keyword:String(r.keyword||""),category:String(r.category||"Needs Review"),include:String(r.include||"Yes")};});
+ localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+ alert("Transaction repair complete. Kept "+repaired.length+" valid transactions.");
+ render();
+};
+document.getElementById("reset").onclick=function(){if(confirm("Reset all data?")){data=clone(defaults);save();}};
 }
 function safeRender(id,fn){
  try{fn();}
@@ -590,7 +630,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.5.7-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.5.8-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
