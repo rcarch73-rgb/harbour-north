@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 2.5.9</title>
+<title>RyanOS 2.6.0</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -48,7 +48,7 @@ input[type=range]{width:100%}
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>2.5.9 — Transaction Engine Repair</small></div>
+  <div><h1>RyanOS</h1><small>2.6.0 — Category Dropdowns</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -436,6 +436,19 @@ function parseCsv(text){
  });
  return imported;
 }
+function allCategories(){
+ var set={};
+ data.budget.forEach(function(x){if(x&&x[0])set[String(x[0])]=true;});
+ ["Needs Review","Income","Transfers","Investments","Debt","Bank Fees"].forEach(function(x){set[x]=true;});
+ data.transactions.forEach(function(t){if(t&&t.category)set[String(t.category)]=true;});
+ data.rules.forEach(function(r){if(r&&r.category)set[String(r.category)]=true;});
+ return Object.keys(set).sort(function(a,b){return a.localeCompare(b);});
+}
+function categoryOptions(selected){
+ return allCategories().map(function(cat){
+  return'<option value="'+esc(cat)+'" '+(cat===selected?"selected":"")+'>'+esc(cat)+'</option>';
+ }).join("");
+}
 function safeTransactionRow(t,i){
  try{
   var date=esc(String(t&&t.date||""));
@@ -445,7 +458,7 @@ function safeTransactionRow(t,i){
   var category=esc(String(t&&t.category||"Needs Review"));
   var confidence=esc(String(t&&t.confidence||""));
   var include=String(t&&t.include||"Yes");
-  return'<tr><td>'+date+'</td><td title="'+esc(description)+'">'+merchant+'</td><td>'+amount+'</td><td><input class="tx-cat" data-i="'+i+'" value="'+category+'"></td><td>'+confidence+'</td><td><select class="tx-inc" data-i="'+i+'"><option '+(include==="Yes"?"selected":"")+'>Yes</option><option '+(include!=="Yes"?"selected":"")+'>No</option></select></td><td><button class="secondary tx-learn" data-i="'+i+'">Learn Rule</button> <button class="danger tx-del" data-i="'+i+'">Delete</button></td></tr>';
+  return'<tr><td>'+date+'</td><td title="'+esc(description)+'">'+merchant+'</td><td>'+amount+'</td><td><select class="tx-cat" data-i="'+i+'">'+categoryOptions(String(t&&t.category||"Needs Review"))+'</select></td><td>'+confidence+'</td><td><select class="tx-inc" data-i="'+i+'"><option '+(include==="Yes"?"selected":"")+'>Yes</option><option '+(include!=="Yes"?"selected":"")+'>No</option></select></td><td><button class="secondary tx-learn" data-i="'+i+'">Learn Rule</button> <button class="danger tx-del" data-i="'+i+'">Delete</button></td></tr>';
  }catch(err){
   console.error("Skipping malformed transaction row",i,err);
   return'<tr class="alert-row"><td colspan="7">Skipped malformed transaction #'+(i+1)+'. Use Settings → Repair Transactions.</td></tr>';
@@ -454,7 +467,7 @@ function safeTransactionRow(t,i){
 function renderTransactions(){
  var rows="";
  for(var i=0;i<data.transactions.length;i++)rows+=safeTransactionRow(data.transactions[i],i);
- document.getElementById("transactions").innerHTML='<h2>Transactions</h2><div class="toolbar"><input type="file" id="csvFile" accept=".csv"><button id="importCsv">Import CSV</button><button class="secondary" id="applyRules">Re-categorize All</button><button class="danger" id="clearTx">Clear</button></div><div class="notice">RyanOS now skips malformed transaction rows instead of blanking the whole page. Use Settings → Repair Transactions if this page reports skipped rows.</div><div id="importStatus"></div><div class="card"><table><thead><tr><th>Date</th><th>Merchant</th><th>Amount</th><th>Category</th><th>Confidence</th><th>Include?</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+ document.getElementById("transactions").innerHTML='<h2>Transactions</h2><div class="toolbar"><input type="file" id="csvFile" accept=".csv"><button id="importCsv">Import CSV</button><button class="secondary" id="applyRules">Re-categorize All</button><button class="danger" id="clearTx">Clear</button></div><div class="notice">Use the category dropdown to choose from every existing RyanOS category. Correct a merchant, then tap Learn Rule to remember it for future imports.</div><div id="importStatus"></div><div class="card"><table><thead><tr><th>Date</th><th>Merchant</th><th>Amount</th><th>Category</th><th>Confidence</th><th>Include?</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
  document.getElementById("importCsv").onclick=function(){
   var f=document.getElementById("csvFile").files[0];if(!f){alert("Choose a CSV file first.");return;}
   var r=new FileReader();
@@ -717,7 +730,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.5.9-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.6.0-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
