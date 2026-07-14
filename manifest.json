@@ -1,9 +1,9 @@
 {
-  "name": "RyanOS 2.9.1",
+  "name": "RyanOS 3.0.0",
   "short_name": "RyanOS",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f3f6fa",
   "theme_color": "#17365d",
-  "description": "RyanOS with robust retirement spending estimation and depletion diagnostics."
+  "description": "RyanOS with a rebuilt month-by-month retirement calculation engine."
 }
