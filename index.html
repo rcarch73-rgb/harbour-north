@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 2.6.0</title>
+<title>RyanOS 2.6.1</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -48,7 +48,7 @@ input[type=range]{width:100%}
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>2.6.0 — Category Dropdowns</small></div>
+  <div><h1>RyanOS</h1><small>2.6.1 — Retirement Assumptions</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -508,10 +508,32 @@ function projection(age){
  var income=pension+wcb+cpp+wcpp+inv*.04;return{inv:inv,spend:spend,income:income,gap:income-spend};
 }
 function renderRetirement(){
+ var s=data.settings;
  var ages=[55,56,57,58,59,60,62,65];
- document.getElementById("retirement").innerHTML='<h2>Retirement</h2><div class="notice">Planning model only. Update assumptions in Settings.</div><div class="card"><table><thead><tr><th>Age</th><th>Investments</th><th>Spending</th><th>Income</th><th>Surplus / Gap</th></tr></thead><tbody>'+
- ages.map(function(a){var x=projection(a);return'<tr><td>'+a+'</td><td>'+money(x.inv)+'</td><td>'+money(x.spend)+'</td><td>'+money(x.income)+'</td><td class="'+(x.gap>=0?"good":"bad")+'">'+money(x.gap)+'</td></tr>';}).join("")+
- '</tbody></table></div>';
+ var selected=projection(s.retireAge);
+ var wifeAgeAtRetirement=s.retireAge-s.wifeAgeDiff;
+ var userCppAmount=s.userCppStart===70?s.userCpp70:s.userCpp65;
+ var wifeCppAmount=s.wifeCppStart===60?s.wifeCpp60:(s.wifeCppStart===70?s.wifeCpp70:s.wifeCpp65);
+ document.getElementById("retirement").innerHTML=
+ '<h2>Retirement</h2>'+
+ '<div class="notice"><strong>Based on your current assumptions in Settings.</strong> This is a planning estimate, not a guarantee.</div>'+
+ '<div class="grid"><div class="card"><h3>Target retirement age</h3><div class="metric">'+s.retireAge+'</div></div>'+
+ '<div class="card"><h3>Projected investments</h3><div class="metric">'+money(selected.inv)+'</div></div>'+
+ '<div class="card"><h3>Inflation-adjusted spending</h3><div class="metric">'+money(selected.spend)+'</div></div>'+
+ '<div class="card"><h3>Estimated annual result</h3><div class="metric '+(selected.gap>=0?"good":"bad")+'">'+money(selected.gap)+'</div></div></div>'+
+ '<div class="card" style="margin-top:12px"><h3>Assumptions currently being used</h3><table><tbody>'+
+ '<tr><td>Current age</td><td>'+s.age+'</td><td>Current investments</td><td>'+money(s.investments)+'</td></tr>'+
+ '<tr><td>Monthly investment contribution</td><td>'+money(s.investing)+'</td><td>Expected return</td><td>'+s.returnRate.toFixed(1)+'%</td></tr>'+
+ '<tr><td>Annual retirement spending</td><td>'+money(s.retireSpend)+'</td><td>Inflation</td><td>'+s.inflation.toFixed(1)+'%</td></tr>'+
+ '<tr><td>Wife pension</td><td>'+money(s.wifePension)+'/month</td><td>Wife age at your retirement</td><td>'+wifeAgeAtRetirement+'</td></tr>'+
+ '<tr><td>Your CPP start age</td><td>'+s.userCppStart+'</td><td>Your CPP estimate</td><td>'+money(userCppAmount)+'/month</td></tr>'+
+ '<tr><td>Wife CPP start age</td><td>'+s.wifeCppStart+'</td><td>Wife CPP estimate</td><td>'+money(wifeCppAmount)+'/month</td></tr>'+
+ '<tr><td>WorkSafeBC income</td><td>'+money(s.wcb)+'/month to age 65</td><td>LOC balance</td><td>'+money(s.loc)+'</td></tr>'+
+ '</tbody></table></div>'+
+ '<div class="card" style="margin-top:12px"><h3>Retirement age comparison</h3><table><thead><tr><th>Age</th><th>Projected investments</th><th>Inflation-adjusted spending</th><th>Estimated income</th><th>Surplus / Gap</th></tr></thead><tbody>'+
+ ages.map(function(a){var x=projection(a);return'<tr '+(a===s.retireAge?'style="font-weight:700;background:#edf3f9"':'')+'><td>'+a+'</td><td>'+money(x.inv)+'</td><td>'+money(x.spend)+'</td><td>'+money(x.income)+'</td><td class="'+(x.gap>=0?"good":"bad")+'">'+money(x.gap)+'</td></tr>';}).join("")+
+ '</tbody></table></div>'+
+ '<div class="notice">Change any assumption in Settings and this page recalculates automatically.</div>';
 }
 function renderNetWorth(){
  var t=totals(),s=data.settings,assets=[["Primary home",s.home],["NS property 1",s.ns1],["NS property 2",s.ns2],["Investments",s.investments],["Cash",s.cash],["Vehicles",s.vehicles],["Boat",s.boat],["Camper",s.camper]];
@@ -730,7 +752,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.6.0-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.6.1-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
