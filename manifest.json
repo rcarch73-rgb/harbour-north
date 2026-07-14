@@ -1,9 +1,9 @@
 {
-  "name": "RyanOS 2.5.8",
+  "name": "RyanOS 2.5.9",
   "short_name": "RyanOS",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f3f6fa",
   "theme_color": "#17365d",
-  "description": "RyanOS transaction data repair and financial health score."
+  "description": "RyanOS transaction engine repair."
 }

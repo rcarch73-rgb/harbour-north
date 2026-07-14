@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 2.5.8</title>
+<title>RyanOS 2.5.9</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -48,7 +48,7 @@ input[type=range]{width:100%}
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>2.5.8 — Transaction Data Repair</small></div>
+  <div><h1>RyanOS</h1><small>2.5.9 — Transaction Engine Repair</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -295,6 +295,93 @@ function renderMoney(){
   renderMoney();
  };
  document.querySelectorAll(".budget-input").forEach(function(el){el.addEventListener("change",function(){data.budget[Number(el.dataset.i)][1]=Number(el.value);save();});});
+}
+
+var smartRules=[
+ ["SAFEWAY","Groceries"],["SAVE ON FOODS","Groceries"],["SUPERSTORE","Groceries"],["WALMART","Groceries"],["COSTCO","Groceries"],
+ ["TIM HORTON","Dining"],["MCDONALD","Dining"],["DAIRY QUEEN","Dining"],["TACO TIME","Dining"],["PIZZA HUT","Dining"],["STARBUCKS","Dining"],["FAMILY THAI","Dining"],
+ ["SHELL","Transportation"],["PETRO-CANADA","Transportation"],["ESSO","Transportation"],["CHEVRON","Transportation"],["CENTEX","Transportation"],
+ ["HOME DEPOT","Home & Garden"],["CANADIAN TIRE","Home & Garden"],["TOP CROP","Home & Garden"],
+ ["ROGERS","Utilities"],["SHAW","Utilities"],["FORTIS","Utilities"],["STARLINK","Utilities"],
+ ["NETFLIX","Subscriptions"],["SPOTIFY","Subscriptions"],["DISNEY","Subscriptions"],["SIRIUSXM","Subscriptions"],["APPLE.COM/BILL","Subscriptions"],
+ ["AMAZON","Shopping & Personal"],["AMZN","Shopping & Personal"],["WINNERS","Shopping & Personal"],["STAPLES","Shopping & Personal"],["SEPHORA","Shopping & Personal"],["VAGARO","Shopping & Personal"],
+ ["BC LIQUOR","Alcohol"],["LIQUOR","Alcohol"],
+ ["PHARMASAVE","Medical"],["SDM ","Medical"],
+ ["PET VALU","Pets"],["VETERINARY","Pets"],
+ ["WESTJET","Travel"],["AIR TRANSAT","Travel"],["RYANAIR","Travel"],["BOOKING.COM","Travel"],["EXPEDIA","Travel"],["HERTZ","Travel"],
+ ["MARINE","Boat & Outdoor"],["DEFENDER","Boat & Outdoor"],["DIRECT SAILS","Boat & Outdoor"],
+ ["COURSERA","Education"]
+];
+function cleanDescription(desc){
+ var d=String(desc||"").toUpperCase().trim();
+ d=d.replace(/^\[[A-Z]{2}\]\s*/,"");
+ d=d.replace(/^ONLINE PURCHASE\s+[A-Z0-9]+/,"");
+ d=d.replace(/^RECURRING PYMNT\s+[A-Z0-9]+/,"");
+ d=d.replace(/\s+/g," ").trim();
+ return d;
+}
+function specialCategory(desc){
+ var d=cleanDescription(desc);
+ if(/YELLOWHEAD|PROVINCE OF B\.?C|WCB OF BC|CANADA RIT|MOBILE CHEQUE DEPOSIT|BMO INV INC/.test(d))
+  return{category:"Income",include:"No",confidence:"high"};
+ if(/EDWARD JONES|ASSOMPTION VIE|SUN LIFE|CGHLI/.test(d))
+  return{category:"Investments",include:"No",confidence:"high"};
+ if(/TRSF FROM\/DE ACCT|^\s*TF\s+\d|INTERAC ETRNSFR|CREDIT CARD PAYMENT|MASTERCARD PAYMENT|BMO MC/.test(d))
+  return{category:"Transfers",include:"No",confidence:"high"};
+ if(/PLAN FEE|O\/D PROTECTION|CASH ADVANCE FEE|INTEREST ADVANCES/.test(d))
+  return{category:"Bank Fees",include:"Yes",confidence:"high"};
+ return null;
+}
+function splitCsvLine(line){
+ var out=[],cur="",quoted=false;
+ for(var i=0;i<line.length;i++){
+  var ch=line[i];
+  if(ch==='"'){
+   if(quoted&&line[i+1]==='"'){cur+='"';i++;}
+   else quoted=!quoted;
+  }else if(ch===","&&!quoted){out.push(cur);cur="";}
+  else cur+=ch;
+ }
+ out.push(cur);
+ return out;
+}
+function findHeaderRow(lines){
+ for(var i=0;i<Math.min(lines.length,25);i++){
+  var cols=splitCsvLine(lines[i]).map(function(x){return String(x).trim().toLowerCase();});
+  var hasDate=cols.some(function(h){return h.indexOf("date")>=0;});
+  var hasAmount=cols.some(function(h){return h.indexOf("amount")>=0||h.indexOf("debit")>=0||h.indexOf("credit")>=0;});
+  var hasDesc=cols.some(function(h){return h.indexOf("description")>=0||h.indexOf("merchant")>=0||h.indexOf("details")>=0||h.indexOf("payee")>=0;});
+  if(hasDate&&hasAmount&&hasDesc)return i;
+ }
+ return -1;
+}
+function parseAmount(v){
+ var s=String(v||"").replace(/[$,\s]/g,"");
+ if(s.indexOf("(")>=0&&s.indexOf(")")>=0)s="-"+s.replace(/[()]/g,"");
+ var n=Number(s);
+ return isNaN(n)?0:n;
+}
+function normalizeDate(v){
+ var s=String(v||"").trim();
+ if(/^\d{8}$/.test(s))return s.slice(0,4)+"-"+s.slice(4,6)+"-"+s.slice(6,8);
+ return s;
+}
+function txKey(t){
+ return [String(t.date||"").trim(),String(t.description||"").trim().toUpperCase(),Number(t.amount||0).toFixed(2)].join("|");
+}
+function learnRuleFromTransaction(i){
+ var t=data.transactions[i];
+ if(!t){alert("Transaction not found.");return;}
+ var keyword=prompt("Merchant keyword to remember:",t.merchant||t.description||"");
+ if(!keyword)return;
+ var found=data.rules.find(function(r){return String(r.keyword||"").toUpperCase()===keyword.toUpperCase();});
+ if(found){
+  found.category=t.category||"Needs Review";
+  found.include=t.include||"Yes";
+ }else{
+  data.rules.push({keyword:keyword,category:t.category||"Needs Review",include:t.include||"Yes"});
+ }
+ save();
 }
 function categorize(desc){
  var special=specialCategory(desc);if(special)return special;
@@ -630,7 +717,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.5.8-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.5.9-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
