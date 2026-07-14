@@ -1,9 +1,9 @@
 {
-  "name": "RyanOS 2.4",
+  "name": "RyanOS 2.5",
   "short_name": "RyanOS",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f3f6fa",
   "theme_color": "#17365d",
-  "description": "RyanOS reports, spending trends and goal optimizer."
+  "description": "RyanOS with repaired BMO transaction categorization."
 }
