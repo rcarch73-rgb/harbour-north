@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 2.5</title>
+<title>RyanOS 2.5.1</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -48,7 +48,7 @@ input[type=range]{width:100%}
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>2.5 — Categorization Repair</small></div>
+  <div><h1>RyanOS</h1><small>2.5.1 — Categorization Repair</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -140,15 +140,6 @@ var data=migrate(JSON.parse(localStorage.getItem(STORAGE_KEY)||localStorage.getI
 if(!data.review)data.review={month:new Date().toISOString().slice(0,7),notes:"",lastBackup:""};
 if(!Array.isArray(data.netWorthHistory))data.netWorthHistory=[];
 if(data.optimizerExtra===undefined)data.optimizerExtra=0;
-if(!data.categorizationVersion||data.categorizationVersion<25){
- data.transactions.forEach(function(t){
-  var r=categorize(t.description);
-  t.merchant=cleanDescription(t.description);
-  t.category=r.category;t.include=r.include;t.confidence=r.confidence;
- });
- data.categorizationVersion=25;
- localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
-}
 
 
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));render();}
@@ -511,7 +502,19 @@ function renderSettings(){
  document.getElementById("reset").onclick=function(){if(confirm("Reset all data?")){data=clone(defaults);save();}};
 }
 function render(){renderHome();renderMoney();renderTransactions();renderGoals();renderRetirement();renderNetWorth();renderLife();renderReview();renderReports();renderSettings();}
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.5-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.5.1-backup.json";a.click();};
+if(!data.categorizationVersion||data.categorizationVersion<25){
+ data.transactions.forEach(function(t){
+  var r=categorize(t.description);
+  t.merchant=cleanDescription(t.description);
+  t.category=r.category;
+  t.include=r.include;
+  t.confidence=r.confidence;
+ });
+ data.categorizationVersion=25;
+ localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+}
+
 nav();render();
 })();
 </script>
