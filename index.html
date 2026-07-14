@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 2.7.1</title>
+<title>RyanOS 2.7.2</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -48,7 +48,7 @@ input[type=range]{width:100%}
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>2.7.1 — Conservative Balance Fix</small></div>
+  <div><h1>RyanOS</h1><small>2.7.2 — Editable Retirement Contributions</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -687,11 +687,13 @@ function renderRetirement(){
  document.getElementById("retirement").innerHTML=
  '<h2>Retirement</h2>'+
  '<div class="notice"><strong>Ending-balance calculation corrected.</strong> The model no longer reinvests surplus employment or pension income after retirement, uses exactly the correct number of pre-retirement growth years, and shows ending balances in both future dollars and today’s purchasing power.</div>'+
- '<div class="card" style="margin-bottom:12px"><h3>Scenario ages</h3><div class="form-grid">'+
+ '<div class="card" style="margin-bottom:12px"><h3>Scenario ages and investment contributions</h3><div class="form-grid">'+
  '<label>Your age<input id="scenarioUserAge" type="number" min="'+s.retireAge+'" max="'+(s.retirementEndAge-1)+'" step="1" value="'+scenarioUserAge+'"></label>'+
  '<label>Your wife’s age<input id="scenarioWifeAge" type="number" min="35" max="'+s.retirementEndAge+'" step="1" value="'+scenarioWifeAge+'"></label>'+
  '<label>Age difference<input value="'+wifeDiff+' years" disabled></label>'+
- '</div></div>'+
+ '<label>Monthly investment contribution<input id="retirementContributionAmount" type="number" min="0" step="50" value="'+Number(s.investing||0)+'"></label>'+
+ '<label>Contributions stop at your age<input id="retirementContributionStopAge" type="number" min="'+s.age+'" max="'+s.retirementEndAge+'" step="1" value="'+Number(s.retireAge||s.age)+'"></label>'+
+ '</div><div class="notice">Changing the contribution stop age also changes your retirement age throughout the model.</div></div>'+
  '<div class="grid"><div class="card"><h3>Expected balance at '+s.retirementEndAge+'</h3><div class="metric">'+money(eSum.endBalance)+'</div><p>'+money(eSum.realEndBalance)+' in today’s dollars</p></div>'+
  '<div class="card"><h3>Conservative balance at '+s.retirementEndAge+'</h3><div class="metric '+(cSum.depletedAge?"bad":"good")+'">'+money(cSum.endBalance)+'</div><p>'+(cSum.depletedAge?'Depleted during age '+cSum.depletedAge:money(cSum.realEndBalance)+' in today’s dollars')+'</p></div>'+
  '<div class="card"><h3>Expected scenario</h3><div class="metric '+(eSum.depletedAge?"bad":"good")+'">'+(eSum.depletedAge?'Age '+eSum.depletedAge:'Funded')+'</div><p>Through age '+s.retirementEndAge+'</p></div>'+
@@ -721,7 +723,7 @@ function renderRetirement(){
  '</tbody></table></div></div>'+
  '<div class="card" style="margin-top:12px"><h3>Model assumptions</h3><table><tbody>'+
  '<tr><td>Balance at retirement</td><td>'+money(balanceAtRetirement(s.returnRate))+'</td><td>Annual spending</td><td>'+money(selectedRetirementSpending())+' from Money page</td></tr>'+
- '<tr><td>Investment contributions</td><td>'+money(s.investing)+'/month until age '+s.retireAge+'</td><td>Wife take-home income</td><td>'+money(s.wifeEmploymentNetAnnual)+'/year until your age '+s.wifeWorkUntilUserAge+'</td></tr>'+
+ '<tr><td>Investment contributions</td><td>'+money(s.investing)+'/month until age '+s.retireAge+' (editable above)</td><td>Wife take-home income</td><td>'+money(s.wifeEmploymentNetAnnual)+'/year until your age '+s.wifeWorkUntilUserAge+'</td></tr>'+
  '<tr><td>Inflation</td><td>'+Number(s.inflation).toFixed(1)+'%</td><td>Effective retirement tax</td><td>'+Number(s.retirementTaxRate).toFixed(1)+'%</td></tr>'+
  '<tr><td>Inheritance</td><td>'+money(s.inheritanceAmount)+' at age '+s.inheritanceAge+'</td><td>Special expense</td><td>'+money(s.oneTimeExpenseAmount)+' at age '+s.oneTimeExpenseAge+'</td></tr>'+
  '</tbody></table></div>'+
@@ -736,6 +738,19 @@ function renderRetirement(){
   data.settings.retirementScenarioWifeAge=Math.max(35,Number(this.value||scenarioUserAge-s.wifeAgeDiff));
   localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
   renderRetirement();
+ };
+ document.getElementById("retirementContributionAmount").onchange=function(){
+  data.settings.investing=Math.max(0,Number(this.value||0));
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+  render();
+ };
+ document.getElementById("retirementContributionStopAge").onchange=function(){
+  var newAge=Math.max(Number(s.age),Math.min(Number(this.value||s.retireAge),Number(s.retirementEndAge)));
+  data.settings.retireAge=newAge;
+  if(Number(data.settings.retirementScenarioUserAge)<newAge)data.settings.retirementScenarioUserAge=newAge;
+  data.settings.retirementScenarioWifeAge=Number(data.settings.retirementScenarioUserAge)-Number(data.settings.wifeAgeDiff||0);
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+  render();
  };
 }
 function renderNetWorth(){
@@ -1007,7 +1022,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.7.1-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.7.2-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
