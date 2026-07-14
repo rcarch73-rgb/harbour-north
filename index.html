@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 2.6.4</title>
+<title>RyanOS 2.6.5</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -48,7 +48,7 @@ input[type=range]{width:100%}
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>2.6.4 — Goal Funding Save Fix</small></div>
+  <div><h1>RyanOS</h1><small>2.6.5 — OAS & Spouse Employment</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -75,7 +75,7 @@ var defaults={
  settings:{
   income1:5428.78,income2:5147.32,wcb:1352.34,investing:2600,bills:1200,chores:173,
   loc:23000,rate:5.19,months:24,investments:520000,age:52,retireAge:58,returnRate:7,
-  inflation:2.5,retireSpend:72000,wifePension:3200,wifeAgeDiff:7,wifeRetireAge:55,
+  inflation:2.5,retireSpend:72000,wifePension:3200,wifeAgeDiff:7,wifeRetireAge:55,wifeEmploymentAnnual:110000,wifeWorkUntilUserAge:62,wifeEmploymentGrowth:0,userOasMonthly:751.97,userOasStart:65,wifeOasMonthly:751.97,wifeOasStart:65,
   userCpp65:1308.21,userCpp70:1857.66,userCppStart:70,wifeCpp60:878,wifeCpp65:1372,
   wifeCpp70:1948,wifeCppStart:65,home:650000,ns1:100000,ns2:40000,vehicles:25000,
   boat:18000,camper:15000,cash:0,ccDebt:0
@@ -165,6 +165,18 @@ data.rules=data.rules.filter(function(r){return r&&typeof r==="object";}).map(fu
 });
 if(!Array.isArray(data.budget))data.budget=clone(defaults.budget);
 if(!Array.isArray(data.goals))data.goals=clone(defaults.goals);
+[
+ ["wifeEmploymentAnnual",110000],
+ ["wifeWorkUntilUserAge",62],
+ ["wifeEmploymentGrowth",0],
+ ["userOasMonthly",751.97],
+ ["userOasStart",65],
+ ["wifeOasMonthly",751.97],
+ ["wifeOasStart",65]
+].forEach(function(x){
+ if(data.settings[x[0]]===undefined||!isFinite(Number(data.settings[x[0]])))data.settings[x[0]]=x[1];
+});
+
 var locGoalInit=data.goals.find(function(g){return String(g&&g.name||"").toUpperCase()==="LOC";});
 if(locGoalInit&&(!isFinite(Number(locGoalInit.monthly))||Number(locGoalInit.monthly)<=0)){
  locGoalInit.monthly=Math.round(pmt(data.settings.rate,data.settings.months,data.settings.loc)*100)/100;
@@ -507,21 +519,38 @@ function renderGoals(){
  document.querySelectorAll(".g-del").forEach(function(el){el.onclick=function(){data.goals.splice(Number(el.dataset.i),1);save();};});
 }
 function projection(age){
- var s=data.settings,y=age-s.age,inv=s.investments*Math.pow(1+s.returnRate/100,y)+s.investing*12*((Math.pow(1+s.returnRate/100,y)-1)/(s.returnRate/100));
- var spend=s.retireSpend*Math.pow(1+s.inflation/100,y),wifeAge=age-s.wifeAgeDiff,pension=wifeAge>=s.wifeRetireAge?s.wifePension*12:0,wcb=age<65?s.wcb*12:0;
- var cpp=age>=s.userCppStart?(s.userCppStart===70?s.userCpp70:s.userCpp65)*12:0,wcpp=wifeAge>=s.wifeCppStart?(s.wifeCppStart===60?s.wifeCpp60:s.wifeCppStart===70?s.wifeCpp70:s.wifeCpp65)*12:0;
- var income=pension+wcb+cpp+wcpp+inv*.04;return{inv:inv,spend:spend,income:income,gap:income-spend};
+ var s=data.settings,y=age-s.age;
+ var growth=s.returnRate/100;
+ var inv=s.investments*Math.pow(1+growth,y)+(growth===0?s.investing*12*y:s.investing*12*((Math.pow(1+growth,y)-1)/growth));
+ var spend=s.retireSpend*Math.pow(1+s.inflation/100,y);
+ var wifeAge=age-s.wifeAgeDiff;
+
+ var wifeWorking=age<s.wifeWorkUntilUserAge;
+ var wifeEmployment=wifeWorking?s.wifeEmploymentAnnual*Math.pow(1+s.wifeEmploymentGrowth/100,Math.max(0,y)):0;
+ var pension=(!wifeWorking&&wifeAge>=s.wifeRetireAge)?s.wifePension*12:0;
+ var wcb=age<65?s.wcb*12:0;
+ var cpp=age>=s.userCppStart?(s.userCppStart===70?s.userCpp70:s.userCpp65)*12:0;
+ var wcpp=wifeAge>=s.wifeCppStart?(s.wifeCppStart===60?s.wifeCpp60:s.wifeCppStart===70?s.wifeCpp70:s.wifeCpp65)*12:0;
+ var oas=age>=s.userOasStart?s.userOasMonthly*12:0;
+ var woas=wifeAge>=s.wifeOasStart?s.wifeOasMonthly*12:0;
+ var investmentDraw=inv*.04;
+ var income=wifeEmployment+pension+wcb+cpp+wcpp+oas+woas+investmentDraw;
+ return{
+  age:age,wifeAge:wifeAge,inv:inv,spend:spend,income:income,gap:income-spend,
+  wifeEmployment:wifeEmployment,pension:pension,wcb:wcb,cpp:cpp,wcpp:wcpp,
+  oas:oas,woas:woas,investmentDraw:investmentDraw
+ };
 }
 function renderRetirement(){
  var s=data.settings;
- var ages=[55,56,57,58,59,60,62,65];
+ var ages=[55,56,57,58,59,60,62,65,67,70];
  var selected=projection(s.retireAge);
  var wifeAgeAtRetirement=s.retireAge-s.wifeAgeDiff;
  var userCppAmount=s.userCppStart===70?s.userCpp70:s.userCpp65;
  var wifeCppAmount=s.wifeCppStart===60?s.wifeCpp60:(s.wifeCppStart===70?s.wifeCpp70:s.wifeCpp65);
  document.getElementById("retirement").innerHTML=
  '<h2>Retirement</h2>'+
- '<div class="notice"><strong>Based on your current assumptions in Settings.</strong> This is a planning estimate, not a guarantee.</div>'+
+ '<div class="notice"><strong>Based on your current assumptions in Settings.</strong> Your wife’s employment income is included until you reach age '+s.wifeWorkUntilUserAge+'. OAS begins at the selected OAS start ages. This is a planning estimate and does not calculate income tax or OAS recovery tax.</div>'+
  '<div class="grid"><div class="card"><h3>Target retirement age</h3><div class="metric">'+s.retireAge+'</div></div>'+
  '<div class="card"><h3>Projected investments</h3><div class="metric">'+money(selected.inv)+'</div></div>'+
  '<div class="card"><h3>Inflation-adjusted spending</h3><div class="metric">'+money(selected.spend)+'</div></div>'+
@@ -530,15 +559,28 @@ function renderRetirement(){
  '<tr><td>Current age</td><td>'+s.age+'</td><td>Current investments</td><td>'+money(s.investments)+'</td></tr>'+
  '<tr><td>Monthly investment contribution</td><td>'+money(s.investing)+'</td><td>Expected return</td><td>'+s.returnRate.toFixed(1)+'%</td></tr>'+
  '<tr><td>Annual retirement spending</td><td>'+money(s.retireSpend)+'</td><td>Inflation</td><td>'+s.inflation.toFixed(1)+'%</td></tr>'+
+ '<tr><td>Wife annual employment income</td><td>'+money(s.wifeEmploymentAnnual)+'</td><td>Wife works until your age</td><td>'+s.wifeWorkUntilUserAge+'</td></tr>'+
  '<tr><td>Wife pension</td><td>'+money(s.wifePension)+'/month</td><td>Wife age at your retirement</td><td>'+wifeAgeAtRetirement+'</td></tr>'+
  '<tr><td>Your CPP start age</td><td>'+s.userCppStart+'</td><td>Your CPP estimate</td><td>'+money(userCppAmount)+'/month</td></tr>'+
  '<tr><td>Wife CPP start age</td><td>'+s.wifeCppStart+'</td><td>Wife CPP estimate</td><td>'+money(wifeCppAmount)+'/month</td></tr>'+
+ '<tr><td>Your OAS</td><td>'+money(s.userOasMonthly)+'/month at '+s.userOasStart+'</td><td>Wife OAS</td><td>'+money(s.wifeOasMonthly)+'/month at '+s.wifeOasStart+'</td></tr>'+
  '<tr><td>WorkSafeBC income</td><td>'+money(s.wcb)+'/month to age 65</td><td>LOC balance</td><td>'+money(s.loc)+'</td></tr>'+
  '</tbody></table></div>'+
- '<div class="card" style="margin-top:12px"><h3>Retirement age comparison</h3><table><thead><tr><th>Age</th><th>Projected investments</th><th>Inflation-adjusted spending</th><th>Estimated income</th><th>Surplus / Gap</th></tr></thead><tbody>'+
- ages.map(function(a){var x=projection(a);return'<tr '+(a===s.retireAge?'style="font-weight:700;background:#edf3f9"':'')+'><td>'+a+'</td><td>'+money(x.inv)+'</td><td>'+money(x.spend)+'</td><td>'+money(x.income)+'</td><td class="'+(x.gap>=0?"good":"bad")+'">'+money(x.gap)+'</td></tr>';}).join("")+
+ '<div class="card" style="margin-top:12px"><h3>Income breakdown at target retirement age</h3><table><thead><tr><th>Source</th><th>Annual amount</th></tr></thead><tbody>'+
+ '<tr><td>Wife employment</td><td>'+money(selected.wifeEmployment)+'</td></tr>'+
+ '<tr><td>Wife pension</td><td>'+money(selected.pension)+'</td></tr>'+
+ '<tr><td>WorkSafeBC</td><td>'+money(selected.wcb)+'</td></tr>'+
+ '<tr><td>Your CPP</td><td>'+money(selected.cpp)+'</td></tr>'+
+ '<tr><td>Wife CPP</td><td>'+money(selected.wcpp)+'</td></tr>'+
+ '<tr><td>Your OAS</td><td>'+money(selected.oas)+'</td></tr>'+
+ '<tr><td>Wife OAS</td><td>'+money(selected.woas)+'</td></tr>'+
+ '<tr><td>4% investment draw</td><td>'+money(selected.investmentDraw)+'</td></tr>'+
+ '<tr><td><strong>Total estimated income</strong></td><td><strong>'+money(selected.income)+'</strong></td></tr>'+
  '</tbody></table></div>'+
- '<div class="notice">Change any assumption in Settings and this page recalculates automatically.</div>';
+ '<div class="card" style="margin-top:12px"><h3>Retirement age comparison</h3><table><thead><tr><th>Your age</th><th>Wife age</th><th>Projected investments</th><th>Spending</th><th>Estimated income</th><th>Surplus / Gap</th></tr></thead><tbody>'+
+ ages.map(function(a){var x=projection(a);return'<tr '+(a===s.retireAge?'style="font-weight:700;background:#edf3f9"':'')+'><td>'+a+'</td><td>'+x.wifeAge+'</td><td>'+money(x.inv)+'</td><td>'+money(x.spend)+'</td><td>'+money(x.income)+'</td><td class="'+(x.gap>=0?"good":"bad")+'">'+money(x.gap)+'</td></tr>';}).join("")+
+ '</tbody></table></div>'+
+ '<div class="notice">OAS is shown at the current monthly assumption. The July–September 2026 maximum OAS at age 65 is $751.97 per month. Actual OAS depends on residency and income and may be reduced by recovery tax.</div>';
 }
 function renderNetWorth(){
  var t=totals(),s=data.settings,assets=[["Primary home",s.home],["NS property 1",s.ns1],["NS property 2",s.ns2],["Investments",s.investments],["Cash",s.cash],["Vehicles",s.vehicles],["Boat",s.boat],["Camper",s.camper]];
@@ -757,7 +799,7 @@ function renderReports(){
  };
 }
 function renderSettings(){
- var s=data.settings,fields=[["income1","Yellowhead monthly income"],["income2","Province monthly income"],["wcb","WorkSafeBC monthly income"],["investing","Retirement investing"],["bills","Annual-bills reserve"],["chores","Son's chores"],["loc","LOC balance"],["rate","LOC rate (%)"],["months","LOC months"],["investments","Current investments"],["age","Current age"],["retireAge","Retirement age"],["returnRate","Expected return (%)"],["inflation","Inflation (%)"],["retireSpend","Annual retirement spending"],["wifePension","Wife monthly pension"],["wifeAgeDiff","Wife age difference"],["wifeRetireAge","Wife retirement age"],["userCpp65","User CPP at 65"],["userCpp70","User CPP at 70"],["userCppStart","User CPP start age"],["wifeCpp60","Wife CPP at 60"],["wifeCpp65","Wife CPP at 65"],["wifeCpp70","Wife CPP at 70"],["wifeCppStart","Wife CPP start age"],["home","Home value"],["ns1","NS property 1"],["ns2","NS property 2"],["vehicles","Vehicle value"],["boat","Boat value"],["camper","Camper value"],["cash","Cash"],["ccDebt","Credit-card debt"]];
+ var s=data.settings,fields=[["income1","Yellowhead monthly income"],["income2","Province monthly income"],["wcb","WorkSafeBC monthly income"],["investing","Retirement investing"],["bills","Annual-bills reserve"],["chores","Son's chores"],["loc","LOC balance"],["rate","LOC rate (%)"],["months","LOC months"],["investments","Current investments"],["age","Current age"],["retireAge","Retirement age"],["returnRate","Expected return (%)"],["inflation","Inflation (%)"],["retireSpend","Annual retirement spending"],["wifePension","Wife monthly pension"],["wifeAgeDiff","Wife age difference"],["wifeRetireAge","Wife retirement age"],["wifeEmploymentAnnual","Wife annual employment income"],["wifeWorkUntilUserAge","Wife works until your age"],["wifeEmploymentGrowth","Wife salary growth (%)"],["userOasMonthly","Your monthly OAS"],["userOasStart","Your OAS start age"],["wifeOasMonthly","Wife monthly OAS"],["wifeOasStart","Wife OAS start age"],["userCpp65","User CPP at 65"],["userCpp70","User CPP at 70"],["userCppStart","User CPP start age"],["wifeCpp60","Wife CPP at 60"],["wifeCpp65","Wife CPP at 65"],["wifeCpp70","Wife CPP at 70"],["wifeCppStart","Wife CPP start age"],["home","Home value"],["ns1","NS property 1"],["ns2","NS property 2"],["vehicles","Vehicle value"],["boat","Boat value"],["camper","Camper value"],["cash","Cash"],["ccDebt","Credit-card debt"]];
  document.getElementById("settings").innerHTML='<h2>Settings</h2><div class="toolbar"><button id="importBackup">Import backup</button><input id="backupFile" type="file" accept=".json"><button class="secondary" id="repairTransactions">Repair Transactions</button><button class="danger" id="reset">Reset defaults</button></div><div class="card"><div class="form-grid">'+fields.map(function(f){return'<label>'+f[1]+'<input class="setting-input" data-k="'+f[0]+'" type="number" step="any" value="'+s[f[0]]+'"></label>';}).join("")+"</div></div>";
  document.querySelectorAll(".setting-input").forEach(function(el){el.onchange=function(){data.settings[el.dataset.k]=Number(el.value);save();};});
  document.getElementById("importBackup").onclick=function(){var f=document.getElementById("backupFile").files[0];if(!f){alert("Choose a JSON backup.");return;}var r=new FileReader();r.onload=function(){data=migrate(JSON.parse(r.result));save();};r.readAsText(f);};
@@ -809,7 +851,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.6.4-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.6.5-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
