@@ -1,9 +1,9 @@
 {
-  "name": "RyanOS 3.1.0",
+  "name": "RyanOS 3.2.0",
   "short_name": "RyanOS",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f3f6fa",
   "theme_color": "#17365d",
-  "description": "RyanOS with retirement spending phases and a full annual income audit."
+  "description": "RyanOS with retirement stress testing."
 }
