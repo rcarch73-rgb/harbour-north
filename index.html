@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 2.5.6</title>
+<title>RyanOS 2.5.7</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -48,7 +48,7 @@ input[type=range]{width:100%}
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>2.5.6 — Startup Data Repair</small></div>
+  <div><h1>RyanOS</h1><small>2.5.7 — Financial Health Score</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -191,16 +191,76 @@ function nav(){
  document.getElementById("nav").innerHTML=items.map(function(x,i){return'<button data-page="'+x[0]+'" class="'+(i===0?"active":"")+'">'+x[1]+"</button>";}).join("");
  document.querySelectorAll("#nav button").forEach(function(b){b.addEventListener("click",function(){document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});document.querySelectorAll("#nav button").forEach(function(x){x.classList.remove("active");});document.getElementById(b.dataset.page).classList.add("active");b.classList.add("active");});});
 }
-function healthScore(){
- var t=totals(),score=50;
- if(t.surplus>=0)score+=20;else score-=10;
- if(data.settings.loc<23000)score+=10;
- if(actualSpend()<=t.spending)score+=10;
- if(data.settings.investments>=520000)score+=10;
- return Math.max(0,Math.min(100,score));
+function financialHealth(){
+ var t=totals();
+ var month=data.reportMonth||data.review.month||new Date().toISOString().slice(0,7);
+ var monthTx=monthTransactions(month);
+ var monthSpend=monthTx.filter(function(x){return x.include==="Yes";}).reduce(function(a,x){return a+Math.abs(Number(x.amount||0));},0);
+ var budgetPoints;
+ var budgetNote;
+ if(monthTx.length===0){
+  budgetPoints=15;
+  budgetNote="No transactions imported for "+month+"; neutral score used.";
+ }else{
+  var ratio=t.spending>0?monthSpend/t.spending:1;
+  budgetPoints=ratio<=0.90?25:ratio<=1?25-(ratio-0.90)*100:Math.max(0,15-(ratio-1)*75);
+  budgetNote=money(monthSpend)+" spent against "+money(t.spending)+" monthly budget.";
+ }
+ budgetPoints=Math.round(Math.max(0,Math.min(25,budgetPoints)));
+
+ var cashRatio=t.income>0?t.surplus/t.income:0;
+ var cashPoints=cashRatio>=0.10?20:cashRatio>=0?15:cashRatio>=-0.05?8:0;
+ var cashNote="Planned monthly result: "+money(t.surplus)+".";
+
+ var locGoal=data.goals.find(function(g){return String(g.name||"").toUpperCase()==="LOC";});
+ var locStart=Math.max(Number(locGoal&&locGoal.target||0),23000,Number(data.settings.loc||0));
+ var debtProgress=locStart>0?(locStart-Number(data.settings.loc||0))/locStart:1;
+ var debtPoints=Math.round(15*Math.max(0,Math.min(1,debtProgress)));
+ var debtNote="LOC balance: "+money(data.settings.loc)+" from a "+money(locStart)+" starting balance.";
+
+ var emergency=data.goals.find(function(g){return String(g.name||"").toLowerCase().indexOf("emergency")>=0;});
+ var emergencyProgress=emergency&&Number(emergency.target)>0?Number(emergency.current||0)/Number(emergency.target):0;
+ var emergencyPoints=Math.round(15*Math.max(0,Math.min(1,emergencyProgress)));
+ var emergencyNote=emergency?money(emergency.current)+" saved toward "+money(emergency.target)+".":"No emergency-fund goal found.";
+
+ var incomplete=data.goals.filter(function(g){return g.name!=="LOC"&&Number(g.current||0)<Number(g.target||0);});
+ var funded=incomplete.filter(function(g){return Number(g.monthly||0)>0;}).length;
+ var goalPoints=incomplete.length?Math.round(10*funded/incomplete.length):10;
+ var goalNote=funded+" of "+incomplete.length+" incomplete non-LOC goals have monthly funding.";
+
+ var nwPoints=5,nwNote="Add two net-worth snapshots to measure the trend.";
+ if(data.netWorthHistory.length>=2){
+  var sorted=data.netWorthHistory.slice().sort(function(a,b){return String(a.month).localeCompare(String(b.month));});
+  var prev=Number(sorted[sorted.length-2].value||0),latest=Number(sorted[sorted.length-1].value||0);
+  var change=latest-prev;
+  nwPoints=change>0?10:change===0?6:0;
+  nwNote="Latest net-worth change: "+money(change)+".";
+ }
+
+ var retire=projection(data.settings.retireAge);
+ var wifeAge=data.settings.retireAge-data.settings.wifeAgeDiff;
+ var guaranteed=(wifeAge>=data.settings.wifeRetireAge?data.settings.wifePension*12:0);
+ if(data.settings.retireAge>=data.settings.userCppStart)guaranteed+=(data.settings.userCppStart===70?data.settings.userCpp70:data.settings.userCpp65)*12;
+ var capitalTarget=Math.max(0,(retire.spend-guaranteed)*25);
+ var retirementRatio=capitalTarget>0?retire.inv/capitalTarget:1;
+ var retirementPoints=Math.round(5*Math.max(0,Math.min(1,retirementRatio)));
+ var retirementNote="Projected investments at "+data.settings.retireAge+": "+money(retire.inv)+"; rough capital target: "+money(capitalTarget)+".";
+
+ var parts=[
+  {name:"Monthly budget",points:budgetPoints,max:25,note:budgetNote},
+  {name:"Cash-flow plan",points:cashPoints,max:20,note:cashNote},
+  {name:"LOC reduction",points:debtPoints,max:15,note:debtNote},
+  {name:"Emergency fund",points:emergencyPoints,max:15,note:emergencyNote},
+  {name:"Goal funding",points:goalPoints,max:10,note:goalNote},
+  {name:"Net-worth trend",points:nwPoints,max:10,note:nwNote},
+  {name:"Retirement progress",points:retirementPoints,max:5,note:retirementNote}
+ ];
+ var total=parts.reduce(function(a,x){return a+x.points;},0);
+ return{total:Math.max(0,Math.min(100,total)),parts:parts,month:month};
 }
+function healthScore(){return financialHealth().total;}
 function renderHome(){
- var t=totals(),score=healthScore(),days=Math.round(Math.max(0,data.settings.retireAge-data.settings.age)*365.25);
+ var t=totals(),health=financialHealth(),score=health.total,days=Math.round(Math.max(0,data.settings.retireAge-data.settings.age)*365.25);
  var goals=data.goals.slice().sort(function(a,b){return a.priority-b.priority;}).slice(0,4);
  document.getElementById("home").innerHTML=
  '<div class="today"><h2>Today Dashboard</h2><p>Your financial position and next actions.</p></div>'+
@@ -212,7 +272,9 @@ function renderHome(){
  '<div class="kpi"><small>Days to retirement</small><strong>'+days.toLocaleString()+'</strong></div></div>'+
  '<div class="grid two"><div class="card"><h3>Financial health</h3><div class="ring" style="--score:'+score+'"><b>'+score+'</b></div><p style="text-align:center">Score out of 100</p></div>'+
  '<div class="card"><h3>Priority goals</h3>'+goals.map(function(g){var p=g.name==="LOC"?(1-g.current/g.target)*100:g.current/g.target*100;return"<p><strong>"+esc(g.priority+". "+g.name)+"</strong> — "+money(g.current)+" / "+money(g.target)+'</p><div class="progress"><span style="width:'+Math.max(0,Math.min(100,p))+'%"></span></div>';}).join("")+'</div></div>'+
- '<div class="grid two" style="margin-top:12px"><div class="card"><h3>This month</h3><p>Imported spending: <strong>'+money(actualSpend())+'</strong></p><p>Budget: <strong>'+money(t.spending)+'</strong></p><p>LOC target payment: <strong>'+money(t.locPayment)+'</strong></p></div>'+
+ +'<div class="card" style="margin-top:12px"><h3>How the score is calculated — '+esc(health.month)+'</h3><table><thead><tr><th>Measure</th><th>Points</th><th>What it measures</th></tr></thead><tbody>'+
+ health.parts.map(function(x){return'<tr><td>'+esc(x.name)+'</td><td><strong>'+x.points+' / '+x.max+'</strong></td><td>'+esc(x.note)+'</td></tr>';}).join("")+
+ '</tbody></table><div class="notice">The score is a planning indicator, not a credit score or financial-advice rating. A missing month of transaction data receives a neutral budget score rather than a perfect score.</div></div>' + '<div class="grid two" style="margin-top:12px"><div class="card"><h3>This month</h3><p>Imported spending: <strong>'+money(actualSpend())+'</strong></p><p>Budget: <strong>'+money(t.spending)+'</strong></p><p>LOC target payment: <strong>'+money(t.locPayment)+'</strong></p></div>'+
  '<div class="card"><h3>Next actions</h3><div class="notice">Import this month’s transactions.</div><p>Update LOC and goal balances.</p><p>Export a backup after your monthly review.</p></div></div>';
 }
 function renderMoney(){
@@ -528,7 +590,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.5.6-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.5.7-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
