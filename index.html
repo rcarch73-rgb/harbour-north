@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 2.2</title>
+<title>RyanOS 2.3</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -38,7 +38,7 @@ input,select,textarea{border:1px solid #b8c5d1;border-radius:8px;padding:8px;bac
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>2.2 — Monthly Review & Smart Transactions</small></div>
+  <div><h1>RyanOS</h1><small>2.3 — BMO Import Repair</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -208,47 +208,78 @@ function parseAmount(v){
  if(s.indexOf("(")>=0&&s.indexOf(")")>=0)s="-"+s.replace(/[()]/g,"");
  var n=Number(s);return isNaN(n)?0:n;
 }
+function normalizeDate(v){
+ var s=String(v||"").trim();
+ if(/^\d{8}$/.test(s))return s.slice(0,4)+"-"+s.slice(4,6)+"-"+s.slice(6,8);
+ return s;
+}
+function findHeaderRow(lines){
+ for(var i=0;i<Math.min(lines.length,20);i++){
+  var cols=splitCsvLine(lines[i]).map(function(x){return x.trim().toLowerCase();});
+  var hasDate=cols.some(function(h){return h.indexOf("date")>=0;});
+  var hasAmount=cols.some(function(h){return h.indexOf("amount")>=0;});
+  var hasDesc=cols.some(function(h){return h.indexOf("description")>=0||h.indexOf("merchant")>=0||h.indexOf("details")>=0;});
+  if(hasDate&&hasAmount&&hasDesc)return i;
+ }
+ return -1;
+}
 function parseCsv(text){
- var lines=text.replace(/^\uFEFF/,"").trim().split(/\r?\n/);if(lines.length<2)return[];
+ var lines=text.replace(/^\uFEFF/,"").split(/\r?\n/);
+ var headerRow=findHeaderRow(lines);
+ if(headerRow<0)return[];
+ lines=lines.slice(headerRow);
  var headers=splitCsvLine(lines.shift()).map(function(x){return x.trim().toLowerCase();});
  function find(names){return headers.findIndex(function(h){return names.some(function(n){return h.indexOf(n)>=0;});});}
- var di=find(["transaction date","posting date","date"]);
+ var di=find(["transaction date","date posted","posting date","date"]);
  var xi=find(["description","details","merchant","payee"]);
- var ai=find(["amount"]);
+ var ai=find(["transaction amount","amount"]);
  var debitI=find(["debit","withdrawal"]);
  var creditI=find(["credit","deposit"]);
+ var typeI=find(["transaction type"]);
  var existing={};data.transactions.forEach(function(t){existing[txKey(t)]=true;});
  var imported=[];
  lines.forEach(function(line){
   if(!line.trim())return;
-  var c=splitCsvLine(line),desc=c[xi]||"";
+  var c=splitCsvLine(line);
+  if(c.length<3)return;
+  var desc=(c[xi]||"").trim();
+  if(!desc)return;
   var amount=ai>=0?parseAmount(c[ai]):0;
   if(ai<0){
    var debit=debitI>=0?parseAmount(c[debitI]):0;
    var credit=creditI>=0?parseAmount(c[creditI]):0;
    amount=credit?credit:-Math.abs(debit);
   }
-  var r=categorize(desc),t={date:c[di]||"",description:desc,amount:amount,category:r.category,include:r.include};
+  if(typeI>=0){
+   var typ=String(c[typeI]||"").trim().toUpperCase();
+   if(typ==="DEBIT"&&amount>0)amount=-amount;
+   if(typ==="CREDIT"&&amount<0)amount=Math.abs(amount);
+  }
+  var r=categorize(desc),t={date:normalizeDate(c[di]||""),description:desc,amount:amount,category:r.category,include:r.include};
   if(!existing[txKey(t)]){existing[txKey(t)]=true;imported.push(t);}
  });
  return imported;
 }
-function learnRuleFromTransaction(i){
- var t=data.transactions[i],keyword=prompt("Merchant keyword to remember:",t.description);
- if(!keyword)return;
- var found=data.rules.find(function(r){return r.keyword.toUpperCase()===keyword.toUpperCase();});
- if(found){found.category=t.category;found.include=t.include;}
- else data.rules.push({keyword:keyword,category:t.category,include:t.include});
- save();
-}
 function renderTransactions(){
- document.getElementById("transactions").innerHTML='<h2>Transactions</h2><div class="toolbar"><input type="file" id="csvFile" accept=".csv"><button id="importCsv">Import CSV</button><button class="secondary" id="applyRules">Apply rules</button><button class="danger" id="clearTx">Clear</button></div><div class="notice">RyanOS now skips exact duplicates using date, description and amount. Correct a transaction, then use Learn Rule to remember that merchant.</div><div id="importStatus"></div><div class="card"><table><thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Category</th><th>Include?</th><th></th></tr></thead><tbody>'+
+ document.getElementById("transactions").innerHTML='<h2>Transactions</h2><div class="toolbar"><input type="file" id="csvFile" accept=".csv"><button id="importCsv">Import CSV</button><button class="secondary" id="applyRules">Apply rules</button><button class="danger" id="clearTx">Clear</button></div><div class="notice">RyanOS now supports both BMO bank-account and BMO Mastercard CSV exports, including their introductory text and blank lines. Exact duplicates are skipped.</div><div id="importStatus"></div><div class="card"><table><thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Category</th><th>Include?</th><th></th></tr></thead><tbody>'+
  data.transactions.map(function(t,i){return'<tr><td>'+esc(t.date)+'</td><td>'+esc(t.description)+'</td><td>'+money(t.amount)+'</td><td><input class="tx-cat" data-i="'+i+'" value="'+esc(t.category)+'"></td><td><select class="tx-inc" data-i="'+i+'"><option '+(t.include==="Yes"?"selected":"")+'>Yes</option><option '+(t.include!=="Yes"?"selected":"")+'>No</option></select></td><td><button class="secondary tx-learn" data-i="'+i+'">Learn Rule</button> <button class="danger tx-del" data-i="'+i+'">Delete</button></td></tr>';}).join("")+
  '</tbody></table></div>';
  document.getElementById("importCsv").onclick=function(){
   var f=document.getElementById("csvFile").files[0];if(!f){alert("Choose a CSV file first.");return;}
   var before=data.transactions.length,r=new FileReader();
-  r.onload=function(){var added=parseCsv(r.result);data.transactions=data.transactions.concat(added);localStorage.setItem(STORAGE_KEY,JSON.stringify(data));render();setTimeout(function(){var el=document.getElementById("importStatus");if(el)el.innerHTML='<div class="notice">Imported '+added.length+' new transactions. '+(before+added.length-data.transactions.length)+' duplicates skipped.</div>';},0);};
+  r.onload=function(){
+   var rawLines=r.result.replace(/^\uFEFF/,"").split(/\r?\n/);
+   var possibleRows=Math.max(0,rawLines.length-findHeaderRow(rawLines)-1);
+   var added=parseCsv(r.result);
+   if(added.length===0&&findHeaderRow(rawLines)<0){alert("RyanOS could not find the transaction header row in this CSV.");return;}
+   data.transactions=data.transactions.concat(added);
+   localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+   render();
+   setTimeout(function(){
+    var el=document.getElementById("importStatus");
+    if(el)el.innerHTML='<div class="notice">Imported <strong>'+added.length+'</strong> new transactions. Duplicate or blank rows were skipped automatically.</div>';
+   },0);
+  };
   r.readAsText(f);
  };
  document.getElementById("applyRules").onclick=function(){data.transactions.forEach(function(t){var r=categorize(t.description);t.category=r.category;t.include=r.include;});save();};
