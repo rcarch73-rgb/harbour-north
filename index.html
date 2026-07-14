@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 2.3</title>
+<title>RyanOS 2.4</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -34,11 +34,21 @@ input,select,textarea{border:1px solid #b8c5d1;border-radius:8px;padding:8px;bac
 .ring{width:112px;height:112px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--good) calc(var(--score)*1%),#e5e7eb 0);position:relative;margin:auto}
 .ring:after{content:"";position:absolute;width:82px;height:82px;border-radius:50%;background:white}.ring b{z-index:1;font-size:27px}
 @media(max-width:900px){.kpis{grid-template-columns:1fr 1fr 1fr}}@media(max-width:620px){.kpis{grid-template-columns:1fr 1fr}}
+
+.report-bars{display:flex;align-items:flex-end;gap:10px;height:220px;padding:18px 8px 0;border-bottom:1px solid var(--border)}
+.report-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:34px}
+.report-bar{width:100%;max-width:54px;background:#2d6ea6;border-radius:6px 6px 0 0;min-height:2px}
+.report-col span{font-size:11px;color:var(--muted);margin-top:6px;text-align:center;word-break:break-word}
+.alert-row{background:#fff3f2}.optimizer-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.range-wrap{display:grid;grid-template-columns:1fr 100px;gap:10px;align-items:center}
+input[type=range]{width:100%}
+@media(max-width:700px){.optimizer-grid{grid-template-columns:1fr}.report-bars{overflow-x:auto;justify-content:flex-start}.report-col{min-width:52px}}
+
 </style>
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>2.3 — BMO Import Repair</small></div>
+  <div><h1>RyanOS</h1><small>2.4 — Reports & Goal Optimizer</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -52,6 +62,7 @@ input,select,textarea{border:1px solid #b8c5d1;border-radius:8px;padding:8px;bac
 <section id="networth" class="page"></section>
 <section id="life" class="page"></section>
 <section id="review" class="page"></section>
+<section id="reports" class="page"></section>
 <section id="settings" class="page"></section>
 </main>
 </div>
@@ -128,6 +139,7 @@ function migrate(raw){
 var data=migrate(JSON.parse(localStorage.getItem(STORAGE_KEY)||localStorage.getItem("ryanos-data")||"null"));
 if(!data.review)data.review={month:new Date().toISOString().slice(0,7),notes:"",lastBackup:""};
 if(!Array.isArray(data.netWorthHistory))data.netWorthHistory=[];
+if(data.optimizerExtra===undefined)data.optimizerExtra=0;
 
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));render();}
 function money(n){return new Intl.NumberFormat("en-CA",{style:"currency",currency:"CAD",maximumFractionDigits:0}).format(Number(n||0));}
@@ -147,7 +159,7 @@ function actualSpend(){return data.transactions.filter(function(t){return t.incl
 function byCategory(){var m={};data.transactions.filter(function(t){return t.include==="Yes";}).forEach(function(t){m[t.category]=(m[t.category]||0)+Math.abs(Number(t.amount||0));});return m;}
 function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 function nav(){
- var items=[["home","Home"],["money","Money"],["transactions","Transactions"],["goals","Goals & Debt"],["retirement","Retirement"],["networth","Net Worth"],["life","Life Goals"],["review","Monthly Review"],["settings","Settings"]];
+ var items=[["home","Home"],["money","Money"],["transactions","Transactions"],["goals","Goals & Debt"],["retirement","Retirement"],["networth","Net Worth"],["life","Life Goals"],["review","Monthly Review"],["reports","Reports & Optimizer"],["settings","Settings"]];
  document.getElementById("nav").innerHTML=items.map(function(x,i){return'<button data-page="'+x[0]+'" class="'+(i===0?"active":"")+'">'+x[1]+"</button>";}).join("");
  document.querySelectorAll("#nav button").forEach(function(b){b.addEventListener("click",function(){document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});document.querySelectorAll("#nav button").forEach(function(x){x.classList.remove("active");});document.getElementById(b.dataset.page).classList.add("active");b.classList.add("active");});});
 }
@@ -358,6 +370,85 @@ function renderReview(){
  document.getElementById("reviewNotes").onchange=function(){data.review.notes=this.value;save();};
  document.getElementById("saveNW").onclick=saveNetWorthSnapshot;
 }
+function txDateObj(v){
+ var s=String(v||"").trim();
+ if(/^\d{4}-\d{2}-\d{2}$/.test(s))return new Date(s+"T12:00:00");
+ if(/^\d{8}$/.test(s))return new Date(s.slice(0,4)+"-"+s.slice(4,6)+"-"+s.slice(6,8)+"T12:00:00");
+ var d=new Date(s);return isNaN(d)?null:d;
+}
+function monthKeyFromDate(d){
+ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+}
+function monthlyHistory(count){
+ var out=[],now=new Date();
+ for(var i=count-1;i>=0;i--){
+  var d=new Date(now.getFullYear(),now.getMonth()-i,1),key=monthKeyFromDate(d);
+  var spend=0,income=0;
+  data.transactions.forEach(function(t){
+   var td=txDateObj(t.date);
+   if(!td||monthKeyFromDate(td)!==key)return;
+   var amt=Number(t.amount||0);
+   if(t.include==="Yes")spend+=Math.abs(amt);
+   if(t.category==="Income")income+=Math.abs(amt);
+  });
+  out.push({key:key,label:d.toLocaleString("en-CA",{month:"short"}),spend:spend,income:income});
+ }
+ return out;
+}
+function merchantReport(){
+ var m={};
+ data.transactions.filter(function(t){return t.include==="Yes";}).forEach(function(t){
+  var k=(t.description||"Unknown").trim();
+  if(!m[k])m[k]=0;m[k]+=Math.abs(Number(t.amount||0));
+ });
+ return Object.keys(m).map(function(k){return{name:k,total:m[k]};}).sort(function(a,b){return b.total-a.total;}).slice(0,15);
+}
+function uncategorized(){
+ return data.transactions.filter(function(t){return !t.category||t.category==="Miscellaneous";});
+}
+function goalPlan(extra){
+ var ordered=data.goals.slice().sort(function(a,b){return a.priority-b.priority;});
+ var carry=Number(extra||0),results=[];
+ ordered.forEach(function(g){
+  var remaining=g.name==="LOC"?Number(g.current||0):Math.max(0,Number(g.target||0)-Number(g.current||0));
+  var monthly=Math.max(0,Number(g.monthly||0)+carry);
+  var months=remaining<=0?0:(monthly>0?Math.ceil(remaining/monthly):null);
+  results.push({name:g.name,remaining:remaining,monthly:monthly,months:months});
+  if(months===0||months===null)return;
+  carry+=Number(g.monthly||0);
+ });
+ return results;
+}
+function monthNameAfter(n){
+ if(n===null)return"Not funded";
+ var d=new Date();d.setMonth(d.getMonth()+n);
+ return d.toLocaleString("en-CA",{month:"short",year:"numeric"});
+}
+function renderReports(){
+ var hist=monthlyHistory(12),maxSpend=Math.max.apply(null,hist.map(function(x){return x.spend;}).concat([1]));
+ var merchants=merchantReport(),misc=uncategorized(),plan=goalPlan(data.optimizerExtra),cat=byCategory();
+ document.getElementById("reports").innerHTML=
+ '<h2>Reports & Goal Optimizer</h2>'+
+ '<div class="grid two"><div class="card"><h3>12-month spending trend</h3><div class="report-bars">'+
+ hist.map(function(x){return'<div class="report-col"><div class="report-bar" style="height:'+Math.max(2,(x.spend/maxSpend)*170)+'px"></div><span>'+x.label+'<br>'+money(x.spend)+'</span></div>';}).join("")+
+ '</div></div><div class="card"><h3>Uncategorized review queue</h3><div class="metric '+(misc.length?"bad":"good")+'">'+misc.length+'</div><p>Transactions still categorized as Miscellaneous.</p><button id="goTransactions">Review transactions</button></div></div>'+
+ '<div class="grid two" style="margin-top:12px"><div class="card"><h3>Top merchants</h3><table><thead><tr><th>Merchant</th><th>Total</th></tr></thead><tbody>'+
+ merchants.map(function(x){return'<tr><td>'+esc(x.name)+'</td><td>'+money(x.total)+'</td></tr>';}).join("")+
+ '</tbody></table></div><div class="card"><h3>Budget trend alerts</h3><table><thead><tr><th>Category</th><th>Budget</th><th>Actual</th><th>Status</th></tr></thead><tbody>'+
+ data.budget.map(function(x){var a=cat[x[0]]||0,over=a>Number(x[1]||0);return'<tr class="'+(over?"alert-row":"")+'"><td>'+esc(x[0])+'</td><td>'+money(x[1])+'</td><td>'+money(a)+'</td><td class="'+(over?"bad":"good")+'">'+(over?"Over budget":"On track")+'</td></tr>';}).join("")+
+ '</tbody></table></div></div>'+
+ '<div class="card" style="margin-top:12px"><h3>Goal funding optimizer</h3><div class="range-wrap"><input id="extraRange" type="range" min="0" max="2000" step="50" value="'+data.optimizerExtra+'"><input id="extraNumber" type="number" min="0" max="2000" step="50" value="'+data.optimizerExtra+'"></div><p>Extra monthly funding: <strong>'+money(data.optimizerExtra)+'</strong></p><table><thead><tr><th>Priority</th><th>Goal</th><th>Remaining</th><th>Monthly funding</th><th>Estimated completion</th></tr></thead><tbody>'+
+ plan.map(function(x,i){return'<tr><td>'+(i+1)+'</td><td>'+esc(x.name)+'</td><td>'+money(x.remaining)+'</td><td>'+money(x.monthly)+'</td><td>'+monthNameAfter(x.months)+'</td></tr>';}).join("")+
+ '</tbody></table><div class="notice">The optimizer follows your goal priorities and rolls each completed goal’s monthly payment into the next goal.</div></div>';
+ document.getElementById("extraRange").oninput=function(){data.optimizerExtra=Number(this.value);localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderReports();};
+ document.getElementById("extraNumber").onchange=function(){data.optimizerExtra=Math.max(0,Number(this.value||0));localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderReports();};
+ document.getElementById("goTransactions").onclick=function(){
+  document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});
+  document.querySelectorAll("#nav button").forEach(function(b){b.classList.remove("active");});
+  document.getElementById("transactions").classList.add("active");
+  var btn=document.querySelector('#nav button[data-page="transactions"]');if(btn)btn.classList.add("active");
+ };
+}
 function renderSettings(){
  var s=data.settings,fields=[["income1","Yellowhead monthly income"],["income2","Province monthly income"],["wcb","WorkSafeBC monthly income"],["investing","Retirement investing"],["bills","Annual-bills reserve"],["chores","Son's chores"],["loc","LOC balance"],["rate","LOC rate (%)"],["months","LOC months"],["investments","Current investments"],["age","Current age"],["retireAge","Retirement age"],["returnRate","Expected return (%)"],["inflation","Inflation (%)"],["retireSpend","Annual retirement spending"],["wifePension","Wife monthly pension"],["wifeAgeDiff","Wife age difference"],["wifeRetireAge","Wife retirement age"],["userCpp65","User CPP at 65"],["userCpp70","User CPP at 70"],["userCppStart","User CPP start age"],["wifeCpp60","Wife CPP at 60"],["wifeCpp65","Wife CPP at 65"],["wifeCpp70","Wife CPP at 70"],["wifeCppStart","Wife CPP start age"],["home","Home value"],["ns1","NS property 1"],["ns2","NS property 2"],["vehicles","Vehicle value"],["boat","Boat value"],["camper","Camper value"],["cash","Cash"],["ccDebt","Credit-card debt"]];
  document.getElementById("settings").innerHTML='<h2>Settings</h2><div class="toolbar"><button id="importBackup">Import backup</button><input id="backupFile" type="file" accept=".json"><button class="danger" id="reset">Reset defaults</button></div><div class="card"><div class="form-grid">'+fields.map(function(f){return'<label>'+f[1]+'<input class="setting-input" data-k="'+f[0]+'" type="number" step="any" value="'+s[f[0]]+'"></label>';}).join("")+"</div></div>";
@@ -365,8 +456,8 @@ function renderSettings(){
  document.getElementById("importBackup").onclick=function(){var f=document.getElementById("backupFile").files[0];if(!f){alert("Choose a JSON backup.");return;}var r=new FileReader();r.onload=function(){data=migrate(JSON.parse(r.result));save();};r.readAsText(f);};
  document.getElementById("reset").onclick=function(){if(confirm("Reset all data?")){data=clone(defaults);save();}};
 }
-function render(){renderHome();renderMoney();renderTransactions();renderGoals();renderRetirement();renderNetWorth();renderLife();renderReview();renderSettings();}
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.2-backup.json";a.click();};
+function render(){renderHome();renderMoney();renderTransactions();renderGoals();renderRetirement();renderNetWorth();renderLife();renderReview();renderReports();renderSettings();}
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.4-backup.json";a.click();};
 nav();render();
 })();
 </script>
