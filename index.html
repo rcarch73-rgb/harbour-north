@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 3.0.0</title>
+<title>RyanOS 3.0.1</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -48,7 +48,7 @@ input[type=range]{width:100%}
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>3.0.0 — Rebuilt Retirement Engine</small></div>
+  <div><h1>RyanOS</h1><small>3.0.1 — Rebuilt Retirement Engine Repair</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -617,328 +617,340 @@ function spendingEstimate(){
 function selectedRetirementSpending(){
  return spendingEstimate().retirementEstimate;
 }
-
-function retirementSpendingBase(){
+function retirementIncomeAtAge(age,wifeAge){
  var s=data.settings;
- var mode=Number(s.retirementSpendingMode||1);
- if(mode===2){
-  return data.budget.reduce(function(total,row){return total+Math.max(0,Number(row[1]||0));},0)*12;
- }
- if(mode===3){
-  return spendingEstimate().retirementEstimate;
- }
- return Math.max(0,Number(s.retireSpend||0));
-}
-function retirementSpendingLabel(){
- var mode=Number(data.settings.retirementSpendingMode||1);
- return mode===2?"Budget-based":mode===3?"Transaction-based":"Manual";
-}
-function monthlyRate(annualPercent){
- return Math.pow(1+Number(annualPercent||0)/100,1/12)-1;
-}
-function accountTotal(a){
- return Math.max(0,Number(a.rrsp||0))+Math.max(0,Number(a.wifeRrsp||0))+Math.max(0,Number(a.tfsa||0))+Math.max(0,Number(a.nonReg||0));
-}
-function cleanAccountSnapshot(a){
- return{
-  rrsp:Math.max(0,Number(a.rrsp||0)),
-  wifeRrsp:Math.max(0,Number(a.wifeRrsp||0)),
-  tfsa:Math.max(0,Number(a.tfsa||0)),
-  nonReg:Math.max(0,Number(a.nonReg||0))
- };
-}
-function benefitIncomeAtMonth(userAge,wifeAge,monthsFromNow){
- var s=data.settings;
- var inflationMonthly=monthlyRate(s.inflation);
- var wifeWorking=userAge<Number(s.wifeWorkUntilUserAge);
- var employmentYears=Math.max(0,monthsFromNow/12);
- var wifeEmploymentNet=wifeWorking?Number(s.wifeEmploymentNetAnnual||0)*Math.pow(1+Number(s.wifeEmploymentGrowth||0)/100,employmentYears)/12:0;
-
+ var wifeWorking=age<Number(s.wifeWorkUntilUserAge);
+ var employmentYears=Math.max(0,age-Number(s.age));
+ var wifeEmploymentNet=wifeWorking?Number(s.wifeEmploymentNetAnnual||0)*Math.pow(1+Number(s.wifeEmploymentGrowth||0)/100,employmentYears):0;
  var pensionStartUserAge=Math.max(Number(s.wifeWorkUntilUserAge),Number(s.wifeRetireAge)+Number(s.wifeAgeDiff));
- var pensionMonths=Math.max(0,(userAge-pensionStartUserAge)*12);
- var pension=(!wifeWorking&&wifeAge>=Number(s.wifeRetireAge))?
-  Number(s.wifePension||0)*Math.pow(1+inflationMonthly,pensionMonths):0;
-
- var wcb=userAge<65?Number(s.wcb||0):0;
-
+ var pensionYears=Math.max(0,age-pensionStartUserAge);
+ var pension=(!wifeWorking&&wifeAge>=Number(s.wifeRetireAge))?Number(s.wifePension||0)*12*Math.pow(1+Number(s.inflation||0)/100,pensionYears):0;
+ var wcb=age<65?Number(s.wcb||0)*12:0;
  var userCppBase=Number(s.userCppStart)===70?Number(s.userCpp70||0):Number(s.userCpp65||0);
  var wifeCppBase=Number(s.wifeCppStart)===60?Number(s.wifeCpp60||0):(Number(s.wifeCppStart)===70?Number(s.wifeCpp70||0):Number(s.wifeCpp65||0));
- var cppMonths=Math.max(0,(userAge-Number(s.userCppStart))*12);
- var wifeCppMonths=Math.max(0,(wifeAge-Number(s.wifeCppStart))*12);
- var userOasMonths=Math.max(0,(userAge-Number(s.userOasStart))*12);
- var wifeOasMonths=Math.max(0,(wifeAge-Number(s.wifeOasStart))*12);
-
- var cpp=userAge>=Number(s.userCppStart)?userCppBase*Math.pow(1+inflationMonthly,cppMonths):0;
- var wifeCpp=wifeAge>=Number(s.wifeCppStart)?wifeCppBase*Math.pow(1+inflationMonthly,wifeCppMonths):0;
- var oas=userAge>=Number(s.userOasStart)?Number(s.userOasMonthly||0)*Math.pow(1+inflationMonthly,userOasMonths):0;
- var wifeOas=wifeAge>=Number(s.wifeOasStart)?Number(s.wifeOasMonthly||0)*Math.pow(1+inflationMonthly,wifeOasMonths):0;
-
- return{
-  wifeEmploymentNet:wifeEmploymentNet,
-  pension:pension,wcb:wcb,cpp:cpp,wifeCpp:wifeCpp,oas:oas,wifeOas:wifeOas
- };
+ var cpp=age>=Number(s.userCppStart)?userCppBase*12*Math.pow(1+Number(s.inflation||0)/100,Math.max(0,age-Number(s.userCppStart))):0;
+ var wcpp=wifeAge>=Number(s.wifeCppStart)?wifeCppBase*12*Math.pow(1+Number(s.inflation||0)/100,Math.max(0,wifeAge-Number(s.wifeCppStart))):0;
+ var oas=age>=Number(s.userOasStart)?Number(s.userOasMonthly||0)*12*Math.pow(1+Number(s.inflation||0)/100,Math.max(0,age-Number(s.userOasStart))):0;
+ var woas=wifeAge>=Number(s.wifeOasStart)?Number(s.wifeOasMonthly||0)*12*Math.pow(1+Number(s.inflation||0)/100,Math.max(0,wifeAge-Number(s.wifeOasStart))):0;
+ return{wifeEmploymentNet:wifeEmploymentNet,pension:pension,wcb:wcb,cpp:cpp,wcpp:wcpp,oas:oas,woas:woas};
 }
-function withdrawNetFromAccount(accounts,key,netNeeded,taxRate){
+function accountBalancesAtRetirement(returnRate){
+ var s=data.settings;
+ var rate=Number(returnRate)/100;
+ var years=Math.max(0,Number(s.retireAge)-Number(s.age));
+ var accounts={
+  rrsp:Number(s.rrspBalance||0),
+  userTfsa:Number(s.userTfsaBalance||0),
+  wifeRrsp:Number(s.wifeRrspBalance||0),
+  nonReg:Number(s.nonRegisteredBalance||0)
+ };
+ var annual={
+  rrsp:Number(s.rrspMonthlyContribution||0)*12,
+  userTfsa:Number(s.userTfsaMonthlyContribution||0)*12,
+  wifeRrsp:Number(s.wifeRrspMonthlyContribution||0)*12,
+  nonReg:Number(s.nonRegisteredMonthlyContribution||0)*12
+ };
+ for(var i=0;i<years;i++){
+  Object.keys(accounts).forEach(function(k){
+   accounts[k]=accounts[k]*(1+rate)+annual[k]*(1+rate/2);
+  });
+ }
+ accounts.total=accounts.rrsp+accounts.userTfsa+accounts.wifeRrsp+accounts.nonReg;
+ return accounts;
+}
+function balanceAtRetirement(returnRate){
+ return accountBalancesAtRetirement(returnRate).total;
+}
+function takeFromAccount(account,key,neededNet,taxRate){
+ var available=Math.max(0,Number(account[key]||0));
  var tax=Math.max(0,Math.min(.75,Number(taxRate||0)));
- var available=Math.max(0,Number(accounts[key]||0));
- var grossNeeded=tax>=.99?netNeeded:netNeeded/(1-tax);
+ var grossNeeded=tax>=.99?neededNet:neededNet/(1-tax);
  var gross=Math.min(available,grossNeeded);
- accounts[key]=available-gross;
+ account[key]-=gross;
  return{gross:gross,net:gross*(1-tax),tax:gross*tax};
 }
-function retirementWithdrawalOrder(){
- var strategy=Number(data.settings.withdrawalStrategy||1);
- if(strategy===2)return["tfsa","nonReg","rrsp","wifeRrsp"];
- if(strategy===3)return["nonReg","rrsp","wifeRrsp","tfsa"];
- return["rrsp","wifeRrsp","nonReg","tfsa"];
-}
-function retirementSimulation(returnRate){
- var s=data.settings;
- var currentAge=Number(s.age||0);
- var retireAge=Math.max(currentAge,Number(s.retireAge||currentAge));
- var endAge=Math.max(retireAge+1,Number(s.retirementEndAge||95));
- var totalMonths=Math.ceil((endAge-currentAge)*12);
- var retirementMonth=Math.max(0,Math.round((retireAge-currentAge)*12));
- var investmentRate=monthlyRate(returnRate);
- var inflationRate=monthlyRate(s.inflation);
+function retirementPlan(returnRate,wifeAgeDifferenceOverride){
+ var s=data.settings,rate=Number(returnRate)/100;
  var pensionTax=Math.max(0,Math.min(.6,Number(s.retirementTaxRate||0)/100));
  var nonRegTax=Math.max(0,Math.min(.6,Number(s.nonRegisteredWithdrawalTaxRate||0)/100));
  var bracketTax=Math.max(0,Math.min(.6,Number(s.lowestBracketMarginalTaxRate||0)/100));
-
- var accounts={
-  rrsp:Number(s.rrspBalance||0),
-  wifeRrsp:Number(s.wifeRrspBalance||0),
-  tfsa:Number(s.userTfsaBalance||0),
-  nonReg:Number(s.nonRegisteredBalance||0)
- };
- var startingDetailedTotal=accountTotal(accounts);
- var tfsaRoom=Math.max(0,Number(s.tfsaAvailableRoom||0));
- var annualTfsaRoom=Math.max(0,Number(s.tfsaAnnualLimit||0));
-
- var monthlyContrib={
-  rrsp:Math.max(0,Number(s.rrspMonthlyContribution||0)),
-  wifeRrsp:Math.max(0,Number(s.wifeRrspMonthlyContribution||0)),
-  tfsa:Math.max(0,Number(s.userTfsaMonthlyContribution||0)),
-  nonReg:Math.max(0,Number(s.nonRegisteredMonthlyContribution||0))
- };
-
- var annualRows=[],year=null,depletionAge=null;
- var inheritanceDone=false,expenseDone=false;
-
- function openYear(age,wifeAge){
-  return{
-   age:age,wifeAge:wifeAge,startAccounts:cleanAccountSnapshot(accounts),startBalance:accountTotal(accounts),
-   contributions:0,inheritance:0,externalNet:0,spending:0,specialExpense:0,
-   rrspWithdrawal:0,wifeRrspWithdrawal:0,tfsaWithdrawal:0,nonRegWithdrawal:0,
-   withdrawalTax:0,strategicRrsp:0,strategicTax:0,tfsaTransfer:0,nonRegTransfer:0,
-   growth:0,endAccounts:null,endBalance:0,unfunded:0
-  };
+ var wifeDiff=(wifeAgeDifferenceOverride===undefined||wifeAgeDifferenceOverride===null)?Number(s.wifeAgeDiff):Number(wifeAgeDifferenceOverride);
+ var endAge=Math.max(Math.ceil(Number(s.retireAge))+1,Number(s.retirementEndAge||95));
+ var account=accountBalancesAtRetirement(returnRate); delete account.total;
+ var tfsaRoom=Math.max(0,Number(s.tfsaAvailableRoom||0)),rows=[];
+ for(var age=Math.ceil(Number(s.retireAge));age<endAge;age++){
+  var wifeAge=age-wifeDiff,start={rrsp:account.rrsp,userTfsa:account.userTfsa,wifeRrsp:account.wifeRrsp,nonReg:account.nonReg};
+  var startBalance=start.rrsp+start.userTfsa+start.wifeRrsp+start.nonReg;
+  if(age>Math.ceil(Number(s.retireAge)))tfsaRoom+=Math.max(0,Number(s.tfsaAnnualLimit||0));
+  var inheritance=age===Number(s.inheritanceAge)?Number(s.inheritanceAmount||0):0; account.nonReg+=inheritance;
+  var extraExpense=age===Number(s.oneTimeExpenseAge)?Number(s.oneTimeExpenseAmount||0):0;
+  var mode=Number(s.retirementSpendingMode||1);
+  var baseSpend=mode===2?data.budget.reduce(function(a,x){return a+Number(x[1]||0);},0)*12:mode===3?spendingEstimate().retirementEstimate:Number(s.retireSpend||0);
+  var spend=baseSpend*Math.pow(1+Number(s.inflation||0)/100,age-Number(s.age));
+  var inc=retirementIncomeAtAge(age,wifeAge),taxable=inc.pension+inc.cpp+inc.wcpp+inc.oas+inc.woas;
+  var netExternal=inc.wifeEmploymentNet+inc.wcb+taxable*(1-pensionTax),need=Math.max(0,spend+extraExpense-netExternal);
+  var w={rrsp:0,userTfsa:0,wifeRrsp:0,nonReg:0,tax:0,net:0};
+  var order=Number(s.withdrawalStrategy)===2?["userTfsa","nonReg","rrsp","wifeRrsp"]:Number(s.withdrawalStrategy)===3?["nonReg","rrsp","wifeRrsp","userTfsa"]:["rrsp","wifeRrsp","nonReg","userTfsa"];
+  order.forEach(function(key){if(need<=.01)return;var tax=(key==="rrsp"||key==="wifeRrsp")?pensionTax:(key==="nonReg"?nonRegTax:0);var r=takeFromAccount(account,key,need,tax);w[key]+=r.gross;w.tax+=r.tax;w.net+=r.net;need=Math.max(0,need-r.net);});
+  var strategicGross=0,strategicTax=0,tfsaDeposit=0,nonRegDeposit=0;
+  if(Number(s.rrspDrawdownEnabled||0)===1&&age>=Number(s.rrspDrawdownStartAge||55)&&age<Number(s.rrspDrawdownEndAge||70)&&account.rrsp>0){
+   var room=Math.max(0,Number(s.lowestTaxBracketCeiling||0)-(inc.cpp+inc.oas+w.rrsp));
+   strategicGross=Math.min(account.rrsp,room); account.rrsp-=strategicGross; strategicTax=strategicGross*bracketTax;
+   var net=strategicGross-strategicTax; tfsaDeposit=Math.min(net,tfsaRoom); account.userTfsa+=tfsaDeposit; tfsaRoom-=tfsaDeposit; nonRegDeposit=Math.max(0,net-tfsaDeposit); account.nonReg+=nonRegDeposit;
+  }
+  var growth={rrsp:account.rrsp*rate,userTfsa:account.userTfsa*rate,wifeRrsp:account.wifeRrsp*rate,nonReg:account.nonReg*rate};
+  account.rrsp+=growth.rrsp;account.userTfsa+=growth.userTfsa;account.wifeRrsp+=growth.wifeRrsp;account.nonReg+=growth.nonReg;
+  var endBalance=account.rrsp+account.userTfsa+account.wifeRrsp+account.nonReg;
+  rows.push({age:age,wifeAge:wifeAge,startBalance:startBalance,startAccounts:start,inheritance:inheritance,extraExpense:extraExpense,spend:spend,wifeEmployment:inc.wifeEmploymentNet,pension:inc.pension,wcb:inc.wcb,cpp:inc.cpp,wcpp:inc.wcpp,oas:inc.oas,woas:inc.woas,netExternal:netExternal,rrspWithdrawal:w.rrsp,userTfsaWithdrawal:w.userTfsa,wifeRrspWithdrawal:w.wifeRrsp,nonRegWithdrawal:w.nonReg,withdrawalTax:w.tax+strategicTax,withdrawal:w.rrsp+w.userTfsa+w.wifeRrsp+w.nonReg+strategicGross,netWithdrawal:w.net,strategicRrspWithdrawal:strategicGross,strategicRrspTax:strategicTax,tfsaDeposit:tfsaDeposit,nonRegDeposit:nonRegDeposit,growth:growth.rrsp+growth.userTfsa+growth.wifeRrsp+growth.nonReg,endAccounts:{rrsp:account.rrsp,userTfsa:account.userTfsa,wifeRrsp:account.wifeRrsp,nonReg:account.nonReg},endBalance:endBalance,depleted:need>.01,unfunded:need});
  }
- function closeYear(){
-  if(!year)return;
-  year.endAccounts=cleanAccountSnapshot(accounts);
-  year.endBalance=accountTotal(accounts);
-  annualRows.push(year);
- }
-
- for(var month=0;month<totalMonths;month++){
-  var userAge=currentAge+month/12;
-  var wifeAge=userAge-Number(s.wifeAgeDiff||0);
-  var retired=month>=retirementMonth;
-
-  if(retired){
-   var retirementYearIndex=Math.floor((month-retirementMonth)/12);
-   if((month-retirementMonth)%12===0){
-    closeYear();
-    year=openYear(userAge,wifeAge);
-    if(retirementYearIndex>0)tfsaRoom+=annualTfsaRoom;
-   }
-  }
-
-  if(!retired){
-   accounts.rrsp+=monthlyContrib.rrsp;
-   accounts.wifeRrsp+=monthlyContrib.wifeRrsp;
-   accounts.tfsa+=monthlyContrib.tfsa;
-   accounts.nonReg+=monthlyContrib.nonReg;
-  }
-
-  if(!inheritanceDone&&userAge>=Number(s.inheritanceAge||999)&&Number(s.inheritanceAmount||0)>0){
-   accounts.nonReg+=Number(s.inheritanceAmount||0);
-   inheritanceDone=true;
-   if(year)year.inheritance+=Number(s.inheritanceAmount||0);
-  }
-
-  var extraExpense=0;
-  if(!expenseDone&&userAge>=Number(s.oneTimeExpenseAge||999)&&Number(s.oneTimeExpenseAmount||0)>0){
-   extraExpense=Number(s.oneTimeExpenseAmount||0);
-   expenseDone=true;
-   if(year)year.specialExpense+=extraExpense;
-  }
-
-  if(retired){
-   var inc=benefitIncomeAtMonth(userAge,wifeAge,month);
-   var taxableBenefits=inc.pension+inc.cpp+inc.wifeCpp+inc.oas+inc.wifeOas;
-   var externalNet=inc.wifeEmploymentNet+inc.wcb+taxableBenefits*(1-pensionTax);
-   var spending=retirementSpendingBase()/12*Math.pow(1+inflationRate,month);
-   var need=Math.max(0,spending+extraExpense-externalNet);
-
-   year.externalNet+=externalNet;
-   year.spending+=spending;
-
-   var order=retirementWithdrawalOrder();
-   for(var oi=0;oi<order.length&&need>0.01;oi++){
-    var key=order[oi];
-    var tax=key==="rrsp"||key==="wifeRrsp"?pensionTax:(key==="nonReg"?nonRegTax:0);
-    var w=withdrawNetFromAccount(accounts,key,need,tax);
-    need=Math.max(0,need-w.net);
-    year.withdrawalTax+=w.tax;
-    if(key==="rrsp")year.rrspWithdrawal+=w.gross;
-    if(key==="wifeRrsp")year.wifeRrspWithdrawal+=w.gross;
-    if(key==="tfsa")year.tfsaWithdrawal+=w.gross;
-    if(key==="nonReg")year.nonRegWithdrawal+=w.gross;
-   }
-
-   // Once each retirement year, draw unused personal bracket room from the user's RRSP.
-   if((month-retirementMonth)%12===0 &&
-      Number(s.rrspDrawdownEnabled||0)===1 &&
-      userAge>=Number(s.rrspDrawdownStartAge||55) &&
-      userAge<Number(s.rrspDrawdownEndAge||70) &&
-      accounts.rrsp>0){
-    var annualPersonalCpp=(inc.cpp+inc.oas)*12;
-    var bracketRoom=Math.max(0,Number(s.lowestTaxBracketCeiling||0)-annualPersonalCpp);
-    var gross=Math.min(accounts.rrsp,bracketRoom);
-    accounts.rrsp-=gross;
-    var tax=gross*bracketTax;
-    var net=gross-tax;
-    var toTfsa=Math.min(net,tfsaRoom);
-    accounts.tfsa+=toTfsa;
-    tfsaRoom-=toTfsa;
-    accounts.nonReg+=Math.max(0,net-toTfsa);
-    year.strategicRrsp+=gross;
-    year.strategicTax+=tax;
-    year.tfsaTransfer+=toTfsa;
-    year.nonRegTransfer+=Math.max(0,net-toTfsa);
-   }
-
-   if(need>0.01){
-    year.unfunded+=need;
-    if(depletionAge===null)depletionAge=userAge;
-   }
-  }
-
-  var growth=0;
-  ["rrsp","wifeRrsp","tfsa","nonReg"].forEach(function(key){
-   var g=accounts[key]*investmentRate;
-   accounts[key]+=g;
-   growth+=g;
-  });
-  if(year)year.growth+=growth;
- }
-
- closeYear();
-
- return{
-  rows:annualRows,
-  retirementAge:retireAge,endAge:endAge,depletionAge:depletionAge,
-  startingDetailedTotal:startingDetailedTotal,
-  aggregateInvestmentSetting:Number(s.investments||0),
-  retirementAccounts:annualRows.length?annualRows[0].startAccounts:cleanAccountSnapshot(accounts),
-  retirementBalance:annualRows.length?annualRows[0].startBalance:accountTotal(accounts),
-  endingAccounts:cleanAccountSnapshot(accounts),endingBalance:accountTotal(accounts),
-  realEndingBalance:accountTotal(accounts)/Math.pow(1+Number(s.inflation||0)/100,endAge-currentAge)
- };
+ return rows;
+}
+function realDollars(amount,age){
+ var s=data.settings;
+ return Number(amount||0)/Math.pow(1+s.inflation/100,Math.max(0,Number(age)-Number(s.age)));
 }
 function projection(age,wifeAgeOverride){
  var s=data.settings;
- var sim=retirementSimulation(s.returnRate);
- var row=sim.rows.find(function(r){return Math.abs(r.age-Number(age))<0.51;})||sim.rows[0];
- if(!row)return{age:age,wifeAge:Number(age)-Number(s.wifeAgeDiff||0),inv:sim.retirementBalance,spend:0,income:0,gap:0};
- var netWithdrawals=row.rrspWithdrawal+row.wifeRrspWithdrawal+row.tfsaWithdrawal+row.nonRegWithdrawal-row.withdrawalTax;
+ var wifeDiff=(wifeAgeOverride===undefined||wifeAgeOverride===null)?s.wifeAgeDiff:Number(age)-Number(wifeAgeOverride);
+ var row=retirementPlan(s.returnRate,wifeDiff).find(function(x){return x.age===Number(age);});
+ if(!row)return{age:age,wifeAge:age-wifeDiff,inv:balanceAtRetirement(s.returnRate),spend:0,income:0,gap:0,wifeEmployment:0,pension:0,wcb:0,cpp:0,wcpp:0,oas:0,woas:0,investmentDraw:0};
  return{
-  age:row.age,wifeAge:row.wifeAge,inv:row.startBalance,spend:row.spending,
-  income:row.externalNet+netWithdrawals,gap:row.externalNet+netWithdrawals-row.spending-row.specialExpense
+  age:row.age,wifeAge:row.wifeAge,inv:row.startBalance,spend:row.spend,
+  income:row.netExternal+row.netWithdrawal,gap:row.netExternal+row.netWithdrawal-row.spend-row.extraExpense,
+  wifeEmployment:row.wifeEmployment,pension:row.pension,wcb:row.wcb,cpp:row.cpp,wcpp:row.wcpp,
+  oas:row.oas,woas:row.woas,investmentDraw:row.withdrawal
  };
 }
 function renderRetirement(){
- var s=data.settings;
- var expected=retirementSimulation(s.returnRate);
- var conservative=retirementSimulation(s.conservativeReturn);
- var optimistic=retirementSimulation(s.optimisticReturn);
- var selectedIndex=Math.max(0,Math.min(expected.rows.length-1,Math.round(Number(s.retirementScenarioUserAge||s.retireAge)-Number(s.retireAge))));
- var selected=expected.rows[selectedIndex]||expected.rows[0];
- var accountInputTotal=Number(s.rrspBalance||0)+Number(s.wifeRrspBalance||0)+Number(s.userTfsaBalance||0)+Number(s.nonRegisteredBalance||0);
- var mismatch=Number(s.investments||0)-accountInputTotal;
-
- function resultText(sim){
-  return sim.depletionAge===null?"Funded through "+sim.endAge:"Shortfall begins near age "+sim.depletionAge.toFixed(1);
- }
- function accountRows(a){
-  return'<tr><td>Your RRSP</td><td>'+money(a.rrsp)+'</td></tr>'+
-   '<tr><td>Wife RRSP</td><td>'+money(a.wifeRrsp)+'</td></tr>'+
-   '<tr><td>Your TFSA</td><td>'+money(a.tfsa)+'</td></tr>'+
-   '<tr><td>Non-registered</td><td>'+money(a.nonReg)+'</td></tr>';
- }
-
+ var s=data.settings,expected=retirementPlan(s.returnRate),conservative=retirementPlan(s.conservativeReturn),optimistic=retirementPlan(s.optimisticReturn);
+ function sum(rows){var d=rows.find(function(x){return x.depleted;}),last=rows[rows.length-1];return{d:d?d.age:null,end:last?last.endBalance:0,real:last?realDollars(last.endBalance,s.retirementEndAge):0};}
+ var e=sum(expected),c=sum(conservative),o=sum(optimistic),at=accountBalancesAtRetirement(s.returnRate);
+ var detailed=Number(s.rrspBalance||0)+Number(s.userTfsaBalance||0)+Number(s.wifeRrspBalance||0)+Number(s.nonRegisteredBalance||0),mismatch=Number(s.investments||0)-detailed;
+ var mode=Number(s.retirementSpendingMode||1),spending=mode===2?data.budget.reduce(function(a,x){return a+Number(x[1]||0);},0)*12:mode===3?spendingEstimate().retirementEstimate:Number(s.retireSpend||0);
  document.getElementById("retirement").innerHTML=
- '<h2>Retirement — rebuilt engine</h2>'+
- '<div class="notice"><strong>This module was rebuilt from scratch.</strong> It runs month by month, keeps every account separate, treats RRSP-to-TFSA moves as transfers rather than spending, and reconciles each retirement year.</div>'+
- '<div class="card"><h3>Core assumptions</h3><div class="form-grid">'+
- '<label>Current age<input class="ret-clean" data-k="age" type="number" step="0.1" value="'+s.age+'"></label>'+
- '<label>Retirement age<input class="ret-clean" data-k="retireAge" type="number" step="0.1" value="'+s.retireAge+'"></label>'+
- '<label>Plan through age<input class="ret-clean" data-k="retirementEndAge" type="number" step="1" value="'+s.retirementEndAge+'"></label>'+
- '<label>Spending method<select id="retirementSpendingMode"><option value="1" '+(Number(s.retirementSpendingMode)===1?'selected':'')+'>Manual target</option><option value="2" '+(Number(s.retirementSpendingMode)===2?'selected':'')+'>Current budget</option><option value="3" '+(Number(s.retirementSpendingMode)===3?'selected':'')+'>Imported transactions</option></select></label>'+
- '<label>Manual annual spending<input class="ret-clean" data-k="retireSpend" type="number" step="1000" value="'+s.retireSpend+'"></label>'+
- '<label>Annual spending currently used<input value="'+money(retirementSpendingBase())+'" disabled></label>'+
- '</div><div class="notice">The rebuilt model defaults to the manual spending target. Budget and transaction spending remain available for comparison.</div></div>'+
- '<div class="grid" style="margin-top:12px">'+
- '<div class="card"><h3>Expected result</h3><div class="metric '+(expected.depletionAge===null?'good':'bad')+'">'+resultText(expected)+'</div><p>Ending balance: '+money(expected.endingBalance)+'</p></div>'+
- '<div class="card"><h3>Conservative result</h3><div class="metric '+(conservative.depletionAge===null?'good':'bad')+'">'+resultText(conservative)+'</div><p>Ending balance: '+money(conservative.endingBalance)+'</p></div>'+
- '<div class="card"><h3>Balance at retirement</h3><div class="metric">'+money(expected.retirementBalance)+'</div></div>'+
- '<div class="card"><h3>Today-dollar ending balance</h3><div class="metric">'+money(expected.realEndingBalance)+'</div></div>'+
- '</div>'+
- '<div class="card" style="margin-top:12px"><h3>Investment accounts</h3><div class="form-grid">'+
- '<label>Your RRSP balance<input class="ret-clean-account" data-k="rrspBalance" type="number" step="1000" value="'+s.rrspBalance+'"></label>'+
- '<label>Your RRSP monthly contribution<input class="ret-clean-account" data-k="rrspMonthlyContribution" type="number" step="50" value="'+s.rrspMonthlyContribution+'"></label>'+
- '<label>Wife RRSP balance<input class="ret-clean-account" data-k="wifeRrspBalance" type="number" step="1000" value="'+s.wifeRrspBalance+'"></label>'+
- '<label>Wife RRSP monthly contribution<input class="ret-clean-account" data-k="wifeRrspMonthlyContribution" type="number" step="50" value="'+s.wifeRrspMonthlyContribution+'"></label>'+
- '<label>Your TFSA balance<input class="ret-clean-account" data-k="userTfsaBalance" type="number" step="1000" value="'+s.userTfsaBalance+'"></label>'+
- '<label>Your TFSA monthly contribution<input class="ret-clean-account" data-k="userTfsaMonthlyContribution" type="number" step="50" value="'+s.userTfsaMonthlyContribution+'"></label>'+
- '<label>Non-registered balance<input class="ret-clean-account" data-k="nonRegisteredBalance" type="number" step="1000" value="'+s.nonRegisteredBalance+'"></label>'+
- '<label>Non-registered monthly contribution<input class="ret-clean-account" data-k="nonRegisteredMonthlyContribution" type="number" step="50" value="'+s.nonRegisteredMonthlyContribution+'"></label>'+
- '</div><div class="notice '+(Math.abs(mismatch)>1?'bad':'good')+'">Detailed accounts total '+money(accountInputTotal)+'. The older aggregate investment setting is '+money(s.investments)+'. Difference: '+money(mismatch)+'. The rebuilt model uses the detailed account balances.</div></div>'+
- '<div class="card" style="margin-top:12px"><h3>Income assumptions</h3><div class="form-grid">'+
- '<label>Wife annual take-home while working<input class="ret-clean" data-k="wifeEmploymentNetAnnual" type="number" step="1000" value="'+s.wifeEmploymentNetAnnual+'"></label>'+
- '<label>Wife works until your age<input class="ret-clean" data-k="wifeWorkUntilUserAge" type="number" step="0.1" value="'+s.wifeWorkUntilUserAge+'"></label>'+
- '<label>Wife pension per month at start<input class="ret-clean" data-k="wifePension" type="number" step="100" value="'+s.wifePension+'"></label>'+
- '<label>Your CPP start age<input class="ret-clean" data-k="userCppStart" type="number" step="1" value="'+s.userCppStart+'"></label>'+
- '<label>Wife CPP start age<input class="ret-clean" data-k="wifeCppStart" type="number" step="1" value="'+s.wifeCppStart+'"></label>'+
- '<label>Your OAS start age<input class="ret-clean" data-k="userOasStart" type="number" step="1" value="'+s.userOasStart+'"></label>'+
- '<label>Wife OAS start age<input class="ret-clean" data-k="wifeOasStart" type="number" step="1" value="'+s.wifeOasStart+'"></label>'+
- '</div></div>'+
- '<div class="card" style="margin-top:12px"><h3>Return scenarios</h3><table><thead><tr><th>Scenario</th><th>Return</th><th>Result</th><th>Ending balance</th><th>Today-dollar balance</th></tr></thead><tbody>'+
- '<tr><td>Conservative</td><td>'+Number(s.conservativeReturn).toFixed(1)+'%</td><td>'+resultText(conservative)+'</td><td>'+money(conservative.endingBalance)+'</td><td>'+money(conservative.realEndingBalance)+'</td></tr>'+
- '<tr><td>Expected</td><td>'+Number(s.returnRate).toFixed(1)+'%</td><td>'+resultText(expected)+'</td><td>'+money(expected.endingBalance)+'</td><td>'+money(expected.realEndingBalance)+'</td></tr>'+
- '<tr><td>Optimistic</td><td>'+Number(s.optimisticReturn).toFixed(1)+'%</td><td>'+resultText(optimistic)+'</td><td>'+money(optimistic.endingBalance)+'</td><td>'+money(optimistic.realEndingBalance)+'</td></tr>'+
- '</tbody></table></div>'+
- '<div class="card" style="margin-top:12px"><h3>Balances at retirement — expected return</h3><table><tbody>'+accountRows(expected.retirementAccounts)+'</tbody></table></div>'+
- '<div class="card" style="margin-top:12px"><h3>Year-by-year reconciliation — expected return</h3><div style="overflow-x:auto"><table><thead><tr><th>Age</th><th>Wife</th><th>Start</th><th>Income net</th><th>Spending</th><th>RRSP</th><th>Wife RRSP</th><th>TFSA</th><th>Non-reg</th><th>Strategic RRSP</th><th>TFSA transfer</th><th>Tax</th><th>Growth</th><th>End</th><th>Unfunded</th></tr></thead><tbody>'+
- expected.rows.map(function(r){return'<tr><td>'+r.age.toFixed(1)+'</td><td>'+r.wifeAge.toFixed(1)+'</td><td>'+money(r.startBalance)+'</td><td>'+money(r.externalNet)+'</td><td>'+money(r.spending+r.specialExpense)+'</td><td>'+money(r.rrspWithdrawal)+'</td><td>'+money(r.wifeRrspWithdrawal)+'</td><td>'+money(r.tfsaWithdrawal)+'</td><td>'+money(r.nonRegWithdrawal)+'</td><td>'+money(r.strategicRrsp)+'</td><td>'+money(r.tfsaTransfer)+'</td><td>'+money(r.withdrawalTax+r.strategicTax)+'</td><td>'+money(r.growth)+'</td><td>'+money(r.endBalance)+'</td><td class="'+(r.unfunded>0?'bad':'')+'">'+money(r.unfunded)+'</td></tr>';}).join("")+
+ '<h2>Retirement — rebuilt engine</h2><div class="notice"><strong>Repair complete.</strong> Only the retirement functions were replaced. All other app pages were preserved.</div>'+
+ '<div class="card"><h3>Core assumptions</h3><div class="form-grid"><label>Current age<input class="ret-repair" data-k="age" type="number" step="0.1" value="'+s.age+'"></label><label>Retirement age<input class="ret-repair" data-k="retireAge" type="number" step="0.1" value="'+s.retireAge+'"></label><label>Plan through age<input class="ret-repair" data-k="retirementEndAge" type="number" step="1" value="'+s.retirementEndAge+'"></label><label>Spending method<select id="retirementSpendingMode"><option value="1" '+(mode===1?'selected':'')+'>Manual target</option><option value="2" '+(mode===2?'selected':'')+'>Current budget</option><option value="3" '+(mode===3?'selected':'')+'>Imported transactions</option></select></label><label>Manual annual spending<input class="ret-repair" data-k="retireSpend" type="number" step="1000" value="'+s.retireSpend+'"></label><label>Annual spending used<input value="'+money(spending)+'" disabled></label></div></div>'+
+ '<div class="grid" style="margin-top:12px"><div class="card"><h3>Expected</h3><div class="metric '+(e.d?'bad':'good')+'">'+(e.d?'Shortfall at '+e.d:'Funded through '+s.retirementEndAge)+'</div><p>'+money(e.end)+' ending balance</p></div><div class="card"><h3>Conservative</h3><div class="metric '+(c.d?'bad':'good')+'">'+(c.d?'Shortfall at '+c.d:'Funded through '+s.retirementEndAge)+'</div><p>'+money(c.end)+' ending balance</p></div><div class="card"><h3>Balance at retirement</h3><div class="metric">'+money(at.total)+'</div></div><div class="card"><h3>Expected ending balance today</h3><div class="metric">'+money(e.real)+'</div></div></div>'+
+ '<div class="card" style="margin-top:12px"><h3>Account check</h3><table><tbody><tr><td>Your RRSP</td><td>'+money(s.rrspBalance)+'</td></tr><tr><td>Wife RRSP</td><td>'+money(s.wifeRrspBalance)+'</td></tr><tr><td>Your TFSA</td><td>'+money(s.userTfsaBalance)+'</td></tr><tr><td>Non-registered</td><td>'+money(s.nonRegisteredBalance)+'</td></tr><tr><td><strong>Detailed total</strong></td><td><strong>'+money(detailed)+'</strong></td></tr><tr><td>Older aggregate setting</td><td>'+money(s.investments)+'</td></tr></tbody></table><div class="notice '+(Math.abs(mismatch)>1?'bad':'good')+'">Difference: '+money(mismatch)+'. The model uses detailed accounts.</div></div>'+
+ '<div class="card" style="margin-top:12px"><h3>Year-by-year reconciliation</h3><div style="overflow-x:auto"><table><thead><tr><th>Age</th><th>Start</th><th>Net income</th><th>Spending</th><th>RRSP</th><th>Wife RRSP</th><th>TFSA</th><th>Non-reg</th><th>Strategic RRSP</th><th>TFSA deposit</th><th>Tax</th><th>Growth</th><th>End</th><th>Unfunded</th></tr></thead><tbody>'+expected.map(function(r){return'<tr><td>'+r.age+'</td><td>'+money(r.startBalance)+'</td><td>'+money(r.netExternal)+'</td><td>'+money(r.spend+r.extraExpense)+'</td><td>'+money(r.rrspWithdrawal)+'</td><td>'+money(r.wifeRrspWithdrawal)+'</td><td>'+money(r.userTfsaWithdrawal)+'</td><td>'+money(r.nonRegWithdrawal)+'</td><td>'+money(r.strategicRrspWithdrawal)+'</td><td>'+money(r.tfsaDeposit)+'</td><td>'+money(r.withdrawalTax)+'</td><td>'+money(r.growth)+'</td><td>'+money(r.endBalance)+'</td><td class="'+(r.unfunded>0?'bad':'')+'">'+money(r.unfunded)+'</td></tr>';}).join("")+'</tbody></table></div></div>'+
+ '<div class="card" style="margin-top:12px"><h3>Return scenarios</h3><table><thead><tr><th>Scenario</th><th>Return</th><th>Result</th><th>Ending balance</th></tr></thead><tbody><tr><td>Conservative</td><td>'+Number(s.conservativeReturn).toFixed(1)+'%</td><td>'+(c.d?'Shortfall at '+c.d:'Funded')+'</td><td>'+money(c.end)+'</td></tr><tr><td>Expected</td><td>'+Number(s.returnRate).toFixed(1)+'%</td><td>'+(e.d?'Shortfall at '+e.d:'Funded')+'</td><td>'+money(e.end)+'</td></tr><tr><td>Optimistic</td><td>'+Number(s.optimisticReturn).toFixed(1)+'%</td><td>'+(o.d?'Shortfall at '+o.d:'Funded')+'</td><td>'+money(o.end)+'</td></tr></tbody></table></div>';
+ document.querySelectorAll(".ret-repair").forEach(function(el){el.onchange=function(){data.settings[el.dataset.k]=Number(el.value||0);localStorage.setItem(STORAGE_KEY,JSON.stringify(data));render();};});
+ document.getElementById("retirementSpendingMode").onchange=function(){data.settings.retirementSpendingMode=Number(this.value);localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderRetirement();};
+}
+function renderNetWorth(){
+ var t=totals(),s=data.settings,assets=[["Primary home",s.home],["NS property 1",s.ns1],["NS property 2",s.ns2],["Investments",s.investments],["Cash",s.cash],["Vehicles",s.vehicles],["Boat",s.boat],["Camper",s.camper]];
+ document.getElementById("networth").innerHTML='<h2>Net Worth</h2><div class="grid"><div class="card"><h3>Assets</h3><div class="metric">'+money(t.assets)+'</div></div><div class="card"><h3>Debt</h3><div class="metric">'+money(t.debt)+'</div></div><div class="card"><h3>Net worth</h3><div class="metric">'+money(t.networth)+'</div></div></div><div class="card" style="margin-top:12px"><table><thead><tr><th>Asset</th><th>Value</th></tr></thead><tbody>'+assets.map(function(x){return"<tr><td>"+x[0]+"</td><td>"+money(x[1])+"</td></tr>";}).join("")+"</tbody></table></div>";
+}
+function renderLife(){
+ document.getElementById("life").innerHTML='<h2>Life Goals</h2><div class="toolbar"><button id="addLife">Add life goal</button></div><div class="card"><table><thead><tr><th>Goal</th><th>Target</th><th>Saved</th><th>Year</th><th>Progress</th><th>Notes</th><th></th></tr></thead><tbody>'+
+ data.life.map(function(p,i){var pr=p.target?Math.min(100,p.saved/p.target*100):0;return'<tr><td><input class="l-name" data-i="'+i+'" value="'+esc(p.name)+'"></td><td><input class="l-target" data-i="'+i+'" type="number" value="'+p.target+'"></td><td><input class="l-saved" data-i="'+i+'" type="number" value="'+p.saved+'"></td><td><input class="l-year" data-i="'+i+'" type="number" value="'+p.year+'"></td><td>'+pr.toFixed(1)+'%</td><td><input class="l-notes" data-i="'+i+'" value="'+esc(p.notes)+'"></td><td><button class="danger l-del" data-i="'+i+'">Delete</button></td></tr>';}).join("")+
+ '</tbody></table></div>';
+ document.getElementById("addLife").onclick=function(){data.life.push({name:"New life goal",target:0,saved:0,year:new Date().getFullYear()+1,notes:""});save();};
+ [[".l-name","name",String],[".l-target","target",Number],[".l-saved","saved",Number],[".l-year","year",Number],[".l-notes","notes",String]].forEach(function(cfg){document.querySelectorAll(cfg[0]).forEach(function(el){el.onchange=function(){data.life[Number(el.dataset.i)][cfg[1]]=cfg[2](el.value);save();};});});
+ document.querySelectorAll(".l-del").forEach(function(el){el.onclick=function(){data.life.splice(Number(el.dataset.i),1);save();};});
+}
+function txDateObj(v){
+ var s=String(v||"").trim();
+ if(/^\d{4}-\d{2}-\d{2}$/.test(s))return new Date(s+"T12:00:00");
+ if(/^\d{8}$/.test(s))return new Date(s.slice(0,4)+"-"+s.slice(4,6)+"-"+s.slice(6,8)+"T12:00:00");
+ var d=new Date(s);
+ return isNaN(d.getTime())?null:d;
+}
+function monthKeyFromDate(d){
+ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+}
+function monthlyHistory(count){
+ var out=[],now=new Date();
+ for(var i=count-1;i>=0;i--){
+  var d=new Date(now.getFullYear(),now.getMonth()-i,1);
+  var key=monthKeyFromDate(d),spend=0,income=0;
+  data.transactions.forEach(function(t){
+   var td=txDateObj(t.date);
+   if(!td||monthKeyFromDate(td)!==key)return;
+   var amt=Number(t.amount||0);
+   if(t.include==="Yes")spend+=Math.abs(amt);
+   if(t.category==="Income")income+=Math.abs(amt);
+  });
+  out.push({key:key,label:d.toLocaleString("en-CA",{month:"short"}),spend:spend,income:income});
+ }
+ return out;
+}
+function currentNetWorth(){
+ return totals().networth;
+}
+function saveNetWorthSnapshot(){
+ var month=data.review.month||new Date().toISOString().slice(0,7);
+ var existing=data.netWorthHistory.find(function(x){return x.month===month;});
+ if(existing)existing.value=currentNetWorth();else data.netWorthHistory.push({month:month,value:currentNetWorth()});
+ data.netWorthHistory.sort(function(a,b){return a.month.localeCompare(b.month);});
+ save();
+}
+function recurringCandidates(){
+ var counts={};
+ data.transactions.forEach(function(t){
+  var k=(t.description||"").trim().toUpperCase();
+  if(!k)return;
+  if(!counts[k])counts[k]={description:t.description,count:0,total:0};
+  counts[k].count++;counts[k].total+=Math.abs(Number(t.amount||0));
+ });
+ return Object.values(counts).filter(function(x){return x.count>=2;}).sort(function(a,b){return b.count-a.count;}).slice(0,12);
+}
+function renderReview(){
+ var month=data.review.month||new Date().toISOString().slice(0,7);
+ var t=totals(),cat=byCategoryForMonth(month),rec=recurringCandidates();
+ var monthTx=monthTransactions(month);
+ var monthSpend=monthTx.filter(function(x){return x.include==="Yes";}).reduce(function(a,x){return a+Math.abs(Number(x.amount||0));},0);
+ var monthNeedsReview=monthTx.filter(function(x){return !x.category||x.category==="Miscellaneous"||x.category==="Needs Review";}).length;
+ document.getElementById("review").innerHTML='<h2>Monthly Review</h2><div class="grid two"><div class="card"><h3>Review controls</h3><label>Review month<input id="reviewMonth" type="month" value="'+esc(month)+'"></label><p>Transactions this month: <strong>'+monthTx.length+'</strong></p><p>Included spending this month: <strong>'+money(monthSpend)+'</strong></p><p>Needs review this month: <strong>'+monthNeedsReview+'</strong></p><p>Monthly plan result: <strong class="'+(t.surplus>=0?"good":"bad")+'">'+money(t.surplus)+'</strong></p><div class="toolbar"><button id="saveNW">Save net-worth snapshot</button></div></div><div class="card"><h3>Decisions and notes</h3><textarea id="reviewNotes">'+esc(data.review.notes||"")+'</textarea></div></div>'+
+ '<div class="grid two" style="margin-top:12px"><div class="card"><h3>Budget alerts — '+esc(month)+'</h3><table><thead><tr><th>Category</th><th>Monthly budget</th><th>Actual</th><th>Status</th></tr></thead><tbody>'+
+ data.budget.map(function(x){var a=cat[x[0]]||0;return'<tr><td>'+esc(x[0])+'</td><td>'+money(x[1])+'</td><td>'+money(a)+'</td><td class="'+(a<=x[1]?"good":"bad")+'">'+(a<=x[1]?"OK":"Over")+'</td></tr>';}).join("")+
+ '</tbody></table></div><div class="card"><h3>Recurring bill candidates</h3><table><thead><tr><th>Merchant</th><th>Count</th><th>Average</th></tr></thead><tbody>'+
+ rec.map(function(x){return'<tr><td>'+esc(x.description)+'</td><td>'+x.count+'</td><td>'+money(x.total/x.count)+'</td></tr>';}).join("")+
  '</tbody></table></div></div>'+
- '<div class="notice">Annual reconciliation: start balance + inheritance + transfers retained in investment accounts + growth − withdrawals = end balance. Contributions stop at the retirement month. Tax remains an estimate rather than a Canadian tax-return calculation.</div>';
-
- document.querySelectorAll(".ret-clean").forEach(function(el){el.onchange=function(){
-  data.settings[el.dataset.k]=Number(el.value||0);
-  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));render();
- };});
- document.querySelectorAll(".ret-clean-account").forEach(function(el){el.onchange=function(){
-  data.settings[el.dataset.k]=Math.max(0,Number(el.value||0));
-  data.settings.investments=Number(data.settings.rrspBalance||0)+Number(data.settings.wifeRrspBalance||0)+Number(data.settings.userTfsaBalance||0)+Number(data.settings.nonRegisteredBalance||0);
-  data.settings.investing=Number(data.settings.rrspMonthlyContribution||0)+Number(data.settings.wifeRrspMonthlyContribution||0)+Number(data.settings.userTfsaMonthlyContribution||0)+Number(data.settings.nonRegisteredMonthlyContribution||0);
-  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));render();
- };});
- document.getElementById("retirementSpendingMode").onchange=function(){
-  data.settings.retirementSpendingMode=Number(this.value);
-  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderRetirement();
+ '<div class="card" style="margin-top:12px"><h3>Net-worth history</h3><table><thead><tr><th>Month</th><th>Net worth</th></tr></thead><tbody>'+
+ data.netWorthHistory.map(function(x){return'<tr><td>'+esc(x.month)+'</td><td>'+money(x.value)+'</td></tr>';}).join("")+
+ '</tbody></table></div>'+
+ '<div class="notice">This page now uses only the selected month for transaction counts, spending totals, Needs Review items, and budget alerts.</div>';
+ document.getElementById("reviewMonth").onchange=function(){
+  data.review.month=this.value;
+  data.reportMonth=this.value;
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+  renderReview();
+ };
+ document.getElementById("reviewNotes").onchange=function(){data.review.notes=this.value;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));};
+ document.getElementById("saveNW").onclick=saveNetWorthSnapshot;
+}
+function transactionMonth(t){
+ var d=txDateObj(t.date);
+ return d?monthKeyFromDate(d):"";
+}
+function selectedReportMonth(){
+ return data.reportMonth||data.review.month||new Date().toISOString().slice(0,7);
+}
+function monthTransactions(month){
+ return data.transactions.filter(function(t){return transactionMonth(t)===month;});
+}
+function merchantReport(month){
+ var m={};
+ monthTransactions(month).filter(function(t){return t.include==="Yes";}).forEach(function(t){
+  var k=(t.merchant||t.description||"Unknown").trim();
+  if(!m[k])m[k]=0;
+  m[k]+=Math.abs(Number(t.amount||0));
+ });
+ return Object.keys(m).map(function(k){return{name:k,total:m[k]};}).sort(function(a,b){return b.total-a.total;}).slice(0,15);
+}
+function uncategorized(month){
+ return monthTransactions(month).filter(function(t){return !t.category||t.category==="Miscellaneous"||t.category==="Needs Review";});
+}
+function byCategoryForMonth(month){
+ var m={};
+ monthTransactions(month).filter(function(t){return t.include==="Yes";}).forEach(function(t){
+  m[t.category]=(m[t.category]||0)+Math.abs(Number(t.amount||0));
+ });
+ return m;
+}
+function goalPlan(extra){
+ var ordered=data.goals.slice().sort(function(a,b){return Number(a.priority||0)-Number(b.priority||0);});
+ var states=ordered.map(function(g){
+  var remaining=String(g.name||"").toUpperCase()==="LOC"
+   ?Math.max(0,Number(g.current||0))
+   :Math.max(0,Number(g.target||0)-Number(g.current||0));
+  return{
+   name:g.name,
+   remaining:remaining,
+   baseMonthly:Math.max(0,Number(g.monthly||0)),
+   priority:Number(g.priority||0),
+   completedMonth:remaining<=0?0:null,
+   firstMonthFunding:0
+  };
+ });
+ var rollover=Math.max(0,Number(extra||0));
+ var maxMonths=600;
+ for(var month=1;month<=maxMonths;month++){
+  var activeIndex=states.findIndex(function(x){return x.remaining>0;});
+  if(activeIndex<0)break;
+  var completedThisMonth=[];
+  states.forEach(function(x,i){
+   if(x.remaining<=0)return;
+   var funding=x.baseMonthly+(i===activeIndex?rollover:0);
+   if(month===1)x.firstMonthFunding=funding;
+   if(funding<=0)return;
+   var paid=Math.min(x.remaining,funding);
+   x.remaining-=paid;
+   if(x.remaining<=0.005){
+    x.remaining=0;
+    x.completedMonth=month;
+    completedThisMonth.push(i);
+   }
+  });
+  completedThisMonth.forEach(function(i){
+   rollover+=states[i].baseMonthly;
+  });
+ }
+ return states.map(function(x,i){
+  var original=ordered[i];
+  var originalRemaining=String(original.name||"").toUpperCase()==="LOC"
+   ?Math.max(0,Number(original.current||0))
+   :Math.max(0,Number(original.target||0)-Number(original.current||0));
+  return{
+   name:x.name,
+   remaining:originalRemaining,
+   currentMonthly:x.baseMonthly,
+   firstMonthFunding:x.firstMonthFunding,
+   months:x.completedMonth
+  };
+ });
+}
+function monthNameAfter(n){
+ if(n===null)return"Not funded";
+ var d=new Date();d.setMonth(d.getMonth()+n);
+ return d.toLocaleString("en-CA",{month:"short",year:"numeric"});
+}
+function renderReports(){
+ var month=selectedReportMonth();
+ var hist=monthlyHistory(12),maxSpend=Math.max.apply(null,hist.map(function(x){return x.spend;}).concat([1]));
+ var merchants=merchantReport(month),misc=uncategorized(month),plan=goalPlan(data.optimizerExtra),cat=byCategoryForMonth(month);
+ var monthTx=monthTransactions(month);
+ var monthSpend=monthTx.filter(function(t){return t.include==="Yes";}).reduce(function(a,t){return a+Math.abs(Number(t.amount||0));},0);
+ document.getElementById("reports").innerHTML=
+ '<h2>Reports & Goal Optimizer</h2>'+
+ '<div class="card" style="margin-bottom:12px"><div class="form-grid"><label>Report month<input id="reportMonth" type="month" value="'+esc(month)+'"></label><label>Transactions this month<input value="'+monthTx.length+'" disabled></label><label>Included spending this month<input value="'+money(monthSpend)+'" disabled></label></div><div class="notice">Budget alerts and merchant totals now use only the selected month.</div></div>'+
+ '<div class="grid two"><div class="card"><h3>12-month spending trend</h3><div class="report-bars">'+
+ hist.map(function(x){return'<div class="report-col"><div class="report-bar" style="height:'+Math.max(2,(x.spend/maxSpend)*170)+'px"></div><span>'+x.label+'<br>'+money(x.spend)+'</span></div>';}).join("")+
+ '</div></div><div class="card"><h3>Uncategorized review queue — '+esc(month)+'</h3><div class="metric '+(misc.length?"bad":"good")+'">'+misc.length+'</div><p>Selected-month transactions requiring confirmation.</p><button id="goTransactions">Review transactions</button></div></div>'+
+ '<div class="grid two" style="margin-top:12px"><div class="card"><h3>Top merchants — '+esc(month)+'</h3><table><thead><tr><th>Merchant</th><th>Total</th></tr></thead><tbody>'+
+ merchants.map(function(x){return'<tr><td>'+esc(x.name)+'</td><td>'+money(x.total)+'</td></tr>';}).join("")+
+ '</tbody></table></div><div class="card"><h3>Budget alerts — '+esc(month)+'</h3><table><thead><tr><th>Category</th><th>Monthly budget</th><th>Actual</th><th>Status</th></tr></thead><tbody>'+
+ data.budget.map(function(x){var a=cat[x[0]]||0,over=a>Number(x[1]||0);return'<tr class="'+(over?"alert-row":"")+'"><td>'+esc(x[0])+'</td><td>'+money(x[1])+'</td><td>'+money(a)+'</td><td class="'+(over?"bad":"good")+'">'+(over?"Over budget":"On track")+'</td></tr>';}).join("")+
+ '</tbody></table></div></div>'+
+ '<div class="card" style="margin-top:12px"><h3>Goal funding optimizer</h3><div class="range-wrap"><input id="extraRange" type="range" min="0" max="2000" step="50" value="'+data.optimizerExtra+'"><input id="extraNumber" type="number" min="0" max="2000" step="50" value="'+data.optimizerExtra+'"></div><p>Extra monthly funding: <strong>'+money(data.optimizerExtra)+'</strong></p><table><thead><tr><th>Priority</th><th>Goal</th><th>Remaining</th><th>Current monthly</th><th>Month 1 optimized</th><th>Estimated completion</th></tr></thead><tbody>'+
+ plan.map(function(x,i){
+  var goalIndex=data.goals.findIndex(function(g){return g.name===x.name;});
+  return'<tr><td>'+(i+1)+'</td><td>'+esc(x.name)+'</td><td>'+money(x.remaining)+'</td><td><input class="optimizer-monthly" data-goal-index="'+goalIndex+'" type="number" min="0" step="25" value="'+Number(x.currentMonthly||0)+'"></td><td>'+money(x.firstMonthFunding)+'</td><td>'+monthNameAfter(x.months)+'</td></tr>';
+ }).join("")+
+ '</tbody></table><div class="notice">Current monthly is editable. Changes update the Goals page, Home dashboard, and completion dates immediately. Month 1 optimized adds the extra funding only to the highest-priority unfinished goal. When a goal finishes, its regular monthly amount rolls to the next priority beginning the following month.</div></div>';
+ document.getElementById("reportMonth").onchange=function(){
+  data.reportMonth=this.value;
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+  renderReports();
+ };
+ document.getElementById("extraRange").oninput=function(){data.optimizerExtra=Number(this.value);localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderReports();};
+ document.getElementById("extraNumber").onchange=function(){data.optimizerExtra=Math.max(0,Number(this.value||0));localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderReports();};
+ document.querySelectorAll(".optimizer-monthly").forEach(function(el){
+  el.onchange=function(){
+   var idx=Number(el.dataset.goalIndex);
+   if(idx>=0&&data.goals[idx]){
+    data.goals[idx].monthly=Math.max(0,Number(el.value||0));
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+    render();
+   }
+  };
+ });
+ document.getElementById("goTransactions").onclick=function(){
+  document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});
+  document.querySelectorAll("#nav button").forEach(function(b){b.classList.remove("active");});
+  document.getElementById("transactions").classList.add("active");
+  var btn=document.querySelector('#nav button[data-page="transactions"]');if(btn)btn.classList.add("active");
  };
 }
 function renderSettings(){
@@ -994,7 +1006,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-3.0.0-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-3.0.1-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
