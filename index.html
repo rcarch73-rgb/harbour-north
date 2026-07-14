@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 2.6.9</title>
+<title>RyanOS 2.7.0</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -48,7 +48,7 @@ input[type=range]{width:100%}
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>2.6.9 — Contributions Stop at Retirement</small></div>
+  <div><h1>RyanOS</h1><small>2.7.0 — Retirement Drawdown Plan</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -75,7 +75,7 @@ var defaults={
  settings:{
   income1:5428.78,income2:5147.32,wcb:1352.34,investing:2600,bills:1200,chores:173,
   loc:23000,rate:5.19,months:24,investments:520000,age:52,retireAge:58,returnRate:7,
-  inflation:2.5,retireSpend:72000,wifePension:3200,wifeAgeDiff:7,wifeRetireAge:55,wifeEmploymentAnnual:110000,wifeWorkUntilUserAge:62,wifeEmploymentGrowth:0,userOasMonthly:751.97,userOasStart:65,wifeOasMonthly:751.97,wifeOasStart:65,spendingLookbackMonths:12,irregularAnnualAllowance:9000,retirementScenarioUserAge:58,retirementScenarioWifeAge:51,
+  inflation:2.5,retireSpend:72000,wifePension:3200,wifeAgeDiff:7,wifeRetireAge:55,wifeEmploymentAnnual:110000,wifeWorkUntilUserAge:62,wifeEmploymentGrowth:0,userOasMonthly:751.97,userOasStart:65,wifeOasMonthly:751.97,wifeOasStart:65,spendingLookbackMonths:12,irregularAnnualAllowance:9000,retirementScenarioUserAge:58,retirementScenarioWifeAge:51,retirementEndAge:95,retirementTaxRate:15,conservativeReturn:4,optimisticReturn:8,inheritanceAmount:0,inheritanceAge:65,oneTimeExpenseAmount:0,oneTimeExpenseAge:60,
   userCpp65:1308.21,userCpp70:1857.66,userCppStart:70,wifeCpp60:878,wifeCpp65:1372,
   wifeCpp70:1948,wifeCppStart:65,home:650000,ns1:100000,ns2:40000,vehicles:25000,
   boat:18000,camper:15000,cash:0,ccDebt:0
@@ -176,7 +176,15 @@ if(!Array.isArray(data.goals))data.goals=clone(defaults.goals);
  ["spendingLookbackMonths",12],
  ["irregularAnnualAllowance",9000],
  ["retirementScenarioUserAge",58],
- ["retirementScenarioWifeAge",51]
+ ["retirementScenarioWifeAge",51],
+ ["retirementEndAge",95],
+ ["retirementTaxRate",15],
+ ["conservativeReturn",4],
+ ["optimisticReturn",8],
+ ["inheritanceAmount",0],
+ ["inheritanceAge",65],
+ ["oneTimeExpenseAmount",0],
+ ["oneTimeExpenseAge",60]
 ].forEach(function(x){
  if(data.settings[x[0]]===undefined||!isFinite(Number(data.settings[x[0]])))data.settings[x[0]]=x[1];
 });
@@ -557,80 +565,141 @@ function spendingEstimate(){
 function selectedRetirementSpending(){
  return spendingEstimate().retirementEstimate;
 }
-function projection(age,wifeAgeOverride){
- var s=data.settings,y=Math.max(0,age-s.age);
- var growth=s.returnRate/100;
- var contributionYears=Math.max(0,Math.min(y,s.retireAge-s.age));
- var postContributionYears=Math.max(0,y-contributionYears);
- var baseInvestments=s.investments*Math.pow(1+growth,y);
- var contributionsAtStop=growth===0?s.investing*12*contributionYears:s.investing*12*((Math.pow(1+growth,contributionYears)-1)/growth);
- var inv=baseInvestments+contributionsAtStop*Math.pow(1+growth,postContributionYears);
- var spend=selectedRetirementSpending()*Math.pow(1+s.inflation/100,y);
- var wifeAge=(wifeAgeOverride===undefined||wifeAgeOverride===null)?age-s.wifeAgeDiff:Number(wifeAgeOverride);
-
+function retirementIncomeAtAge(age,wifeAge){
+ var s=data.settings;
+ var years=Math.max(0,age-s.age);
  var wifeWorking=age<s.wifeWorkUntilUserAge;
- var wifeEmployment=wifeWorking?s.wifeEmploymentAnnual*Math.pow(1+s.wifeEmploymentGrowth/100,Math.max(0,y)):0;
- var pension=(!wifeWorking&&wifeAge>=s.wifeRetireAge)?s.wifePension*12:0;
+ var wifeEmployment=wifeWorking?s.wifeEmploymentAnnual*Math.pow(1+s.wifeEmploymentGrowth/100,years):0;
+ var indexFactor=Math.pow(1+s.inflation/100,years);
+ var pension=(!wifeWorking&&wifeAge>=s.wifeRetireAge)?s.wifePension*12*indexFactor:0;
  var wcb=age<65?s.wcb*12:0;
- var cpp=age>=s.userCppStart?(s.userCppStart===70?s.userCpp70:s.userCpp65)*12:0;
- var wcpp=wifeAge>=s.wifeCppStart?(s.wifeCppStart===60?s.wifeCpp60:s.wifeCppStart===70?s.wifeCpp70:s.wifeCpp65)*12:0;
- var oas=age>=s.userOasStart?s.userOasMonthly*12:0;
- var woas=wifeAge>=s.wifeOasStart?s.wifeOasMonthly*12:0;
- var investmentDraw=inv*.04;
- var income=wifeEmployment+pension+wcb+cpp+wcpp+oas+woas+investmentDraw;
+ var cpp=age>=s.userCppStart?(s.userCppStart===70?s.userCpp70:s.userCpp65)*12*indexFactor:0;
+ var wcpp=wifeAge>=s.wifeCppStart?(s.wifeCppStart===60?s.wifeCpp60:s.wifeCppStart===70?s.wifeCpp70:s.wifeCpp65)*12*indexFactor:0;
+ var oas=age>=s.userOasStart?s.userOasMonthly*12*indexFactor:0;
+ var woas=wifeAge>=s.wifeOasStart?s.wifeOasMonthly*12*indexFactor:0;
+ return{wifeEmployment:wifeEmployment,pension:pension,wcb:wcb,cpp:cpp,wcpp:wcpp,oas:oas,woas:woas};
+}
+function retirementPlan(returnRate,wifeAgeDifferenceOverride){
+ var s=data.settings;
+ var rate=Number(returnRate)/100;
+ var tax=Math.max(0,Math.min(.6,Number(s.retirementTaxRate||0)/100));
+ var endAge=Math.max(s.retireAge,Number(s.retirementEndAge||95));
+ var wifeDiff=(wifeAgeDifferenceOverride===undefined||wifeAgeDifferenceOverride===null)?s.wifeAgeDiff:Number(wifeAgeDifferenceOverride);
+ var balance=Number(s.investments||0);
+ var rows=[];
+ for(var age=Number(s.age);age<=endAge;age++){
+  var wifeAge=age-wifeDiff;
+  var startBalance=balance;
+  var growth=startBalance*rate;
+  balance+=growth;
+
+  var contribution=age<s.retireAge?Number(s.investing||0)*12:0;
+  balance+=contribution;
+
+  var inheritance=age===Number(s.inheritanceAge)?Number(s.inheritanceAmount||0):0;
+  balance+=inheritance;
+
+  var extraExpense=age===Number(s.oneTimeExpenseAge)?Number(s.oneTimeExpenseAmount||0):0;
+  var spend=age>=s.retireAge?selectedRetirementSpending()*Math.pow(1+s.inflation/100,age-s.age):0;
+  var inc=retirementIncomeAtAge(age,wifeAge);
+  var taxableExternal=inc.wifeEmployment+inc.pension+inc.cpp+inc.wcpp+inc.oas+inc.woas;
+  var netExternal=inc.wcb+taxableExternal*(1-tax);
+  var requiredNet=spend+extraExpense;
+  var netGap=Math.max(0,requiredNet-netExternal);
+  var grossWithdrawal=age>=s.retireAge?(tax>=.99?netGap:netGap/(1-tax)):0;
+  grossWithdrawal=Math.min(balance,grossWithdrawal);
+  balance-=grossWithdrawal;
+
+  var surplus=age>=s.retireAge?Math.max(0,netExternal-requiredNet):0;
+  balance+=surplus;
+
+  var depleted=balance<=0&&netGap>0;
+  rows.push({
+   age:age,wifeAge:wifeAge,startBalance:startBalance,growth:growth,contribution:contribution,
+   inheritance:inheritance,extraExpense:extraExpense,spend:spend,
+   wifeEmployment:inc.wifeEmployment,pension:inc.pension,wcb:inc.wcb,cpp:inc.cpp,wcpp:inc.wcpp,oas:inc.oas,woas:inc.woas,
+   grossExternal:taxableExternal+inc.wcb,netExternal:netExternal,withdrawal:grossWithdrawal,surplus:surplus,
+   endBalance:Math.max(0,balance),depleted:depleted
+  });
+  if(balance<0)balance=0;
+ }
+ return rows;
+}
+function projection(age,wifeAgeOverride){
+ var s=data.settings;
+ var wifeDiff=(wifeAgeOverride===undefined||wifeAgeOverride===null)?s.wifeAgeDiff:Number(age)-Number(wifeAgeOverride);
+ var row=retirementPlan(s.returnRate,wifeDiff).find(function(x){return x.age===Number(age);});
+ if(!row)return{age:age,wifeAge:age-wifeDiff,inv:0,spend:0,income:0,gap:0,wifeEmployment:0,pension:0,wcb:0,cpp:0,wcpp:0,oas:0,woas:0,investmentDraw:0};
+ var totalAvailable=row.netExternal+row.withdrawal*(1-Math.max(0,Math.min(.6,Number(s.retirementTaxRate||0)/100)));
  return{
-  age:age,wifeAge:wifeAge,inv:inv,spend:spend,income:income,gap:income-spend,
-  wifeEmployment:wifeEmployment,pension:pension,wcb:wcb,cpp:cpp,wcpp:wcpp,
-  oas:oas,woas:woas,investmentDraw:investmentDraw
+  age:row.age,wifeAge:row.wifeAge,inv:row.endBalance,spend:row.spend,
+  income:totalAvailable,gap:totalAvailable-row.spend-row.extraExpense,
+  wifeEmployment:row.wifeEmployment,pension:row.pension,wcb:row.wcb,cpp:row.cpp,wcpp:row.wcpp,
+  oas:row.oas,woas:row.woas,investmentDraw:row.withdrawal
  };
 }
 function renderRetirement(){
  var s=data.settings;
  var scenarioUserAge=Number(s.retirementScenarioUserAge||s.retireAge);
  var scenarioWifeAge=Number(s.retirementScenarioWifeAge||scenarioUserAge-s.wifeAgeDiff);
- var ages=[55,56,57,58,59,60,62,65,67,70];
- var selected=projection(scenarioUserAge,scenarioWifeAge);
- var userCppAmount=s.userCppStart===70?s.userCpp70:s.userCpp65;
- var wifeCppAmount=s.wifeCppStart===60?s.wifeCpp60:(s.wifeCppStart===70?s.wifeCpp70:s.wifeCpp65);
+ var wifeDiff=scenarioUserAge-scenarioWifeAge;
+ var expected=retirementPlan(s.returnRate,wifeDiff);
+ var selected=expected.find(function(x){return x.age===scenarioUserAge;})||expected[0];
+ var conservative=retirementPlan(s.conservativeReturn,wifeDiff);
+ var optimistic=retirementPlan(s.optimisticReturn,wifeDiff);
+ function scenarioSummary(rows){
+  var retirementRows=rows.filter(function(x){return x.age>=s.retireAge;});
+  var depleted=retirementRows.find(function(x){return x.depleted;});
+  var last=rows[rows.length-1];
+  return{depletedAge:depleted?depleted.age:null,endBalance:last?last.endBalance:0};
+ }
+ var cSum=scenarioSummary(conservative),eSum=scenarioSummary(expected),oSum=scenarioSummary(optimistic);
+ var tax=Math.max(0,Math.min(.6,Number(s.retirementTaxRate||0)/100));
+ var netWithdrawal=selected.withdrawal*(1-tax);
+ var selectedAvailable=selected.netExternal+netWithdrawal;
+ var selectedGap=selectedAvailable-selected.spend-selected.extraExpense;
 
  document.getElementById("retirement").innerHTML=
  '<h2>Retirement</h2>'+
- '<div class="notice"><strong>Adjust the ages below to test any retirement-year scenario.</strong> The income breakdown recalculates using both ages. Annual spending is pulled directly from the Money page retirement spending estimate. Investment contributions stop automatically at your configured retirement age of '+s.retireAge+'.</div>'+
+ '<div class="notice"><strong>This page now uses a year-by-year cash-flow and portfolio drawdown model.</strong> Contributions stop at age '+s.retireAge+'. Each year applies investment growth, adds income and inheritance, subtracts spending and special expenses, and withdraws only the amount needed from investments.</div>'+
  '<div class="card" style="margin-bottom:12px"><h3>Scenario ages</h3><div class="form-grid">'+
- '<label>Your age<input id="scenarioUserAge" type="number" min="'+s.age+'" max="90" step="1" value="'+scenarioUserAge+'"></label>'+
- '<label>Your wife’s age<input id="scenarioWifeAge" type="number" min="40" max="90" step="1" value="'+scenarioWifeAge+'"></label>'+
- '<label>Age difference<input value="'+(scenarioUserAge-scenarioWifeAge)+' years" disabled></label>'+
- '</div><div class="notice">These boxes change only the retirement-page scenario. They do not change your current ages in Settings.</div></div>'+
- '<div class="grid"><div class="card"><h3>Your scenario age</h3><div class="metric">'+scenarioUserAge+'</div></div>'+
- '<div class="card"><h3>Wife’s scenario age</h3><div class="metric">'+scenarioWifeAge+'</div></div>'+
- '<div class="card"><h3>Projected investments</h3><div class="metric">'+money(selected.inv)+'</div></div>'+
- '<div class="card"><h3>Estimated annual result</h3><div class="metric '+(selected.gap>=0?"good":"bad")+'">'+money(selected.gap)+'</div></div></div>'+
- '<div class="card" style="margin-top:12px"><h3>Income breakdown at selected ages</h3><table><thead><tr><th>Source</th><th>Annual amount</th><th>Status</th></tr></thead><tbody>'+
+ '<label>Your age<input id="scenarioUserAge" type="number" min="'+s.age+'" max="'+s.retirementEndAge+'" step="1" value="'+scenarioUserAge+'"></label>'+
+ '<label>Your wife’s age<input id="scenarioWifeAge" type="number" min="35" max="'+s.retirementEndAge+'" step="1" value="'+scenarioWifeAge+'"></label>'+
+ '<label>Age difference<input value="'+wifeDiff+' years" disabled></label>'+
+ '</div></div>'+
+ '<div class="grid"><div class="card"><h3>Expected ending balance at '+s.retirementEndAge+'</h3><div class="metric">'+money(eSum.endBalance)+'</div></div>'+
+ '<div class="card"><h3>Conservative ending balance</h3><div class="metric '+(cSum.depletedAge?"bad":"good")+'">'+money(cSum.endBalance)+'</div><p>'+(cSum.depletedAge?'Depleted at age '+cSum.depletedAge:'Funded through age '+s.retirementEndAge)+'</p></div>'+
+ '<div class="card"><h3>Expected scenario</h3><div class="metric '+(eSum.depletedAge?"bad":"good")+'">'+(eSum.depletedAge?'Age '+eSum.depletedAge:'Funded')+'</div></div>'+
+ '<div class="card"><h3>Optimistic ending balance</h3><div class="metric">'+money(oSum.endBalance)+'</div></div></div>'+
+ '<div class="card" style="margin-top:12px"><h3>Income breakdown at selected ages</h3><table><thead><tr><th>Source</th><th>Gross annual amount</th><th>Status</th></tr></thead><tbody>'+
  '<tr><td>Wife employment</td><td>'+money(selected.wifeEmployment)+'</td><td>'+(selected.wifeEmployment>0?'Included':'Not active')+'</td></tr>'+
  '<tr><td>Wife pension</td><td>'+money(selected.pension)+'</td><td>'+(selected.pension>0?'Included':'Not active')+'</td></tr>'+
- '<tr><td>WorkSafeBC</td><td>'+money(selected.wcb)+'</td><td>'+(selected.wcb>0?'Included':'Ended')+'</td></tr>'+
+ '<tr><td>WorkSafeBC</td><td>'+money(selected.wcb)+'</td><td>'+(selected.wcb>0?'Included — tax-free assumption':'Ended')+'</td></tr>'+
  '<tr><td>Your CPP</td><td>'+money(selected.cpp)+'</td><td>'+(selected.cpp>0?'Included':'Not started')+'</td></tr>'+
  '<tr><td>Wife CPP</td><td>'+money(selected.wcpp)+'</td><td>'+(selected.wcpp>0?'Included':'Not started')+'</td></tr>'+
  '<tr><td>Your OAS</td><td>'+money(selected.oas)+'</td><td>'+(selected.oas>0?'Included':'Not started')+'</td></tr>'+
  '<tr><td>Wife OAS</td><td>'+money(selected.woas)+'</td><td>'+(selected.woas>0?'Included':'Not started')+'</td></tr>'+
- '<tr><td>4% investment draw</td><td>'+money(selected.investmentDraw)+'</td><td>Planning estimate</td></tr>'+
- '<tr><td><strong>Total estimated income</strong></td><td><strong>'+money(selected.income)+'</strong></td><td></td></tr>'+
+ '<tr><td>Investment withdrawal</td><td>'+money(selected.withdrawal)+'</td><td>Gross withdrawal needed</td></tr>'+
+ '<tr><td><strong>Estimated after-tax available</strong></td><td><strong>'+money(selectedAvailable)+'</strong></td><td></td></tr>'+
  '<tr><td><strong>Inflation-adjusted spending</strong></td><td><strong>'+money(selected.spend)+'</strong></td><td></td></tr>'+
- '<tr><td><strong>Annual surplus / gap</strong></td><td class="'+(selected.gap>=0?"good":"bad")+'"><strong>'+money(selected.gap)+'</strong></td><td></td></tr>'+
+ '<tr><td><strong>Special expense</strong></td><td><strong>'+money(selected.extraExpense)+'</strong></td><td></td></tr>'+
+ '<tr><td><strong>Annual surplus / gap</strong></td><td class="'+(selectedGap>=0?"good":"bad")+'"><strong>'+money(selectedGap)+'</strong></td><td></td></tr>'+
  '</tbody></table></div>'+
- '<div class="card" style="margin-top:12px"><h3>Assumptions currently being used</h3><table><tbody>'+
- '<tr><td>Current age</td><td>'+s.age+'</td><td>Current investments</td><td>'+money(s.investments)+'</td></tr>'+
- '<tr><td>Monthly investment contribution</td><td>'+money(s.investing)+' until age '+s.retireAge+'</td><td>Expected return</td><td>'+s.returnRate.toFixed(1)+'%</td></tr>'+
- '<tr><td>Annual retirement spending</td><td>'+money(selectedRetirementSpending())+' (from Money page estimate)</td><td>Inflation</td><td>'+s.inflation.toFixed(1)+'%</td></tr>'+
- '<tr><td>Wife annual employment income</td><td>'+money(s.wifeEmploymentAnnual)+'</td><td>Wife works until your age</td><td>'+s.wifeWorkUntilUserAge+'</td></tr>'+
- '<tr><td>Wife pension</td><td>'+money(s.wifePension)+'/month</td><td>Wife pension age</td><td>'+s.wifeRetireAge+'</td></tr>'+
- '<tr><td>Your CPP</td><td>'+money(userCppAmount)+'/month at '+s.userCppStart+'</td><td>Wife CPP</td><td>'+money(wifeCppAmount)+'/month at '+s.wifeCppStart+'</td></tr>'+
- '<tr><td>Your OAS</td><td>'+money(s.userOasMonthly)+'/month at '+s.userOasStart+'</td><td>Wife OAS</td><td>'+money(s.wifeOasMonthly)+'/month at '+s.wifeOasStart+'</td></tr>'+
+ '<div class="card" style="margin-top:12px"><h3>Return scenarios</h3><table><thead><tr><th>Scenario</th><th>Return</th><th>Portfolio lasts to</th><th>Balance at '+s.retirementEndAge+'</th></tr></thead><tbody>'+
+ '<tr><td>Conservative</td><td>'+Number(s.conservativeReturn).toFixed(1)+'%</td><td>'+(cSum.depletedAge?'Age '+cSum.depletedAge:'Age '+s.retirementEndAge+'+')+'</td><td>'+money(cSum.endBalance)+'</td></tr>'+
+ '<tr><td>Expected</td><td>'+Number(s.returnRate).toFixed(1)+'%</td><td>'+(eSum.depletedAge?'Age '+eSum.depletedAge:'Age '+s.retirementEndAge+'+')+'</td><td>'+money(eSum.endBalance)+'</td></tr>'+
+ '<tr><td>Optimistic</td><td>'+Number(s.optimisticReturn).toFixed(1)+'%</td><td>'+(oSum.depletedAge?'Age '+oSum.depletedAge:'Age '+s.retirementEndAge+'+')+'</td><td>'+money(oSum.endBalance)+'</td></tr>'+
  '</tbody></table></div>'+
- '<div class="card" style="margin-top:12px"><h3>Retirement age comparison</h3><table><thead><tr><th>Your age</th><th>Wife age</th><th>Projected investments</th><th>Spending</th><th>Estimated income</th><th>Surplus / Gap</th></tr></thead><tbody>'+
- ages.map(function(a){var wa=a-s.wifeAgeDiff,x=projection(a,wa);return'<tr '+(a===scenarioUserAge?'style="font-weight:700;background:#edf3f9"':'')+'><td>'+a+'</td><td>'+wa+'</td><td>'+money(x.inv)+'</td><td>'+money(x.spend)+'</td><td>'+money(x.income)+'</td><td class="'+(x.gap>=0?"good":"bad")+'">'+money(x.gap)+'</td></tr>';}).join("")+
+ '<div class="card" style="margin-top:12px"><h3>Year-by-year expected plan</h3><div style="overflow-x:auto"><table><thead><tr><th>Your age</th><th>Wife age</th><th>Start balance</th><th>Growth</th><th>Contributions</th><th>Inheritance</th><th>After-tax income</th><th>Spending</th><th>Special expense</th><th>Withdrawal</th><th>End balance</th></tr></thead><tbody>'+
+ expected.filter(function(x){return x.age>=s.retireAge;}).map(function(x){return'<tr '+(x.age===scenarioUserAge?'style="font-weight:700;background:#edf3f9"':'')+'><td>'+x.age+'</td><td>'+x.wifeAge+'</td><td>'+money(x.startBalance)+'</td><td>'+money(x.growth)+'</td><td>'+money(x.contribution)+'</td><td>'+money(x.inheritance)+'</td><td>'+money(x.netExternal)+'</td><td>'+money(x.spend)+'</td><td>'+money(x.extraExpense)+'</td><td>'+money(x.withdrawal)+'</td><td class="'+(x.depleted?"bad":"")+'">'+money(x.endBalance)+'</td></tr>';}).join("")+
+ '</tbody></table></div></div>'+
+ '<div class="card" style="margin-top:12px"><h3>Model assumptions</h3><table><tbody>'+
+ '<tr><td>Annual spending</td><td>'+money(selectedRetirementSpending())+' from Money page</td><td>Inflation</td><td>'+Number(s.inflation).toFixed(1)+'%</td></tr>'+
+ '<tr><td>Investment contributions</td><td>'+money(s.investing)+'/month until age '+s.retireAge+'</td><td>Effective retirement tax</td><td>'+Number(s.retirementTaxRate).toFixed(1)+'%</td></tr>'+
+ '<tr><td>Inheritance</td><td>'+money(s.inheritanceAmount)+' at age '+s.inheritanceAge+'</td><td>Special expense</td><td>'+money(s.oneTimeExpenseAmount)+' at age '+s.oneTimeExpenseAge+'</td></tr>'+
+ '<tr><td>Plan end age</td><td>'+s.retirementEndAge+'</td><td>Income indexing</td><td>CPP, OAS and pension follow inflation</td></tr>'+
  '</tbody></table></div>'+
- '<div class="notice">The scenario ages are saved automatically. OAS and CPP amounts are gross planning estimates and do not include tax or OAS recovery tax.</div>';
+ '<div class="notice">This remains a planning estimate. The tax rate is a simplified household effective rate; account-specific RRSP, TFSA and non-registered tax treatment and OAS recovery tax are not yet separated.</div>';
 
  document.getElementById("scenarioUserAge").onchange=function(){
   data.settings.retirementScenarioUserAge=Math.max(Number(s.age),Number(this.value||s.retireAge));
@@ -638,7 +707,7 @@ function renderRetirement(){
   renderRetirement();
  };
  document.getElementById("scenarioWifeAge").onchange=function(){
-  data.settings.retirementScenarioWifeAge=Math.max(40,Number(this.value||scenarioUserAge-s.wifeAgeDiff));
+  data.settings.retirementScenarioWifeAge=Math.max(35,Number(this.value||scenarioUserAge-s.wifeAgeDiff));
   localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
   renderRetirement();
  };
@@ -860,7 +929,7 @@ function renderReports(){
  };
 }
 function renderSettings(){
- var s=data.settings,fields=[["income1","Yellowhead monthly income"],["income2","Province monthly income"],["wcb","WorkSafeBC monthly income"],["investing","Retirement investing"],["bills","Annual-bills reserve"],["chores","Son's chores"],["loc","LOC balance"],["rate","LOC rate (%)"],["months","LOC months"],["investments","Current investments"],["age","Current age"],["retireAge","Retirement age"],["retirementScenarioUserAge","Retirement page scenario: your age"],["retirementScenarioWifeAge","Retirement page scenario: wife age"],["returnRate","Expected return (%)"],["inflation","Inflation (%)"],["retireSpend","Annual retirement spending"],["wifePension","Wife monthly pension"],["wifeAgeDiff","Wife age difference"],["wifeRetireAge","Wife retirement age"],["wifeEmploymentAnnual","Wife annual employment income"],["wifeWorkUntilUserAge","Wife works until your age"],["wifeEmploymentGrowth","Wife salary growth (%)"],["userOasMonthly","Your monthly OAS"],["userOasStart","Your OAS start age"],["wifeOasMonthly","Wife monthly OAS"],["wifeOasStart","Wife OAS start age"],["spendingLookbackMonths","Spending estimate lookback months"],["irregularAnnualAllowance","Annual irregular-spending allowance"],["userCpp65","User CPP at 65"],["userCpp70","User CPP at 70"],["userCppStart","User CPP start age"],["wifeCpp60","Wife CPP at 60"],["wifeCpp65","Wife CPP at 65"],["wifeCpp70","Wife CPP at 70"],["wifeCppStart","Wife CPP start age"],["home","Home value"],["ns1","NS property 1"],["ns2","NS property 2"],["vehicles","Vehicle value"],["boat","Boat value"],["camper","Camper value"],["cash","Cash"],["ccDebt","Credit-card debt"]];
+ var s=data.settings,fields=[["income1","Yellowhead monthly income"],["income2","Province monthly income"],["wcb","WorkSafeBC monthly income"],["investing","Retirement investing"],["bills","Annual-bills reserve"],["chores","Son's chores"],["loc","LOC balance"],["rate","LOC rate (%)"],["months","LOC months"],["investments","Current investments"],["age","Current age"],["retireAge","Retirement age"],["retirementScenarioUserAge","Retirement page scenario: your age"],["retirementScenarioWifeAge","Retirement page scenario: wife age"],["retirementEndAge","Retirement plan end age"],["retirementTaxRate","Effective retirement tax rate (%)"],["conservativeReturn","Conservative return (%)"],["optimisticReturn","Optimistic return (%)"],["inheritanceAmount","Inheritance amount"],["inheritanceAge","Inheritance received at your age"],["oneTimeExpenseAmount","One-time future expense"],["oneTimeExpenseAge","One-time expense at your age"],["returnRate","Expected return (%)"],["inflation","Inflation (%)"],["retireSpend","Annual retirement spending"],["wifePension","Wife monthly pension"],["wifeAgeDiff","Wife age difference"],["wifeRetireAge","Wife retirement age"],["wifeEmploymentAnnual","Wife annual employment income"],["wifeWorkUntilUserAge","Wife works until your age"],["wifeEmploymentGrowth","Wife salary growth (%)"],["userOasMonthly","Your monthly OAS"],["userOasStart","Your OAS start age"],["wifeOasMonthly","Wife monthly OAS"],["wifeOasStart","Wife OAS start age"],["spendingLookbackMonths","Spending estimate lookback months"],["irregularAnnualAllowance","Annual irregular-spending allowance"],["userCpp65","User CPP at 65"],["userCpp70","User CPP at 70"],["userCppStart","User CPP start age"],["wifeCpp60","Wife CPP at 60"],["wifeCpp65","Wife CPP at 65"],["wifeCpp70","Wife CPP at 70"],["wifeCppStart","Wife CPP start age"],["home","Home value"],["ns1","NS property 1"],["ns2","NS property 2"],["vehicles","Vehicle value"],["boat","Boat value"],["camper","Camper value"],["cash","Cash"],["ccDebt","Credit-card debt"]];
  document.getElementById("settings").innerHTML='<h2>Settings</h2><div class="toolbar"><button id="importBackup">Import backup</button><input id="backupFile" type="file" accept=".json"><button class="secondary" id="repairTransactions">Repair Transactions</button><button class="danger" id="reset">Reset defaults</button></div><div class="card"><div class="form-grid">'+fields.map(function(f){return'<label>'+f[1]+'<input class="setting-input" data-k="'+f[0]+'" type="number" step="any" value="'+s[f[0]]+'"></label>';}).join("")+"</div></div>";
  document.querySelectorAll(".setting-input").forEach(function(el){el.onchange=function(){data.settings[el.dataset.k]=Number(el.value);save();};});
  document.getElementById("importBackup").onclick=function(){var f=document.getElementById("backupFile").files[0];if(!f){alert("Choose a JSON backup.");return;}var r=new FileReader();r.onload=function(){data=migrate(JSON.parse(r.result));save();};r.readAsText(f);};
@@ -912,7 +981,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.6.9-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.7.0-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
