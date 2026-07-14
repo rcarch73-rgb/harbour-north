@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 2.6.8</title>
+<title>RyanOS 2.6.9</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -48,7 +48,7 @@ input[type=range]{width:100%}
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>2.6.8 — Linked Annual Spending</small></div>
+  <div><h1>RyanOS</h1><small>2.6.9 — Contributions Stop at Retirement</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -558,9 +558,13 @@ function selectedRetirementSpending(){
  return spendingEstimate().retirementEstimate;
 }
 function projection(age,wifeAgeOverride){
- var s=data.settings,y=age-s.age;
+ var s=data.settings,y=Math.max(0,age-s.age);
  var growth=s.returnRate/100;
- var inv=s.investments*Math.pow(1+growth,y)+(growth===0?s.investing*12*y:s.investing*12*((Math.pow(1+growth,y)-1)/growth));
+ var contributionYears=Math.max(0,Math.min(y,s.retireAge-s.age));
+ var postContributionYears=Math.max(0,y-contributionYears);
+ var baseInvestments=s.investments*Math.pow(1+growth,y);
+ var contributionsAtStop=growth===0?s.investing*12*contributionYears:s.investing*12*((Math.pow(1+growth,contributionYears)-1)/growth);
+ var inv=baseInvestments+contributionsAtStop*Math.pow(1+growth,postContributionYears);
  var spend=selectedRetirementSpending()*Math.pow(1+s.inflation/100,y);
  var wifeAge=(wifeAgeOverride===undefined||wifeAgeOverride===null)?age-s.wifeAgeDiff:Number(wifeAgeOverride);
 
@@ -591,7 +595,7 @@ function renderRetirement(){
 
  document.getElementById("retirement").innerHTML=
  '<h2>Retirement</h2>'+
- '<div class="notice"><strong>Adjust the ages below to test any retirement-year scenario.</strong> The income breakdown recalculates using both ages. Annual spending is pulled directly from the Money page retirement spending estimate.</div>'+
+ '<div class="notice"><strong>Adjust the ages below to test any retirement-year scenario.</strong> The income breakdown recalculates using both ages. Annual spending is pulled directly from the Money page retirement spending estimate. Investment contributions stop automatically at your configured retirement age of '+s.retireAge+'.</div>'+
  '<div class="card" style="margin-bottom:12px"><h3>Scenario ages</h3><div class="form-grid">'+
  '<label>Your age<input id="scenarioUserAge" type="number" min="'+s.age+'" max="90" step="1" value="'+scenarioUserAge+'"></label>'+
  '<label>Your wife’s age<input id="scenarioWifeAge" type="number" min="40" max="90" step="1" value="'+scenarioWifeAge+'"></label>'+
@@ -616,7 +620,7 @@ function renderRetirement(){
  '</tbody></table></div>'+
  '<div class="card" style="margin-top:12px"><h3>Assumptions currently being used</h3><table><tbody>'+
  '<tr><td>Current age</td><td>'+s.age+'</td><td>Current investments</td><td>'+money(s.investments)+'</td></tr>'+
- '<tr><td>Monthly investment contribution</td><td>'+money(s.investing)+'</td><td>Expected return</td><td>'+s.returnRate.toFixed(1)+'%</td></tr>'+
+ '<tr><td>Monthly investment contribution</td><td>'+money(s.investing)+' until age '+s.retireAge+'</td><td>Expected return</td><td>'+s.returnRate.toFixed(1)+'%</td></tr>'+
  '<tr><td>Annual retirement spending</td><td>'+money(selectedRetirementSpending())+' (from Money page estimate)</td><td>Inflation</td><td>'+s.inflation.toFixed(1)+'%</td></tr>'+
  '<tr><td>Wife annual employment income</td><td>'+money(s.wifeEmploymentAnnual)+'</td><td>Wife works until your age</td><td>'+s.wifeWorkUntilUserAge+'</td></tr>'+
  '<tr><td>Wife pension</td><td>'+money(s.wifePension)+'/month</td><td>Wife pension age</td><td>'+s.wifeRetireAge+'</td></tr>'+
@@ -908,7 +912,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.6.8-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.6.9-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
