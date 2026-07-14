@@ -1,9 +1,9 @@
 {
-  "name": "RyanOS 4.0.2",
+  "name": "RyanOS 4.0.3",
   "short_name": "RyanOS",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f4f7fb",
   "theme_color": "#17365d",
-  "description": "RyanOS with fully repaired horizontal navigation and streamlined primary sections."
+  "description": "RyanOS with restored Transactions, CSV importing, and working quick actions."
 }

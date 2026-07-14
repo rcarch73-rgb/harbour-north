@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 4.0.2</title>
+<title>RyanOS 4.0.3</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -196,7 +196,7 @@ main{
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>4.0.2 — Full Navigation Repair</small></div>
+  <div><h1>RyanOS</h1><small>4.0.3 — Transactions & Actions Repair</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -416,10 +416,21 @@ function totals(){
 function actualSpend(){return data.transactions.filter(function(t){return t.include==="Yes";}).reduce(function(a,t){return a+Math.abs(Number(t.amount||0));},0);}
 function byCategory(){var m={};data.transactions.filter(function(t){return t.include==="Yes";}).forEach(function(t){m[t.category]=(m[t.category]||0)+Math.abs(Number(t.amount||0));});return m;}
 function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function showPage(pageId){
+ var page=document.getElementById(pageId);
+ if(!page)return;
+ document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});
+ document.querySelectorAll("#nav button").forEach(function(b){b.classList.remove("active");});
+ page.classList.add("active");
+ var matching=document.querySelector('#nav button[data-page="'+pageId+'"]');
+ if(matching)matching.classList.add("active");
+ window.scrollTo(0,0);
+}
+window.showPage=showPage;
 function nav(){
- var items=[["home","Home"],["money","Money"],["retirement","Retirement"],["settings","Settings & Data"]];
+ var items=[["home","Home"],["money","Money"],["transactions","Transactions"],["retirement","Retirement"],["settings","Settings & Data"]];
  document.getElementById("nav").innerHTML=items.map(function(x,i){return'<button data-page="'+x[0]+'" class="'+(i===0?"active":"")+'">'+x[1]+"</button>";}).join("");
- document.querySelectorAll("#nav button").forEach(function(b){b.addEventListener("click",function(){document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});document.querySelectorAll("#nav button").forEach(function(x){x.classList.remove("active");});document.getElementById(b.dataset.page).classList.add("active");b.classList.add("active");});});
+ document.querySelectorAll("#nav button").forEach(function(b){b.addEventListener("click",function(){showPage(b.dataset.page);});});
 }
 function financialHealth(){
  var t=totals();
@@ -525,7 +536,7 @@ function renderHomeStreamlined(){
   (next?'<p><strong>Next large expense:</strong> '+esc(next.name)+' at age '+Number(next.age).toFixed(0)+' — '+money(Number(next.amount||0))+' in today’s dollars.</p>':'<p>No future expenses are currently scheduled.</p>')+
  '</div>'+
  '<div class="section-card"><h3>Quick actions</h3><div class="quick-actions">'+
-  '<button onclick="showPage(\'budget\')">Review money</button>'+
+  '<button onclick="showPage(\'money\')">Review money</button><button onclick="showPage(\'transactions\')">Import transactions</button>'+
   '<button onclick="showPage(\'retirement\')">Open retirement plan</button>'+
   '<button onclick="showPage(\'settings\')">Backup or settings</button>'+
  '</div></div>';
@@ -756,7 +767,7 @@ function safeTransactionRow(t,i){
 function renderTransactions(){
  var rows="";
  for(var i=0;i<data.transactions.length;i++)rows+=safeTransactionRow(data.transactions[i],i);
- document.getElementById("transactions").innerHTML='<h2>Transactions</h2><div class="toolbar"><input type="file" id="csvFile" accept=".csv"><button id="importCsv">Import CSV</button><button class="secondary" id="applyRules">Re-categorize All</button><button class="danger" id="clearTx">Clear</button></div><div class="notice">Use the category dropdown to choose from every existing RyanOS category. Correct a merchant, then tap Learn Rule to remember it for future imports.</div><div id="importStatus"></div><div class="card"><table><thead><tr><th>Date</th><th>Merchant</th><th>Amount</th><th>Category</th><th>Confidence</th><th>Include?</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+ document.getElementById("transactions").innerHTML='<div class="page-intro"><div><h2>Transactions</h2><p>Upload bank and credit-card CSV files to track actual spending.</p></div></div><div class="section-card"><h3>CSV import</h3><div class="toolbar"><input type="file" id="csvFile" accept=".csv,text/csv"><button id="importCsv">Import selected CSV</button><button class="secondary" id="applyRules">Re-categorize All</button><button class="danger" id="clearTx">Clear</button></div><div class="notice">Choose a CSV exported from your bank or credit-card account. Use the category dropdown to choose from every existing RyanOS category. Correct a merchant, then tap Learn Rule to remember it for future imports.</div><div id="importStatus"></div></div><div class="card"><table><thead><tr><th>Date</th><th>Merchant</th><th>Amount</th><th>Category</th><th>Confidence</th><th>Include?</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
  document.getElementById("importCsv").onclick=function(){
   var f=document.getElementById("csvFile").files[0];if(!f){alert("Choose a CSV file first.");return;}
   var r=new FileReader();
@@ -1535,6 +1546,15 @@ function safeRender(id,fn){
 function render(){
  safeRender("home",renderHome);
  safeRender("money",renderMoney);
+ var moneyPage=document.getElementById("money");
+ if(moneyPage&&moneyPage.innerHTML.indexOf("Import bank or credit-card CSV")<0){
+  moneyPage.innerHTML=
+   '<div class="page-intro"><div><h2>Money</h2><p>Budget, spending and transaction tracking in one place.</p></div></div>'+
+   '<div class="section-card"><h3>Import bank or credit-card CSV</h3><p>Upload statements on the Transactions page so RyanOS can categorize spending and update your actual monthly totals.</p><div class="quick-actions"><button id="openTransactionsFromMoney" type="button">Open Transactions & CSV Import</button></div></div>'+
+   moneyPage.innerHTML;
+  var openTx=document.getElementById("openTransactionsFromMoney");
+  if(openTx)openTx.onclick=function(){showPage("transactions");};
+ }
  safeRender("transactions",renderTransactions);
  safeRender("goals",renderGoals);
  safeRender("retirement",renderRetirement);
@@ -1544,7 +1564,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-4.0.2-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-4.0.3-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
