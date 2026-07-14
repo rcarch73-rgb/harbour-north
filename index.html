@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 2.8.3</title>
+<title>RyanOS 2.9.0</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -48,7 +48,7 @@ input[type=range]{width:100%}
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>2.8.3 — CPP & OAS Audit</small></div>
+  <div><h1>RyanOS</h1><small>2.9.0 — RRSP-to-TFSA Drawdown</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -74,7 +74,7 @@ var STORAGE_KEY="ryanos2-data";
 var defaults={
  settings:{
   income1:5428.78,income2:5147.32,wcb:1352.34,investing:2600,bills:1200,chores:173,
-  loc:23000,rate:5.19,months:24,investments:520000,rrspBalance:442000,userTfsaBalance:45000,wifeRrspBalance:33000,nonRegisteredBalance:0,rrspMonthlyContribution:1800,userTfsaMonthlyContribution:500,wifeRrspMonthlyContribution:300,nonRegisteredMonthlyContribution:0,withdrawalStrategy:1,nonRegisteredWithdrawalTaxRate:5,age:52,retireAge:58,returnRate:7,
+  loc:23000,rate:5.19,months:24,investments:520000,rrspBalance:442000,userTfsaBalance:45000,wifeRrspBalance:33000,nonRegisteredBalance:0,rrspMonthlyContribution:1800,userTfsaMonthlyContribution:500,wifeRrspMonthlyContribution:300,nonRegisteredMonthlyContribution:0,withdrawalStrategy:1,nonRegisteredWithdrawalTaxRate:5,rrspDrawdownEnabled:1,rrspDrawdownStartAge:55,rrspDrawdownEndAge:70,lowestTaxBracketCeiling:50363,lowestBracketMarginalTaxRate:19.6,tfsaAnnualLimit:7000,tfsaAvailableRoom:7000,age:52,retireAge:58,returnRate:7,
   inflation:2.5,retireSpend:72000,wifePension:3200,wifeAgeDiff:7,wifeRetireAge:55,wifeEmploymentAnnual:110000,wifeEmploymentNetAnnual:65000,wifeWorkUntilUserAge:62,wifeEmploymentGrowth:0,userOasMonthly:751.97,userOasStart:65,wifeOasMonthly:751.97,wifeOasStart:65,spendingLookbackMonths:12,irregularAnnualAllowance:9000,retirementScenarioUserAge:58,retirementScenarioWifeAge:51,retirementEndAge:95,retirementTaxRate:15,conservativeReturn:4,optimisticReturn:8,inheritanceAmount:0,inheritanceAge:65,oneTimeExpenseAmount:0,oneTimeExpenseAge:60,
   userCpp65:1308.21,userCpp70:1857.66,userCppStart:70,wifeCpp60:878,wifeCpp65:1372,
   wifeCpp70:1948,wifeCppStart:65,home:650000,ns1:100000,ns2:40000,vehicles:25000,
@@ -178,6 +178,14 @@ if(!Array.isArray(data.goals))data.goals=clone(defaults.goals);
  ["nonRegisteredMonthlyContribution",0],
  ["withdrawalStrategy",1],
  ["nonRegisteredWithdrawalTaxRate",5],
+ ["rrspDrawdownEnabled",1],
+ ["rrspDrawdownStartAge",55],
+ ["rrspDrawdownEndAge",70],
+ ["lowestTaxBracketCeiling",50363],
+ ["lowestBracketMarginalTaxRate",19.6],
+ ["tfsaAnnualLimit",7000],
+ ["tfsaAvailableRoom",7000],
+
 
  ["wifeWorkUntilUserAge",62],
  ["wifeEmploymentGrowth",0],
@@ -638,18 +646,21 @@ function retirementPlan(returnRate,wifeAgeDifferenceOverride){
  var rate=Number(returnRate)/100;
  var pensionTax=Math.max(0,Math.min(.6,Number(s.retirementTaxRate||0)/100));
  var nonRegTax=Math.max(0,Math.min(.6,Number(s.nonRegisteredWithdrawalTaxRate||0)/100));
+ var bracketTax=Math.max(0,Math.min(.6,Number(s.lowestBracketMarginalTaxRate||0)/100));
  var endAge=Math.max(Number(s.retireAge)+1,Number(s.retirementEndAge||95));
  var wifeDiff=(wifeAgeDifferenceOverride===undefined||wifeAgeDifferenceOverride===null)?s.wifeAgeDiff:Number(wifeAgeDifferenceOverride);
  var account=accountBalancesAtRetirement(returnRate);
  delete account.total;
+ var tfsaRoom=Math.max(0,Number(s.tfsaAvailableRoom||0));
  var rows=[];
 
  for(var age=Number(s.retireAge);age<endAge;age++){
   var wifeAge=age-wifeDiff;
-  var start={
-   rrsp:account.rrsp,userTfsa:account.userTfsa,wifeRrsp:account.wifeRrsp,nonReg:account.nonReg
-  };
+  var start={rrsp:account.rrsp,userTfsa:account.userTfsa,wifeRrsp:account.wifeRrsp,nonReg:account.nonReg};
   var startBalance=start.rrsp+start.userTfsa+start.wifeRrsp+start.nonReg;
+
+  // New annual TFSA room is added at the beginning of each calendar-year model period.
+  if(age>Number(s.retireAge))tfsaRoom+=Math.max(0,Number(s.tfsaAnnualLimit||0));
 
   var inheritance=age===Number(s.inheritanceAge)?Number(s.inheritanceAmount||0):0;
   account.nonReg+=inheritance;
@@ -657,6 +668,7 @@ function retirementPlan(returnRate,wifeAgeDifferenceOverride){
   var extraExpense=age===Number(s.oneTimeExpenseAge)?Number(s.oneTimeExpenseAmount||0):0;
   var spend=selectedRetirementSpending()*Math.pow(1+s.inflation/100,age-s.age);
   var inc=retirementIncomeAtAge(age,wifeAge);
+
   var taxableRetirement=inc.pension+inc.cpp+inc.wcpp+inc.oas+inc.woas;
   var netExternal=inc.wifeEmploymentNet+inc.wcb+taxableRetirement*(1-pensionTax);
   var requiredNet=spend+extraExpense;
@@ -668,6 +680,7 @@ function retirementPlan(returnRate,wifeAgeDifferenceOverride){
             strategy===3?["nonReg","rrsp","wifeRrsp","userTfsa"]:
             ["rrsp","wifeRrsp","nonReg","userTfsa"];
 
+  // First cover the household spending gap using the selected withdrawal strategy.
   order.forEach(function(key){
    if(remainingNet<=0.01)return;
    var rateForAccount=(key==="rrsp"||key==="wifeRrsp")?pensionTax:(key==="nonReg"?nonRegTax:0);
@@ -677,6 +690,34 @@ function retirementPlan(returnRate,wifeAgeDifferenceOverride){
    withdrawals.net+=result.net;
    remainingNet=Math.max(0,remainingNet-result.net);
   });
+
+  // Strategic user-RRSP drawdown from age 55 through the year before age 70.
+  // The taxable-income target is personal to the user, so spouse income is not counted.
+  var strategicGross=0,strategicTax=0,strategicNet=0,tfsaDeposit=0;
+  var personalTaxableBeforeDrawdown=inc.cpp+inc.oas;
+  var drawdownActive=Number(s.rrspDrawdownEnabled||0)===1 &&
+                     age>=Number(s.rrspDrawdownStartAge||55) &&
+                     age<Number(s.rrspDrawdownEndAge||70);
+  if(drawdownActive&&account.rrsp>0){
+   var alreadyWithdrawn=withdrawals.rrsp;
+   var bracketRoom=Math.max(0,Number(s.lowestTaxBracketCeiling||0)-personalTaxableBeforeDrawdown-alreadyWithdrawn);
+   strategicGross=Math.min(account.rrsp,bracketRoom);
+   account.rrsp-=strategicGross;
+   strategicTax=strategicGross*bracketTax;
+   strategicNet=strategicGross-strategicTax;
+
+   // Use any strategic drawdown cash not required for an uncovered spending gap to fund the user's TFSA.
+   var uncoveredAfterNormal=remainingNet;
+   var usedForSpending=Math.min(strategicNet,uncoveredAfterNormal);
+   remainingNet=Math.max(0,remainingNet-usedForSpending);
+   var excessStrategic=Math.max(0,strategicNet-usedForSpending);
+   tfsaDeposit=Math.min(excessStrategic,tfsaRoom);
+   account.userTfsa+=tfsaDeposit;
+   tfsaRoom-=tfsaDeposit;
+
+   // Cash above available TFSA room is kept in the non-registered account.
+   account.nonReg+=Math.max(0,excessStrategic-tfsaDeposit);
+  }
 
   var unusedIncome=Math.max(0,netExternal-requiredNet);
   var growth={
@@ -698,8 +739,11 @@ function retirementPlan(returnRate,wifeAgeDifferenceOverride){
    wifeEmployment:inc.wifeEmploymentNet,pension:inc.pension,wcb:inc.wcb,cpp:inc.cpp,wcpp:inc.wcpp,oas:inc.oas,woas:inc.woas,
    grossExternal:inc.wifeEmploymentNet+inc.wcb+taxableRetirement,netExternal:netExternal,
    rrspWithdrawal:withdrawals.rrsp,userTfsaWithdrawal:withdrawals.userTfsa,wifeRrspWithdrawal:withdrawals.wifeRrsp,
-   nonRegWithdrawal:withdrawals.nonReg,withdrawalTax:withdrawals.tax,withdrawal:withdrawals.rrsp+withdrawals.userTfsa+withdrawals.wifeRrsp+withdrawals.nonReg,
-   netWithdrawal:withdrawals.net,unusedIncome:unusedIncome,growth:growth.rrsp+growth.userTfsa+growth.wifeRrsp+growth.nonReg,
+   nonRegWithdrawal:withdrawals.nonReg,withdrawalTax:withdrawals.tax+strategicTax,
+   withdrawal:withdrawals.rrsp+withdrawals.userTfsa+withdrawals.wifeRrsp+withdrawals.nonReg+strategicGross,
+   netWithdrawal:withdrawals.net+strategicNet,unusedIncome:unusedIncome,
+   strategicRrspWithdrawal:strategicGross,strategicRrspTax:strategicTax,tfsaDeposit:tfsaDeposit,tfsaRoomEnd:tfsaRoom,
+   growth:growth.rrsp+growth.userTfsa+growth.wifeRrsp+growth.nonReg,
    endAccounts:{rrsp:account.rrsp,userTfsa:account.userTfsa,wifeRrsp:account.wifeRrsp,nonReg:account.nonReg},
    endBalance:endBalance,depleted:depleted
   });
@@ -762,7 +806,14 @@ function renderRetirement(){
  '<label>Non-registered balance<input class="ret-account" data-k="nonRegisteredBalance" type="number" min="0" step="1000" value="'+s.nonRegisteredBalance+'"></label>'+
  '<label>Non-registered monthly contribution<input class="ret-account" data-k="nonRegisteredMonthlyContribution" type="number" min="0" step="50" value="'+s.nonRegisteredMonthlyContribution+'"></label>'+
  '<label>Withdrawal strategy<select id="withdrawalStrategy"><option value="1" '+(Number(s.withdrawalStrategy)===1?'selected':'')+'>Both RRSPs → Non-registered → TFSA</option><option value="2" '+(Number(s.withdrawalStrategy)===2?'selected':'')+'>TFSA → Non-registered → Both RRSPs</option><option value="3" '+(Number(s.withdrawalStrategy)===3?'selected':'')+'>Non-registered → Both RRSPs → TFSA</option></select></label>'+
- '</div><div class="notice">Current account total: <strong>'+money(Number(s.rrspBalance||0)+Number(s.userTfsaBalance||0)+Number(s.wifeRrspBalance||0)+Number(s.nonRegisteredBalance||0))+'</strong>. Strategy currently used: <strong>'+strategyName+'</strong>.</div></div>'+
+ '<label>RRSP-to-TFSA strategy<select id="rrspDrawdownEnabled"><option value="1" '+(Number(s.rrspDrawdownEnabled)===1?'selected':'')+'>Enabled</option><option value="0" '+(Number(s.rrspDrawdownEnabled)===0?'selected':'')+'>Disabled</option></select></label>'+
+ '<label>Drawdown starts at your age<input class="rrsp-strategy" data-k="rrspDrawdownStartAge" type="number" min="50" max="75" step="1" value="'+s.rrspDrawdownStartAge+'"></label>'+
+ '<label>Drawdown ends at your age<input class="rrsp-strategy" data-k="rrspDrawdownEndAge" type="number" min="55" max="80" step="1" value="'+s.rrspDrawdownEndAge+'"></label>'+
+ '<label>Lowest tax-bracket ceiling<input class="rrsp-strategy" data-k="lowestTaxBracketCeiling" type="number" min="0" step="500" value="'+s.lowestTaxBracketCeiling+'"></label>'+
+ '<label>Estimated marginal tax rate (%)<input class="rrsp-strategy" data-k="lowestBracketMarginalTaxRate" type="number" min="0" max="60" step="0.1" value="'+s.lowestBracketMarginalTaxRate+'"></label>'+
+ '<label>Annual TFSA limit<input class="rrsp-strategy" data-k="tfsaAnnualLimit" type="number" min="0" step="500" value="'+s.tfsaAnnualLimit+'"></label>'+
+ '<label>Available TFSA room now<input class="rrsp-strategy" data-k="tfsaAvailableRoom" type="number" min="0" step="500" value="'+s.tfsaAvailableRoom+'"></label>'+
+ '</div><div class="notice">Current account total: <strong>'+money(Number(s.rrspBalance||0)+Number(s.userTfsaBalance||0)+Number(s.wifeRrspBalance||0)+Number(s.nonRegisteredBalance||0))+'</strong>. Withdrawal strategy: <strong>'+strategyName+'</strong>. RRSP-to-TFSA drawdown is <strong>'+(Number(s.rrspDrawdownEnabled)===1?'enabled':'disabled')+'</strong>.</div></div>'+
  '<div class="grid" style="margin-top:12px"><div class="card"><h3>Expected balance at '+s.retirementEndAge+'</h3><div class="metric">'+money(eSum.endBalance)+'</div><p>'+money(eSum.realEndBalance)+' today</p></div>'+
  '<div class="card"><h3>Conservative outcome</h3><div class="metric '+(cSum.depletedAge?"bad":"good")+'">'+(cSum.depletedAge?'Age '+cSum.depletedAge:money(cSum.endBalance))+'</div></div>'+
  '<div class="card"><h3>Balance at retirement</h3><div class="metric">'+money(atRetirement.total)+'</div></div>'+
@@ -783,6 +834,9 @@ function renderRetirement(){
  '<tr><td>Wife OAS</td><td>'+money(selected.woas)+'</td><td>'+(selected.woas>0?'Included':'Starts when wife is '+s.wifeOasStart)+'</td></tr>'+
  '<tr><td><strong>After-tax external income</strong></td><td><strong>'+money(selected.netExternal)+'</strong></td><td></td></tr>'+
  '<tr><td>RRSP withdrawal</td><td>'+money(selected.rrspWithdrawal)+'</td><td>Taxable</td></tr>'+
+ '<tr><td>Strategic RRSP drawdown</td><td>'+money(selected.strategicRrspWithdrawal)+'</td><td>Fills lowest bracket</td></tr>'+
+ '<tr><td>Strategic drawdown tax</td><td>'+money(selected.strategicRrspTax)+'</td><td>Estimated</td></tr>'+
+ '<tr><td>Deposit to your TFSA</td><td>'+money(selected.tfsaDeposit)+'</td><td>Limited by available room</td></tr>'+
  '<tr><td>Your TFSA withdrawal</td><td>'+money(selected.userTfsaWithdrawal)+'</td><td>Tax-free</td></tr>'+
  '<tr><td>Wife RRSP withdrawal</td><td>'+money(selected.wifeRrspWithdrawal)+'</td><td>Taxable</td></tr>'+
  '<tr><td>Non-registered withdrawal</td><td>'+money(selected.nonRegWithdrawal)+'</td><td>Simplified tax estimate</td></tr>'+
@@ -802,10 +856,10 @@ function renderRetirement(){
  '<tr><td>Expected</td><td>'+Number(s.returnRate).toFixed(1)+'%</td><td>'+(eSum.depletedAge?'Age '+eSum.depletedAge:'Age '+s.retirementEndAge+'+')+'</td><td>'+money(eSum.endBalance)+'</td><td>'+money(eSum.realEndBalance)+'</td></tr>'+
  '<tr><td>Optimistic</td><td>'+Number(s.optimisticReturn).toFixed(1)+'%</td><td>'+(oSum.depletedAge?'Age '+oSum.depletedAge:'Age '+s.retirementEndAge+'+')+'</td><td>'+money(oSum.endBalance)+'</td><td>'+money(oSum.realEndBalance)+'</td></tr>'+
  '</tbody></table></div>'+
- '<div class="card" style="margin-top:12px"><h3>Year-by-year expected withdrawals</h3><div style="overflow-x:auto"><table><thead><tr><th>Age</th><th>Start balance</th><th>After-tax income</th><th>Spending</th><th>RRSP</th><th>Your TFSA</th><th>Wife RRSP</th><th>Non-reg.</th><th>Withdrawal tax</th><th>End balance</th></tr></thead><tbody>'+
+ '<div class="card" style="margin-top:12px"><h3>Year-by-year expected withdrawals</h3><div style="overflow-x:auto"><table><thead><tr><th>Age</th><th>Start balance</th><th>After-tax income</th><th>Spending</th><th>RRSP for spending</th><th>Strategic RRSP</th><th>TFSA deposit</th><th>Your TFSA withdrawal</th><th>Wife RRSP</th><th>Non-reg.</th><th>Withdrawal tax</th><th>End balance</th></tr></thead><tbody>'+
  expected.map(function(x){return'<tr '+(x.age===scenarioUserAge?'style="font-weight:700;background:#edf3f9"':'')+'><td>'+x.age+'</td><td>'+money(x.startBalance)+'</td><td>'+money(x.netExternal)+'</td><td>'+money(x.spend+x.extraExpense)+'</td><td>'+money(x.rrspWithdrawal)+'</td><td>'+money(x.userTfsaWithdrawal)+'</td><td>'+money(x.wifeRrspWithdrawal)+'</td><td>'+money(x.nonRegWithdrawal)+'</td><td>'+money(x.withdrawalTax)+'</td><td class="'+(x.depleted?"bad":"")+'">'+money(x.endBalance)+'</td></tr>';}).join("")+
  '</tbody></table></div></div>'+
- '<div class="notice">CPP and OAS are included. If the portfolio still depletes near age 84, check the Money page retirement spending estimate, retirement tax rate, return assumption, inheritance amount (currently entered separately), account balances, and benefit start ages. This remains a simplified tax model.</div>';
+ '<div class="notice">CPP and OAS are included. The RRSP-to-TFSA strategy draws from your RRSP between the selected ages up to the editable taxable-income ceiling, pays estimated tax, deposits available excess into your TFSA, and sends any amount above TFSA room to the non-registered account. This remains a simplified planning model.</div>';
 
  document.getElementById("scenarioUserAge").onchange=function(){
   data.settings.retirementScenarioUserAge=Math.max(Number(s.retireAge),Math.min(Number(this.value||s.retireAge),Number(s.retirementEndAge)-1));
@@ -832,6 +886,14 @@ function renderRetirement(){
   data.settings.withdrawalStrategy=Number(this.value);
   localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderRetirement();
  };
+ document.getElementById("rrspDrawdownEnabled").onchange=function(){
+  data.settings.rrspDrawdownEnabled=Number(this.value);
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderRetirement();
+ };
+ document.querySelectorAll(".rrsp-strategy").forEach(function(el){el.onchange=function(){
+  data.settings[el.dataset.k]=Math.max(0,Number(el.value||0));
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderRetirement();
+ };});
 }
 function renderNetWorth(){
  var t=totals(),s=data.settings,assets=[["Primary home",s.home],["NS property 1",s.ns1],["NS property 2",s.ns2],["Investments",s.investments],["Cash",s.cash],["Vehicles",s.vehicles],["Boat",s.boat],["Camper",s.camper]];
@@ -1050,7 +1112,7 @@ function renderReports(){
  };
 }
 function renderSettings(){
- var s=data.settings,fields=[["income1","Yellowhead monthly income"],["income2","Province monthly income"],["wcb","WorkSafeBC monthly income"],["investing","Retirement investing"],["bills","Annual-bills reserve"],["chores","Son's chores"],["loc","LOC balance"],["rate","LOC rate (%)"],["months","LOC months"],["investments","Current investments"],["rrspBalance","RRSP balance"],["userTfsaBalance","Your TFSA balance"],["wifeRrspBalance","Wife RRSP balance"],["nonRegisteredBalance","Non-registered balance"],["rrspMonthlyContribution","RRSP monthly contribution"],["userTfsaMonthlyContribution","Your TFSA monthly contribution"],["wifeRrspMonthlyContribution","Wife RRSP monthly contribution"],["nonRegisteredMonthlyContribution","Non-registered monthly contribution"],["withdrawalStrategy","Withdrawal strategy: 1=Both RRSPs first, 2=TFSA first, 3=Non-reg first"],["nonRegisteredWithdrawalTaxRate","Non-registered withdrawal tax rate (%)"],["age","Current age"],["retireAge","Retirement age"],["retirementScenarioUserAge","Retirement page scenario: your age"],["retirementScenarioWifeAge","Retirement page scenario: wife age"],["retirementEndAge","Retirement plan end age"],["retirementTaxRate","Effective retirement tax rate (%)"],["conservativeReturn","Conservative return (%)"],["optimisticReturn","Optimistic return (%)"],["inheritanceAmount","Inheritance amount"],["inheritanceAge","Inheritance received at your age"],["oneTimeExpenseAmount","One-time future expense"],["oneTimeExpenseAge","One-time expense at your age"],["returnRate","Expected return (%)"],["inflation","Inflation (%)"],["retireSpend","Annual retirement spending"],["wifePension","Wife monthly pension"],["wifeAgeDiff","Wife age difference"],["wifeRetireAge","Wife retirement age"],["wifeEmploymentAnnual","Wife annual employment income"],["wifeEmploymentNetAnnual","Wife annual take-home employment income"],["wifeWorkUntilUserAge","Wife works until your age"],["wifeEmploymentGrowth","Wife salary growth (%)"],["userOasMonthly","Your monthly OAS"],["userOasStart","Your OAS start age"],["wifeOasMonthly","Wife monthly OAS"],["wifeOasStart","Wife OAS start age"],["spendingLookbackMonths","Spending estimate lookback months"],["irregularAnnualAllowance","Annual irregular-spending allowance"],["userCpp65","User CPP at 65"],["userCpp70","User CPP at 70"],["userCppStart","User CPP start age"],["wifeCpp60","Wife CPP at 60"],["wifeCpp65","Wife CPP at 65"],["wifeCpp70","Wife CPP at 70"],["wifeCppStart","Wife CPP start age"],["home","Home value"],["ns1","NS property 1"],["ns2","NS property 2"],["vehicles","Vehicle value"],["boat","Boat value"],["camper","Camper value"],["cash","Cash"],["ccDebt","Credit-card debt"]];
+ var s=data.settings,fields=[["income1","Yellowhead monthly income"],["income2","Province monthly income"],["wcb","WorkSafeBC monthly income"],["investing","Retirement investing"],["bills","Annual-bills reserve"],["chores","Son's chores"],["loc","LOC balance"],["rate","LOC rate (%)"],["months","LOC months"],["investments","Current investments"],["rrspBalance","RRSP balance"],["userTfsaBalance","Your TFSA balance"],["wifeRrspBalance","Wife RRSP balance"],["nonRegisteredBalance","Non-registered balance"],["rrspMonthlyContribution","RRSP monthly contribution"],["userTfsaMonthlyContribution","Your TFSA monthly contribution"],["wifeRrspMonthlyContribution","Wife RRSP monthly contribution"],["nonRegisteredMonthlyContribution","Non-registered monthly contribution"],["withdrawalStrategy","Withdrawal strategy: 1=Both RRSPs first, 2=TFSA first, 3=Non-reg first"],["nonRegisteredWithdrawalTaxRate","Non-registered withdrawal tax rate (%)"],["rrspDrawdownEnabled","RRSP-to-TFSA drawdown: 1=on, 0=off"],["rrspDrawdownStartAge","RRSP drawdown start age"],["rrspDrawdownEndAge","RRSP drawdown end age"],["lowestTaxBracketCeiling","Lowest tax-bracket ceiling"],["lowestBracketMarginalTaxRate","Lowest bracket marginal tax rate (%)"],["tfsaAnnualLimit","Annual TFSA limit"],["tfsaAvailableRoom","Available TFSA room now"],["age","Current age"],["retireAge","Retirement age"],["retirementScenarioUserAge","Retirement page scenario: your age"],["retirementScenarioWifeAge","Retirement page scenario: wife age"],["retirementEndAge","Retirement plan end age"],["retirementTaxRate","Effective retirement tax rate (%)"],["conservativeReturn","Conservative return (%)"],["optimisticReturn","Optimistic return (%)"],["inheritanceAmount","Inheritance amount"],["inheritanceAge","Inheritance received at your age"],["oneTimeExpenseAmount","One-time future expense"],["oneTimeExpenseAge","One-time expense at your age"],["returnRate","Expected return (%)"],["inflation","Inflation (%)"],["retireSpend","Annual retirement spending"],["wifePension","Wife monthly pension"],["wifeAgeDiff","Wife age difference"],["wifeRetireAge","Wife retirement age"],["wifeEmploymentAnnual","Wife annual employment income"],["wifeEmploymentNetAnnual","Wife annual take-home employment income"],["wifeWorkUntilUserAge","Wife works until your age"],["wifeEmploymentGrowth","Wife salary growth (%)"],["userOasMonthly","Your monthly OAS"],["userOasStart","Your OAS start age"],["wifeOasMonthly","Wife monthly OAS"],["wifeOasStart","Wife OAS start age"],["spendingLookbackMonths","Spending estimate lookback months"],["irregularAnnualAllowance","Annual irregular-spending allowance"],["userCpp65","User CPP at 65"],["userCpp70","User CPP at 70"],["userCppStart","User CPP start age"],["wifeCpp60","Wife CPP at 60"],["wifeCpp65","Wife CPP at 65"],["wifeCpp70","Wife CPP at 70"],["wifeCppStart","Wife CPP start age"],["home","Home value"],["ns1","NS property 1"],["ns2","NS property 2"],["vehicles","Vehicle value"],["boat","Boat value"],["camper","Camper value"],["cash","Cash"],["ccDebt","Credit-card debt"]];
  document.getElementById("settings").innerHTML='<h2>Settings</h2><div class="toolbar"><button id="importBackup">Import backup</button><input id="backupFile" type="file" accept=".json"><button class="secondary" id="repairTransactions">Repair Transactions</button><button class="danger" id="reset">Reset defaults</button></div><div class="card"><div class="form-grid">'+fields.map(function(f){return'<label>'+f[1]+'<input class="setting-input" data-k="'+f[0]+'" type="number" step="any" value="'+s[f[0]]+'"></label>';}).join("")+"</div></div>";
  document.querySelectorAll(".setting-input").forEach(function(el){el.onchange=function(){data.settings[el.dataset.k]=Number(el.value);save();};});
  document.getElementById("importBackup").onclick=function(){var f=document.getElementById("backupFile").files[0];if(!f){alert("Choose a JSON backup.");return;}var r=new FileReader();r.onload=function(){data=migrate(JSON.parse(r.result));save();};r.readAsText(f);};
@@ -1102,7 +1164,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.8.3-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.9.0-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
