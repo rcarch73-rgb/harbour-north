@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 2.5.1</title>
+<title>RyanOS 2.5.2</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -48,7 +48,7 @@ input[type=range]{width:100%}
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>2.5.1 — Categorization Repair</small></div>
+  <div><h1>RyanOS</h1><small>2.5.2 — Monthly Reports Fix</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -140,6 +140,7 @@ var data=migrate(JSON.parse(localStorage.getItem(STORAGE_KEY)||localStorage.getI
 if(!data.review)data.review={month:new Date().toISOString().slice(0,7),notes:"",lastBackup:""};
 if(!Array.isArray(data.netWorthHistory))data.netWorthHistory=[];
 if(data.optimizerExtra===undefined)data.optimizerExtra=0;
+if(!data.reportMonth)data.reportMonth=data.review.month||new Date().toISOString().slice(0,7);
 
 
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));render();}
@@ -440,16 +441,34 @@ function monthlyHistory(count){
  }
  return out;
 }
-function merchantReport(){
+function transactionMonth(t){
+ var d=txDateObj(t.date);
+ return d?monthKeyFromDate(d):"";
+}
+function selectedReportMonth(){
+ return data.reportMonth||data.review.month||new Date().toISOString().slice(0,7);
+}
+function monthTransactions(month){
+ return data.transactions.filter(function(t){return transactionMonth(t)===month;});
+}
+function merchantReport(month){
  var m={};
- data.transactions.filter(function(t){return t.include==="Yes";}).forEach(function(t){
-  var k=(t.description||"Unknown").trim();
-  if(!m[k])m[k]=0;m[k]+=Math.abs(Number(t.amount||0));
+ monthTransactions(month).filter(function(t){return t.include==="Yes";}).forEach(function(t){
+  var k=(t.merchant||t.description||"Unknown").trim();
+  if(!m[k])m[k]=0;
+  m[k]+=Math.abs(Number(t.amount||0));
  });
  return Object.keys(m).map(function(k){return{name:k,total:m[k]};}).sort(function(a,b){return b.total-a.total;}).slice(0,15);
 }
-function uncategorized(){
- return data.transactions.filter(function(t){return !t.category||t.category==="Miscellaneous"||t.category==="Needs Review";});
+function uncategorized(month){
+ return monthTransactions(month).filter(function(t){return !t.category||t.category==="Miscellaneous"||t.category==="Needs Review";});
+}
+function byCategoryForMonth(month){
+ var m={};
+ monthTransactions(month).filter(function(t){return t.include==="Yes";}).forEach(function(t){
+  m[t.category]=(m[t.category]||0)+Math.abs(Number(t.amount||0));
+ });
+ return m;
 }
 function goalPlan(extra){
  var ordered=data.goals.slice().sort(function(a,b){return a.priority-b.priority;});
@@ -470,21 +489,30 @@ function monthNameAfter(n){
  return d.toLocaleString("en-CA",{month:"short",year:"numeric"});
 }
 function renderReports(){
+ var month=selectedReportMonth();
  var hist=monthlyHistory(12),maxSpend=Math.max.apply(null,hist.map(function(x){return x.spend;}).concat([1]));
- var merchants=merchantReport(),misc=uncategorized(),plan=goalPlan(data.optimizerExtra),cat=byCategory();
+ var merchants=merchantReport(month),misc=uncategorized(month),plan=goalPlan(data.optimizerExtra),cat=byCategoryForMonth(month);
+ var monthTx=monthTransactions(month);
+ var monthSpend=monthTx.filter(function(t){return t.include==="Yes";}).reduce(function(a,t){return a+Math.abs(Number(t.amount||0));},0);
  document.getElementById("reports").innerHTML=
  '<h2>Reports & Goal Optimizer</h2>'+
+ '<div class="card" style="margin-bottom:12px"><div class="form-grid"><label>Report month<input id="reportMonth" type="month" value="'+esc(month)+'"></label><label>Transactions this month<input value="'+monthTx.length+'" disabled></label><label>Included spending this month<input value="'+money(monthSpend)+'" disabled></label></div><div class="notice">Budget alerts and merchant totals now use only the selected month.</div></div>'+
  '<div class="grid two"><div class="card"><h3>12-month spending trend</h3><div class="report-bars">'+
  hist.map(function(x){return'<div class="report-col"><div class="report-bar" style="height:'+Math.max(2,(x.spend/maxSpend)*170)+'px"></div><span>'+x.label+'<br>'+money(x.spend)+'</span></div>';}).join("")+
- '</div></div><div class="card"><h3>Uncategorized review queue</h3><div class="metric '+(misc.length?"bad":"good")+'">'+misc.length+'</div><p>Transactions requiring confirmation.</p><button id="goTransactions">Review transactions</button></div></div>'+
- '<div class="grid two" style="margin-top:12px"><div class="card"><h3>Top merchants</h3><table><thead><tr><th>Merchant</th><th>Total</th></tr></thead><tbody>'+
+ '</div></div><div class="card"><h3>Uncategorized review queue — '+esc(month)+'</h3><div class="metric '+(misc.length?"bad":"good")+'">'+misc.length+'</div><p>Selected-month transactions requiring confirmation.</p><button id="goTransactions">Review transactions</button></div></div>'+
+ '<div class="grid two" style="margin-top:12px"><div class="card"><h3>Top merchants — '+esc(month)+'</h3><table><thead><tr><th>Merchant</th><th>Total</th></tr></thead><tbody>'+
  merchants.map(function(x){return'<tr><td>'+esc(x.name)+'</td><td>'+money(x.total)+'</td></tr>';}).join("")+
- '</tbody></table></div><div class="card"><h3>Budget trend alerts</h3><table><thead><tr><th>Category</th><th>Budget</th><th>Actual</th><th>Status</th></tr></thead><tbody>'+
+ '</tbody></table></div><div class="card"><h3>Budget alerts — '+esc(month)+'</h3><table><thead><tr><th>Category</th><th>Monthly budget</th><th>Actual</th><th>Status</th></tr></thead><tbody>'+
  data.budget.map(function(x){var a=cat[x[0]]||0,over=a>Number(x[1]||0);return'<tr class="'+(over?"alert-row":"")+'"><td>'+esc(x[0])+'</td><td>'+money(x[1])+'</td><td>'+money(a)+'</td><td class="'+(over?"bad":"good")+'">'+(over?"Over budget":"On track")+'</td></tr>';}).join("")+
  '</tbody></table></div></div>'+
  '<div class="card" style="margin-top:12px"><h3>Goal funding optimizer</h3><div class="range-wrap"><input id="extraRange" type="range" min="0" max="2000" step="50" value="'+data.optimizerExtra+'"><input id="extraNumber" type="number" min="0" max="2000" step="50" value="'+data.optimizerExtra+'"></div><p>Extra monthly funding: <strong>'+money(data.optimizerExtra)+'</strong></p><table><thead><tr><th>Priority</th><th>Goal</th><th>Remaining</th><th>Monthly funding</th><th>Estimated completion</th></tr></thead><tbody>'+
  plan.map(function(x,i){return'<tr><td>'+(i+1)+'</td><td>'+esc(x.name)+'</td><td>'+money(x.remaining)+'</td><td>'+money(x.monthly)+'</td><td>'+monthNameAfter(x.months)+'</td></tr>';}).join("")+
  '</tbody></table><div class="notice">The optimizer follows your goal priorities and rolls each completed goal’s monthly payment into the next goal.</div></div>';
+ document.getElementById("reportMonth").onchange=function(){
+  data.reportMonth=this.value;
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+  renderReports();
+ };
  document.getElementById("extraRange").oninput=function(){data.optimizerExtra=Number(this.value);localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderReports();};
  document.getElementById("extraNumber").onchange=function(){data.optimizerExtra=Math.max(0,Number(this.value||0));localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderReports();};
  document.getElementById("goTransactions").onclick=function(){
@@ -502,7 +530,7 @@ function renderSettings(){
  document.getElementById("reset").onclick=function(){if(confirm("Reset all data?")){data=clone(defaults);save();}};
 }
 function render(){renderHome();renderMoney();renderTransactions();renderGoals();renderRetirement();renderNetWorth();renderLife();renderReview();renderReports();renderSettings();}
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.5.1-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-2.5.2-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  data.transactions.forEach(function(t){
   var r=categorize(t.description);
