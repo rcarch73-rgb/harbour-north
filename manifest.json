@@ -1,9 +1,9 @@
 {
-  "name": "RyanOS 4.0.5",
+  "name": "RyanOS 4.1.0",
   "short_name": "RyanOS",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f4f7fb",
   "theme_color": "#17365d",
-  "description": "RyanOS with corrected Home net worth calculation."
+  "description": "RyanOS with mortgage, vehicle loan and general debt planning."
 }

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 4.0.5</title>
+<title>RyanOS 4.1.0</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -196,7 +196,7 @@ main{
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>4.0.5 — Net Worth Calculation Fix</small></div>
+  <div><h1>RyanOS</h1><small>4.1.0 — Debt Planner</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -252,6 +252,7 @@ var defaults={
   {name:"Fence",age:56,amount:6000,inflates:1,account:"nonReg",include:1},
   {name:"Major travel",age:60,amount:15000,inflates:1,account:"tfsa",include:1}
  ],
+ debts:[],
  transactions:[],
  rules:[
   {keyword:"YELLOWHEAD",category:"Income",include:"No"},{keyword:"PROVINCE",category:"Income",include:"No"},
@@ -283,6 +284,13 @@ function migrate(raw){
  if(Array.isArray(raw.goals))out.goals=raw.goals;
  if(Array.isArray(raw.life))out.life=raw.life;
  if(Array.isArray(raw.lifePlans))out.life=raw.lifePlans.map(function(p){return{name:p.name||"Goal",target:Number(p.target||0),saved:Number(p.saved||0),year:Number(p.targetYear||p.year||new Date().getFullYear()+1),notes:p.notes||""};});
+ if(Array.isArray(raw.debts))out.debts=raw.debts.map(function(x){return{
+  name:x.name||"Debt",type:x.type||"Other",balance:Number(x.balance||0),
+  interestRate:Number(x.interestRate||0),payment:Number(x.payment||0),
+  frequency:x.frequency||"Monthly",extraPayment:Number(x.extraPayment||0),
+  dueDay:Number(x.dueDay||1),linkedAsset:x.linkedAsset||"",notes:x.notes||"",
+  include:Number(x.include)===0?0:1
+ };});
  if(Array.isArray(raw.futureExpenses))out.futureExpenses=raw.futureExpenses.map(function(x){return{
   name:x.name||"Future expense",age:Number(x.age||60),amount:Number(x.amount||0),
   inflates:Number(x.inflates)===0?0:1,account:x.account||"nonReg",include:Number(x.include)===0?0:1
@@ -301,6 +309,7 @@ var data=migrate(JSON.parse(localStorage.getItem(STORAGE_KEY)||localStorage.getI
 if(!data.review)data.review={month:new Date().toISOString().slice(0,7),notes:"",lastBackup:""};
 if(!Array.isArray(data.netWorthHistory))data.netWorthHistory=[];
 if(!Array.isArray(data.futureExpenses))data.futureExpenses=clone(defaults.futureExpenses);
+if(!Array.isArray(data.debts))data.debts=[];
 if(data.optimizerExtra===undefined)data.optimizerExtra=0;
 if(!data.reportMonth)data.reportMonth=data.review.month||new Date().toISOString().slice(0,7);
 if(!data.review||typeof data.review!=="object")data.review={month:new Date().toISOString().slice(0,7),notes:"",lastBackup:""};
@@ -428,7 +437,7 @@ function showPage(pageId){
 }
 window.showPage=showPage;
 function nav(){
- var items=[["home","Home"],["money","Money"],["transactions","Transactions"],["networth","Net Worth"],["retirement","Retirement"],["settings","Settings & Data"]];
+ var items=[["home","Home"],["money","Money"],["transactions","Transactions"],["goals","Debt"],["networth","Net Worth"],["retirement","Retirement"],["settings","Settings & Data"]];
  document.getElementById("nav").innerHTML=items.map(function(x,i){return'<button data-page="'+x[0]+'" class="'+(i===0?"active":"")+'">'+x[1]+"</button>";}).join("");
  document.querySelectorAll("#nav button").forEach(function(b){b.addEventListener("click",function(){showPage(b.dataset.page);});});
 }
@@ -518,6 +527,7 @@ function renderHomeStreamlined(){
  var fixed=Number(s.bills||0)+Number(s.investing||0)+Number(s.chores||0);
  var cash=Math.max(0,income-fixed);
  var retirement=retirementHeadline();
+ var debt=debtTotals();
  var next=nextFutureExpense();
  var detailed=Number(s.rrspBalance||0)+Number(s.userTfsaBalance||0)+Number(s.wifeRrspBalance||0)+Number(s.nonRegisteredBalance||0);
  var netWorthTotals=totals();
@@ -530,7 +540,7 @@ function renderHomeStreamlined(){
  '<div class="hero-grid">'+
   '<div class="hero-card"><div class="label">Monthly cash remaining</div><div class="value">'+money(cash)+'</div><div class="sub">After regular bills and investing</div></div>'+
   '<div class="hero-card"><div class="label">Investments used by plan</div><div class="value">'+money(detailed)+'</div><div class="sub">Detailed account balances</div></div>'+
-  '<div class="hero-card"><div class="label">Line of credit</div><div class="value">'+money(Number(s.locBalance||0))+'</div><div class="sub">'+Number(s.locRate||0).toFixed(2)+'% interest</div></div>'+
+  '<div class="hero-card"><div class="label">Total debt</div><div class="value">'+money(debt.balance)+'</div><div class="sub">'+money(debt.monthly)+' monthly payments</div></div>'+
   '<div class="hero-card"><div class="label">Retirement result</div><div class="value">'+(retirement.ok?'Funded':'Age '+retirement.shortfall)+'</div><div class="sub">Projected ending balance '+money(retirement.end)+'</div></div>'+
   '<div class="hero-card"><div class="label">Net worth</div><div class="value">'+money(estimatedNetWorth)+'</div><div class="sub">Matches the Net Worth page</div></div>'+
  '</div>'+
@@ -539,7 +549,7 @@ function renderHomeStreamlined(){
   (next?'<p><strong>Next large expense:</strong> '+esc(next.name)+' at age '+Number(next.age).toFixed(0)+' — '+money(Number(next.amount||0))+' in today’s dollars.</p>':'<p>No future expenses are currently scheduled.</p>')+
  '</div>'+
  '<div class="section-card"><h3>Quick actions</h3><div class="quick-actions">'+
-  '<button onclick="showPage(\'money\')">Review money</button><button onclick="showPage(\'transactions\')">Import transactions</button><button onclick="showPage(\'networth\')">View net worth</button>'+
+  '<button onclick="showPage(\'money\')">Review money</button><button onclick="showPage(\'transactions\')">Import transactions</button><button onclick="showPage(\'goals\')">Manage debt</button><button onclick="showPage(\'networth\')">View net worth</button>'+
   '<button onclick="showPage(\'retirement\')">Open retirement plan</button>'+
   '<button onclick="showPage(\'settings\')">Backup or settings</button>'+
  '</div></div>';
@@ -795,11 +805,86 @@ function renderTransactions(){
  document.querySelectorAll(".tx-learn").forEach(function(el){el.onclick=function(){learnRuleFromTransaction(Number(el.dataset.i));};});
  document.querySelectorAll(".tx-del").forEach(function(el){el.onclick=function(){data.transactions.splice(Number(el.dataset.i),1);save();};});
 }
+function monthlyDebtPayment(d){
+ var p=Number(d.payment||0)+Number(d.extraPayment||0);
+ if(d.frequency==="Weekly")return p*52/12;
+ if(d.frequency==="Biweekly")return p*26/12;
+ if(d.frequency==="Semi-monthly")return p*24/12;
+ if(d.frequency==="Annually")return p/12;
+ return p;
+}
+function debtPayoffEstimate(d){
+ var balance=Math.max(0,Number(d.balance||0));
+ var payment=Math.max(0,monthlyDebtPayment(d));
+ var rate=Math.max(0,Number(d.interestRate||0))/100/12;
+ if(balance<=0)return{months:0,interest:0,status:"Paid off"};
+ if(payment<=0)return{months:Infinity,interest:Infinity,status:"No payment"};
+ if(rate===0){var m=Math.ceil(balance/payment);return{months:m,interest:0,status:"On track"};}
+ if(payment<=balance*rate)return{months:Infinity,interest:Infinity,status:"Payment too low"};
+ var months=Math.ceil(-Math.log(1-balance*rate/payment)/Math.log(1+rate));
+ return{months:months,interest:Math.max(0,months*payment-balance),status:"On track"};
+}
+function debtTotals(){
+ var active=(data.debts||[]).filter(function(d){return Number(d.include)!==0;});
+ return active.reduce(function(a,d){
+  var p=debtPayoffEstimate(d);
+  a.balance+=Number(d.balance||0);a.monthly+=monthlyDebtPayment(d);
+  if(isFinite(p.interest))a.interest+=p.interest;else a.problems++;
+  if(isFinite(p.months))a.longest=Math.max(a.longest,p.months);
+  return a;
+ },{balance:0,monthly:0,interest:0,problems:0,longest:0,count:active.length});
+}
 function renderGoals(){
- var t=totals();
- document.getElementById("goals").innerHTML='<h2>Goals & Debt</h2><div class="toolbar"><button id="addGoal">Add goal</button></div><div class="card"><table><thead><tr><th>Priority</th><th>Goal</th><th>Target</th><th>Current</th><th>Monthly</th><th>Months</th><th></th></tr></thead><tbody>'+
+ var ds=debtTotals();
+ document.getElementById("goals").innerHTML=
+ '<div class="page-intro"><div><h2>Debt</h2><p>Track mortgages, car loans, lines of credit and other debts.</p></div><span class="status-pill '+(ds.problems?'bad':ds.balance?'warn':'good')+'">'+(ds.balance?money(ds.balance)+' owing':'Debt free')+'</span></div>'+
+ '<div class="hero-grid">'+
+  '<div class="hero-card"><div class="label">Total debt</div><div class="value">'+money(ds.balance)+'</div><div class="sub">'+ds.count+' active account'+(ds.count===1?'':'s')+'</div></div>'+
+  '<div class="hero-card"><div class="label">Monthly payments</div><div class="value">'+money(ds.monthly)+'</div><div class="sub">Including extra payments</div></div>'+
+  '<div class="hero-card"><div class="label">Future interest</div><div class="value">'+(ds.problems?'Review needed':money(ds.interest))+'</div><div class="sub">At current rates</div></div>'+
+  '<div class="hero-card"><div class="label">Longest payoff</div><div class="value">'+(ds.longest?Math.floor(ds.longest/12)+'y '+ds.longest%12+'m':'—')+'</div><div class="sub">Current payment plan</div></div>'+
+ '</div>'+
+ '<div class="section-card"><h3>Add debt</h3><div class="form-grid">'+
+  '<label>Name<input id="newDebtName" placeholder="Mortgage or car loan"></label>'+
+  '<label>Type<select id="newDebtType"><option>Mortgage</option><option>Vehicle loan</option><option>Line of credit</option><option>Credit card</option><option>Personal loan</option><option>Student loan</option><option>Other</option></select></label>'+
+  '<label>Current balance<input id="newDebtBalance" type="number" step="100" value="0"></label>'+
+  '<label>Interest rate (%)<input id="newDebtRate" type="number" step="0.01" value="0"></label>'+
+  '<label>Regular payment<input id="newDebtPayment" type="number" step="10" value="0"></label>'+
+  '<label>Frequency<select id="newDebtFrequency"><option>Monthly</option><option>Biweekly</option><option>Weekly</option><option>Semi-monthly</option><option>Annually</option></select></label>'+
+  '<label>Extra payment<input id="newDebtExtra" type="number" step="10" value="0"></label>'+
+  '<label>Due day<input id="newDebtDueDay" type="number" min="1" max="31" value="1"></label>'+
+  '<label>Linked asset<input id="newDebtAsset" placeholder="Home, Subaru…"></label>'+
+  '<label>Notes<input id="newDebtNotes" placeholder="Renewal date, lender…"></label>'+
+  '<label>&nbsp;<button id="addDebt" type="button">Add debt</button></label>'+
+ '</div></div>'+
+ '<div class="section-card"><h3>Debt accounts</h3><div style="overflow-x:auto"><table><thead><tr><th>Use</th><th>Name</th><th>Type</th><th>Balance</th><th>Rate</th><th>Payment</th><th>Frequency</th><th>Extra</th><th>Monthly</th><th>Payoff</th><th>Future interest</th><th>Due</th><th>Linked asset</th><th>Notes</th><th></th></tr></thead><tbody>'+
+ ((data.debts||[]).length?(data.debts||[]).map(function(d,i){var p=debtPayoffEstimate(d),m=monthlyDebtPayment(d);return'<tr>'+
+  '<td><input class="d-toggle" data-i="'+i+'" type="checkbox" '+(Number(d.include)!==0?'checked':'')+'></td>'+
+  '<td><input class="d-field" data-i="'+i+'" data-k="name" value="'+esc(d.name||"")+'"></td>'+
+  '<td><select class="d-field" data-i="'+i+'" data-k="type">'+["Mortgage","Vehicle loan","Line of credit","Credit card","Personal loan","Student loan","Other"].map(function(v){return'<option '+(d.type===v?'selected':'')+'>'+v+'</option>';}).join("")+'</select></td>'+
+  '<td><input class="d-field" data-i="'+i+'" data-k="balance" type="number" step="100" value="'+Number(d.balance||0)+'"></td>'+
+  '<td><input class="d-field" data-i="'+i+'" data-k="interestRate" type="number" step="0.01" value="'+Number(d.interestRate||0)+'"></td>'+
+  '<td><input class="d-field" data-i="'+i+'" data-k="payment" type="number" step="10" value="'+Number(d.payment||0)+'"></td>'+
+  '<td><select class="d-field" data-i="'+i+'" data-k="frequency">'+["Monthly","Biweekly","Weekly","Semi-monthly","Annually"].map(function(v){return'<option '+(d.frequency===v?'selected':'')+'>'+v+'</option>';}).join("")+'</select></td>'+
+  '<td><input class="d-field" data-i="'+i+'" data-k="extraPayment" type="number" step="10" value="'+Number(d.extraPayment||0)+'"></td>'+
+  '<td>'+money(m)+'</td><td class="'+(p.status==="On track"||p.status==="Paid off"?'good':'bad')+'">'+(isFinite(p.months)?Math.floor(p.months/12)+'y '+p.months%12+'m':p.status)+'</td>'+
+  '<td>'+(isFinite(p.interest)?money(p.interest):'—')+'</td>'+
+  '<td><input class="d-field" data-i="'+i+'" data-k="dueDay" type="number" min="1" max="31" value="'+Number(d.dueDay||1)+'"></td>'+
+  '<td><input class="d-field" data-i="'+i+'" data-k="linkedAsset" value="'+esc(d.linkedAsset||"")+'"></td>'+
+  '<td><input class="d-field" data-i="'+i+'" data-k="notes" value="'+esc(d.notes||"")+'"></td>'+
+  '<td><button class="danger d-del" data-i="'+i+'">Remove</button></td></tr>';}).join(""):'<tr><td colspan="15">No debts added yet.</td></tr>')+
+ '</tbody></table></div><div class="notice">Payoff estimates assume the current interest rate and payment remain unchanged. Variable-rate loans will change over time.</div></div>'+
+ '<details class="section-card"><summary>Savings goals</summary><div class="details-body"><div class="toolbar"><button id="addGoal">Add goal</button></div><table><thead><tr><th>Priority</th><th>Goal</th><th>Target</th><th>Current</th><th>Monthly</th><th>Months</th><th></th></tr></thead><tbody>'+
  data.goals.slice().sort(function(a,b){return a.priority-b.priority;}).map(function(g){var i=data.goals.indexOf(g),m=g.monthly>0?Math.ceil(Math.max(g.target-g.current,0)/g.monthly):"—";return'<tr><td><input class="g-pri" data-i="'+i+'" type="number" value="'+g.priority+'"></td><td><input class="g-name" data-i="'+i+'" value="'+esc(g.name)+'"></td><td><input class="g-target" data-i="'+i+'" type="number" value="'+g.target+'"></td><td><input class="g-current" data-i="'+i+'" type="number" value="'+g.current+'"></td><td><input class="g-monthly" data-i="'+i+'" type="number" value="'+g.monthly+'"></td><td>'+m+'</td><td><button class="danger g-del" data-i="'+i+'">Delete</button></td></tr>';}).join("")+
- '</tbody></table></div>';
+ '</tbody></table></div></details>';
+
+ document.getElementById("addDebt").onclick=function(){
+  data.debts.push({name:document.getElementById("newDebtName").value.trim()||"Debt",type:document.getElementById("newDebtType").value,balance:Number(document.getElementById("newDebtBalance").value||0),interestRate:Number(document.getElementById("newDebtRate").value||0),payment:Number(document.getElementById("newDebtPayment").value||0),frequency:document.getElementById("newDebtFrequency").value,extraPayment:Number(document.getElementById("newDebtExtra").value||0),dueDay:Number(document.getElementById("newDebtDueDay").value||1),linkedAsset:document.getElementById("newDebtAsset").value.trim(),notes:document.getElementById("newDebtNotes").value.trim(),include:1});save();
+ };
+ document.querySelectorAll(".d-toggle").forEach(function(el){el.onchange=function(){data.debts[Number(el.dataset.i)].include=el.checked?1:0;save();};});
+ document.querySelectorAll(".d-field").forEach(function(el){el.onchange=function(){var d=data.debts[Number(el.dataset.i)],k=el.dataset.k;d[k]=["name","type","frequency","linkedAsset","notes"].indexOf(k)>=0?el.value:Number(el.value||0);save();};});
+ document.querySelectorAll(".d-del").forEach(function(el){el.onclick=function(){data.debts.splice(Number(el.dataset.i),1);save();};});
+
  document.getElementById("addGoal").onclick=function(){data.goals.push({name:"New goal",target:0,current:0,monthly:0,priority:data.goals.length+1});save();};
  [[".g-pri","priority",Number],[".g-name","name",String],[".g-target","target",Number],[".g-current","current",Number],[".g-monthly","monthly",Number]].forEach(function(cfg){document.querySelectorAll(cfg[0]).forEach(function(el){el.onchange=function(){data.goals[Number(el.dataset.i)][cfg[1]]=cfg[2](el.value);save();};});});
  document.querySelectorAll(".g-del").forEach(function(el){el.onclick=function(){data.goals.splice(Number(el.dataset.i),1);save();};});
@@ -1553,10 +1638,10 @@ function render(){
  if(moneyPage&&moneyPage.innerHTML.indexOf("Import bank or credit-card CSV")<0){
   moneyPage.innerHTML=
    '<div class="page-intro"><div><h2>Money</h2><p>Budget, spending and transaction tracking in one place.</p></div></div>'+
-   '<div class="section-card"><h3>Import bank or credit-card CSV</h3><p>Upload statements on the Transactions page so RyanOS can categorize spending and update your actual monthly totals.</p><div class="quick-actions"><button id="openTransactionsFromMoney" type="button">Open Transactions & CSV Import</button></div></div>'+
+   '<div class="section-card"><h3>Import bank or credit-card CSV</h3><p>Upload statements on the Transactions page so RyanOS can categorize spending and update your actual monthly totals.</p><div class="quick-actions"><button id="openTransactionsFromMoney" type="button">Open Transactions & CSV Import</button><button id="openDebtFromMoney" type="button">Open Debt Planner</button></div></div>'+
    moneyPage.innerHTML;
   var openTx=document.getElementById("openTransactionsFromMoney");
-  if(openTx)openTx.onclick=function(){showPage("transactions");};
+  if(openTx)openTx.onclick=function(){showPage("transactions");}; var openDebt=document.getElementById("openDebtFromMoney");if(openDebt)openDebt.onclick=function(){showPage("goals");};
  }
  safeRender("transactions",renderTransactions);
  safeRender("goals",renderGoals);
@@ -1567,7 +1652,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-4.0.5-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-4.1.0-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
