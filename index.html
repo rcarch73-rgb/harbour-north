@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 4.6.0</title>
+<title>RyanOS 5.0.0</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -238,11 +238,33 @@ main{
 .settings-groups{display:grid;gap:14px}
 .settings-actions{position:sticky;bottom:0;background:rgba(244,247,251,.96);backdrop-filter:blur(8px);padding:10px 0 4px;z-index:3}
 
+
+.ret-readiness{border:1px solid #cfe0d4;background:linear-gradient(135deg,#f4fbf6,#ffffff);border-radius:20px;padding:18px;margin-bottom:14px}
+.ret-readiness.attention{border-color:#efc7c7;background:linear-gradient(135deg,#fff7f7,#ffffff)}
+.ret-status-row{display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap}
+.ret-status-title{font-size:1.7rem;font-weight:900;margin:0}
+.ret-status-copy{color:#586174;margin-top:4px}
+.ret-kpi-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:16px}
+.ret-kpi{background:#fff;border:1px solid #dbe3ee;border-radius:14px;padding:12px}
+.ret-kpi .label{font-size:.76rem;text-transform:uppercase;font-weight:800;color:#667085}
+.ret-kpi .value{font-size:1.22rem;font-weight:900;margin-top:5px}
+.ret-timeline{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.ret-milestone{position:relative;background:#fff;border:1px solid #dbe3ee;border-radius:14px;padding:13px}
+.ret-milestone .age{font-size:1.25rem;font-weight:900;color:#17365d}
+.ret-milestone .event{font-weight:800;margin-top:5px}
+.ret-milestone .detail{font-size:.86rem;color:#667085;margin-top:4px}
+.ret-stress-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.ret-stress{border:1px solid #dbe3ee;border-radius:14px;padding:12px;background:#fff}
+.ret-stress .result{font-weight:900;margin-top:5px}
+.ret-detail-heading{margin:18px 0 8px;padding-top:6px;border-top:2px solid #dbe3ee}
+@media(max-width:950px){.ret-kpi-grid,.ret-timeline,.ret-stress-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:540px){.ret-kpi-grid,.ret-timeline,.ret-stress-grid{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>4.6.0 — Categorized Settings</small></div>
+  <div><h1>RyanOS</h1><small>5.0.0 — Foundation</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -1476,7 +1498,7 @@ function drawRetirementAccountChart(canvasId,rows){
   if(lx>width-150){lx=pad.l;ly+=16;}
  });
 }
-function renderRetirement(){
+function renderRetirementCore(){
  var s=data.settings,expected=retirementPlan(s.returnRate),conservative=retirementPlan(s.conservativeReturn),optimistic=retirementPlan(s.optimisticReturn);
  var stressTests=[
   {name:"20% market drop at retirement",rows:retirementPlan(s.returnRate,null,"crash")},
@@ -1528,7 +1550,7 @@ function renderRetirement(){
  (data.futureExpenses||[]).filter(function(x){return Number(x.include)!==0;}).forEach(function(x){var y=Number(x.age||0);futureExpenseYears[y]=(futureExpenseYears[y]||0)+Number(x.amount||0);});
  var clusteredYears=Object.keys(futureExpenseYears).filter(function(y){return futureExpenseYears[y]>=50000;});
  document.getElementById("retirement").innerHTML=
- '<div class="page-intro"><div><h2>Retirement</h2><p>Start with the headline result, then open details only when needed.</p></div></div><div class="notice"><strong>Repair complete.</strong> Only the retirement functions were replaced. All other app pages were preserved.</div>'+
+ '<div class="ret-detail-heading"><h2>Detailed retirement model</h2><p class="tx-muted">Assumptions, scenarios, future expenses, tax audit and year-by-year calculations.</p></div>'+
  '<div class="hero-grid"><div class="hero-card"><div class="label">Retire at</div><div class="value">'+Number(s.retireAge).toFixed(1)+'</div><div class="sub">'+Number(s.retireAge-s.age).toFixed(1)+' years away</div></div><div class="hero-card"><div class="label">Projected balance at retirement</div><div class="value">'+money(at.total)+'</div><div class="sub">Expected return assumption</div></div><div class="hero-card"><div class="label">Plan result</div><div class="value">'+(e.d?'Shortfall':'Funded')+'</div><div class="sub">'+(e.d?'At age '+e.d:'Through age '+s.retirementEndAge)+'</div></div><div class="hero-card"><div class="label">Ending balance</div><div class="value">'+money(e.end)+'</div><div class="sub">Nominal dollars</div></div></div>'+'<div class="section-card"><h3>Your plan</h3><div class="form-grid"><label>Current age<input class="ret-repair" data-k="age" type="number" step="0.1" value="'+s.age+'"></label><label>Retirement age<input class="ret-repair" data-k="retireAge" type="number" step="0.1" value="'+s.retireAge+'"></label><label>Plan through age<input class="ret-repair" data-k="retirementEndAge" type="number" step="1" value="'+s.retirementEndAge+'"></label><label>Spending method<select id="retirementSpendingMode"><option value="1" '+(mode===1?'selected':'')+'>Manual target</option><option value="2" '+(mode===2?'selected':'')+'>Current budget</option><option value="3" '+(mode===3?'selected':'')+'>Imported transactions</option></select></label><label>Manual annual spending<input class="ret-repair" data-k="retireSpend" type="number" step="1000" value="'+s.retireSpend+'"></label><label>Annual spending used<input value="'+money(spending)+'" disabled></label><label>Spending phases<select id="retirementSpendingPhasesEnabled"><option value="1" '+(Number(s.retirementSpendingPhasesEnabled)===1?'selected':'')+'>Enabled</option><option value="0" '+(Number(s.retirementSpendingPhasesEnabled)===0?'selected':'')+'>Disabled</option></select></label><label>Active phase ends at age<input class="ret-repair" data-k="activeSpendingEndAge" type="number" step="1" value="'+s.activeSpendingEndAge+'"></label><label>Mid phase ends at age<input class="ret-repair" data-k="midSpendingEndAge" type="number" step="1" value="'+s.midSpendingEndAge+'"></label><label>Mid phase spending (%)<input class="ret-repair" data-k="midSpendingPercent" type="number" step="1" value="'+s.midSpendingPercent+'"></label><label>Late phase spending (%)<input class="ret-repair" data-k="lateSpendingPercent" type="number" step="1" value="'+s.lateSpendingPercent+'"></label><label>Spending guardrails<select id="spendingGuardrailsEnabled"><option value="1" '+(Number(s.spendingGuardrailsEnabled)===1?'selected':'')+'>Enabled</option><option value="0" '+(Number(s.spendingGuardrailsEnabled)===0?'selected':'')+'>Disabled</option></select></label><label>Lower portfolio threshold (%)<input class="ret-repair" data-k="guardrailLowerPercent" type="number" step="1" value="'+s.guardrailLowerPercent+'"></label><label>Upper portfolio threshold (%)<input class="ret-repair" data-k="guardrailUpperPercent" type="number" step="1" value="'+s.guardrailUpperPercent+'"></label><label>Spending cut when below (%)<input class="ret-repair" data-k="guardrailCutPercent" type="number" step="1" value="'+s.guardrailCutPercent+'"></label><label>Spending increase when above (%)<input class="ret-repair" data-k="guardrailRaisePercent" type="number" step="1" value="'+s.guardrailRaisePercent+'"></label><label>Freeze inflation after negative return<select id="freezeAfterNegativeReturn"><option value="1" '+(Number(s.freezeAfterNegativeReturn)===1?'selected':'')+'>Yes</option><option value="0" '+(Number(s.freezeAfterNegativeReturn)===0?'selected':'')+'>No</option></select></label><label>Spouse tax audit<select id="taxAuditEnabled"><option value="1" '+(Number(s.taxAuditEnabled)===1?'selected':'')+'>Enabled</option><option value="0" '+(Number(s.taxAuditEnabled)===0?'selected':'')+'>Disabled</option></select></label><label>Eligible pension split (%)<input class="ret-repair" data-k="pensionSplitPercent" type="number" min="0" max="50" step="5" value="'+s.pensionSplitPercent+'"></label></div><div class="notice">Guardrails compare the portfolio to its inflation-adjusted retirement starting value. The spouse tax audit separately estimates federal and B.C. tax. Retirement-start balances use exact fractional-year growth. Your current age is now approximately 52.96 because you turn 53 in about two weeks, so age 55.5 is approximately 2.5 years away.</div></div>'+
  '<div class="grid" style="margin-top:12px"><div class="card"><h3>Expected</h3><div class="metric '+(e.d?'bad':'good')+'">'+(e.d?'Shortfall at '+e.d:'Funded through '+s.retirementEndAge)+'</div><p>'+money(e.end)+' ending balance</p></div><div class="card"><h3>Conservative</h3><div class="metric '+(c.d?'bad':'good')+'">'+(c.d?'Shortfall at '+c.d:'Funded through '+s.retirementEndAge)+'</div><p>'+money(c.end)+' ending balance</p></div><div class="card"><h3>Balance at retirement</h3><div class="metric">'+money(at.total)+'</div></div><div class="card"><h3>Expected ending balance today</h3><div class="metric">'+money(e.real)+'</div></div></div>'+
  '<div class="card" style="margin-top:12px"><h3>Account check</h3><table><tbody><tr><td>Your RRSP</td><td>'+money(s.rrspBalance)+'</td></tr><tr><td>Spouse RRSP</td><td>'+money(s.wifeRrspBalance)+'</td></tr><tr><td>Your TFSA</td><td>'+money(s.userTfsaBalance)+'</td></tr><tr><td>Non-registered</td><td>'+money(s.nonRegisteredBalance)+'</td></tr><tr><td><strong>Detailed total</strong></td><td><strong>'+money(detailed)+'</strong></td></tr><tr><td>Older aggregate setting</td><td>'+money(s.investments)+'</td></tr></tbody></table><div class="notice '+(Math.abs(mismatch)>1?'bad':'good')+'">Difference: '+money(mismatch)+'. The model uses detailed accounts.</div></div>'+
@@ -1568,6 +1590,53 @@ function renderRetirement(){
   data.futureExpenses.splice(Number(el.dataset.i),1);
   localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderRetirement();
  };});
+}
+
+
+function renderRetirement(){
+ renderRetirementCore();
+ var s=data.settings,rows=retirementPlan(s.returnRate);
+ var firstShortfall=0;
+ for(var i=0;i<rows.length;i++){if(Number(rows[i].unfunded||0)>1){firstShortfall=rows[i].age;break;}}
+ var last=rows.length?rows[rows.length-1]:null;
+ var at=accountBalancesAtRetirement(s.returnRate);
+ var mode=Number(s.retirementSpendingMode||1);
+ var spending=mode===2?data.budget.reduce(function(a,x){return a+Number(x[1]||0);},0)*12:mode===3?spendingEstimate().retirementEstimate:Number(s.retireSpend||0);
+ var tests=[
+  {name:"Market drop",rows:retirementPlan(s.returnRate,null,"crash")},
+  {name:"Poor first 5 years",rows:retirementPlan(s.returnRate,null,"badStart")},
+  {name:"Low long-term return",rows:retirementPlan(s.returnRate,null,"lowReturn")},
+  {name:"Higher inflation",rows:retirementPlan(s.returnRate,null,"highInflation")},
+  {name:"Spending shock",rows:retirementPlan(s.returnRate,null,"spendingShock")}
+ ];
+ function depletedAge(testRows){for(var j=0;j<testRows.length;j++){if(Number(testRows[j].unfunded||0)>1||testRows[j].depleted)return testRows[j].age;}return 0;}
+ var results=tests.map(function(t){return{name:t.name,age:depletedAge(t.rows)};});
+ var passes=results.filter(function(x){return !x.age;}).length;
+ var confidence=firstShortfall?"Needs attention":passes===5?"High":passes>=3?"Moderate":"Low";
+ var status=!firstShortfall;
+ var spousePensionAge=Math.max(Number(s.wifeWorkUntilUserAge||0),Number(s.wifeRetireAge||0)+Number(s.wifeAgeDiff||0));
+ var timeline=[
+  {age:Number(s.retireAge||0).toFixed(1),event:"Retirement begins",detail:"Portfolio withdrawals and WCB support cash flow."},
+  {age:Number(spousePensionAge||0).toFixed(0),event:"Spouse pension",detail:"Employment ends and pension income begins."},
+  {age:Number(s.userOasStart||65).toFixed(0),event:"OAS begins",detail:"Government retirement income is added."},
+  {age:Number(s.userCppStart||70).toFixed(0),event:"Your CPP begins",detail:"CPP reduces portfolio withdrawal needs."},
+  {age:Number(s.retirementEndAge||95).toFixed(0),event:"Plan horizon",detail:"RyanOS tests funding through this age."}
+ ];
+ var summary=
+  '<div class="page-intro"><div><h2>Retirement</h2><p>The answer first, with detailed calculations available below.</p></div><span class="status-pill '+(status?'good':'bad')+'">'+(status?'On track':'Needs attention')+'</span></div>'+
+  '<div class="ret-readiness '+(status?'':'attention')+'"><div class="ret-status-row"><div><div class="ret-status-title">'+(status?'Your retirement plan is funded':'Your plan develops a shortfall')+'</div><div class="ret-status-copy">'+(status?'The expected plan remains funded through age '+Number(s.retirementEndAge||95)+'.':'The first projected shortfall occurs at age '+firstShortfall+'.')+'</div></div><div class="status-pill '+(confidence==="High"?'good':confidence==="Moderate"?'warn':'bad')+'">Confidence: '+confidence+'</div></div>'+
+  '<div class="ret-kpi-grid">'+
+   '<div class="ret-kpi"><div class="label">Retire at</div><div class="value">'+Number(s.retireAge||0).toFixed(1)+'</div></div>'+
+   '<div class="ret-kpi"><div class="label">Years away</div><div class="value">'+Math.max(0,Number(s.retireAge||0)-Number(s.age||0)).toFixed(1)+'</div></div>'+
+   '<div class="ret-kpi"><div class="label">Portfolio at retirement</div><div class="value">'+money(at.total)+'</div></div>'+
+   '<div class="ret-kpi"><div class="label">Annual spending used</div><div class="value">'+money(spending)+'</div></div>'+
+   '<div class="ret-kpi"><div class="label">Ending portfolio</div><div class="value">'+money(last?last.endBalance:0)+'</div></div>'+
+  '</div></div>'+
+  '<div class="section-card"><h3>Retirement income timeline</h3><div class="ret-timeline">'+timeline.map(function(x){return'<div class="ret-milestone"><div class="age">Age '+x.age+'</div><div class="event">'+esc(x.event)+'</div><div class="detail">'+esc(x.detail)+'</div></div>';}).join("")+'</div></div>'+
+  '<div class="section-card"><h3>Plan resilience</h3><div class="ret-stress-grid">'+results.map(function(x){return'<div class="ret-stress"><div class="label">'+esc(x.name)+'</div><div class="result '+(x.age?'bad':'good')+'">'+(x.age?'Shortfall at '+x.age:'Passes')+'</div></div>';}).join("")+'</div><div class="notice '+(passes>=3?'good':'bad')+'">'+passes+' of 5 stress tests remain funded through age '+Number(s.retirementEndAge||95)+'.</div></div>';
+ var el=document.getElementById("retirement");
+ if(el&&el.insertAdjacentHTML)el.insertAdjacentHTML("afterbegin",summary);
+ else if(el)el.innerHTML=summary+el.innerHTML;
 }
 
 function saveDetailedNetWorthSnapshot(note,automatic){
@@ -1923,7 +1992,7 @@ function exportBackupFile(){
  var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
  var a=document.createElement("a");
  a.href=URL.createObjectURL(blob);
- a.download="RyanOS-4.6.0-backup.json";
+ a.download="RyanOS-5.0.0-backup.json";
  a.click();
  setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
 }
@@ -2043,7 +2112,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-4.6.0-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.0.0-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
