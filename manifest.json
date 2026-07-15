@@ -1,9 +1,9 @@
 {
-  "name": "RyanOS 4.5.1",
+  "name": "RyanOS 4.5.2",
   "short_name": "RyanOS",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f4f7fb",
   "theme_color": "#17365d",
-  "description": "RyanOS net worth chart and settings repair."
+  "description": "RyanOS debt reconciliation fix for Net Worth."
 }

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 4.5.1</title>
+<title>RyanOS 4.5.2</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -235,7 +235,7 @@ main{
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>4.5.1 — Net Worth & Settings Repair</small></div>
+  <div><h1>RyanOS</h1><small>4.5.2 — Debt Reconciliation Fix</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -466,13 +466,16 @@ function money(n){return new Intl.NumberFormat("en-CA",{style:"currency",currenc
 function pmt(rate,n,pv){var r=rate/1200;return r===0?pv/n:(r*pv)/(1-Math.pow(1+r,-n));}
 function totals(){
  var s=data.settings;
- var income=s.income1+s.income2+s.wcb;
+ var income=Number(s.income1||0)+Number(s.income2||0)+Number(s.wcb||0);
  var spending=data.budget.reduce(function(a,x){return a+Number(x[1]||0);},0);
- var locPayment=pmt(s.rate,s.months,s.loc);
+ var locPayment=pmt(Number(s.rate||0),Number(s.months||0),Number(s.loc||0));
  var goalFunding=data.goals.filter(function(g){return g.name!=="LOC";}).reduce(function(a,g){return a+Number(g.monthly||0);},0);
- var surplus=income-spending-s.investing-s.bills-s.chores-locPayment-goalFunding;
- var assets=s.home+s.ns1+s.ns2+s.vehicles+s.boat+s.camper+s.cash+s.investments;
- var debt=s.loc+s.ccDebt;
+ var surplus=income-spending-Number(s.investing||0)-Number(s.bills||0)-Number(s.chores||0)-locPayment-goalFunding;
+ var assets=Number(s.home||0)+Number(s.ns1||0)+Number(s.ns2||0)+Number(s.vehicles||0)+Number(s.boat||0)+Number(s.camper||0)+Number(s.cash||0)+Number(s.investments||0);
+ var activeDebts=(data.debts||[]).filter(function(d){return Number(d.include)!==0;});
+ var debt=activeDebts.length
+  ? activeDebts.reduce(function(a,d){return a+Number(d.balance||0);},0)
+  : Number(s.loc||0)+Number(s.ccDebt||0);
  return{income:income,spending:spending,locPayment:locPayment,goalFunding:goalFunding,surplus:surplus,assets:assets,debt:debt,networth:assets-debt};
 }
 function actualSpend(){return data.transactions.filter(function(t){return t.include==="Yes";}).reduce(function(a,t){return a+Math.abs(Number(t.amount||0));},0);}
@@ -1643,7 +1646,7 @@ function renderNetWorth(){
  '<div class="section-card"><h3>Current values</h3><table><tbody>'+
   '<tr><td>Total assets</td><td><strong>'+money(t.assets)+'</strong></td><td>Total debt</td><td><strong>'+money(t.debt)+'</strong></td></tr>'+
   '<tr><td>Investments</td><td>'+money(Number(data.settings.investments||0))+'</td><td>Net worth</td><td><strong>'+money(t.networth)+'</strong></td></tr>'+
- '</tbody></table></div>'+
+ '</tbody></table><div class="notice">Total debt uses the same included debt accounts and balances as the Debt page.</div></div>'+
  '<div class="section-card"><h3>History</h3><div style="overflow-x:auto"><table><thead><tr><th>Date</th><th>Assets</th><th>Debt</th><th>Investments</th><th>Net worth</th><th>Change</th><th>Note</th><th></th></tr></thead><tbody>'+
  (history.length?history.map(function(x,i){
    var prev=i>0?history[i-1]:null,chg=prev?Number(x.networth||0)-Number(prev.networth||0):0;
@@ -1913,7 +1916,7 @@ function exportBackupFile(){
  var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
  var a=document.createElement("a");
  a.href=URL.createObjectURL(blob);
- a.download="RyanOS-4.5.1-backup.json";
+ a.download="RyanOS-4.5.2-backup.json";
  a.click();
  setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
 }
@@ -2014,7 +2017,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-4.5.1-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-4.5.2-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
