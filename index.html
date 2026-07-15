@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 4.0.4</title>
+<title>RyanOS 4.0.5</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -196,7 +196,7 @@ main{
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>4.0.4 — Net Worth Restored</small></div>
+  <div><h1>RyanOS</h1><small>4.0.5 — Net Worth Calculation Fix</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -520,9 +520,8 @@ function renderHomeStreamlined(){
  var retirement=retirementHeadline();
  var next=nextFutureExpense();
  var detailed=Number(s.rrspBalance||0)+Number(s.userTfsaBalance||0)+Number(s.wifeRrspBalance||0)+Number(s.nonRegisteredBalance||0);
- var estimatedAssets=detailed+Number(s.homeValue||0)+Number(s.property1Value||0)+Number(s.property2Value||0)+Number(s.vehicleValue||0)+Number(s.boatValue||0)+Number(s.otherAssets||0);
- var estimatedLiabilities=Number(s.locBalance||0)+Number(s.mortgageBalance||0)+Number(s.otherDebt||0);
- var estimatedNetWorth=estimatedAssets-estimatedLiabilities;
+ var netWorthTotals=totals();
+ var estimatedNetWorth=netWorthTotals.networth;
  var warnings=[];
  if(Math.abs(Number(s.investments||0)-detailed)>1)warnings.push("Investment totals do not match detailed accounts.");
  if(Math.abs(Number(s.investing||0)-(Number(s.rrspMonthlyContribution||0)+Number(s.userTfsaMonthlyContribution||0)+Number(s.wifeRrspMonthlyContribution||0)+Number(s.nonRegisteredMonthlyContribution||0)))>1)warnings.push("Monthly investing totals do not match account contributions.");
@@ -533,7 +532,7 @@ function renderHomeStreamlined(){
   '<div class="hero-card"><div class="label">Investments used by plan</div><div class="value">'+money(detailed)+'</div><div class="sub">Detailed account balances</div></div>'+
   '<div class="hero-card"><div class="label">Line of credit</div><div class="value">'+money(Number(s.locBalance||0))+'</div><div class="sub">'+Number(s.locRate||0).toFixed(2)+'% interest</div></div>'+
   '<div class="hero-card"><div class="label">Retirement result</div><div class="value">'+(retirement.ok?'Funded':'Age '+retirement.shortfall)+'</div><div class="sub">Projected ending balance '+money(retirement.end)+'</div></div>'+
-  '<div class="hero-card"><div class="label">Estimated net worth</div><div class="value">'+money(estimatedNetWorth)+'</div><div class="sub">Assets less debts</div></div>'+
+  '<div class="hero-card"><div class="label">Net worth</div><div class="value">'+money(estimatedNetWorth)+'</div><div class="sub">Matches the Net Worth page</div></div>'+
  '</div>'+
  '<div class="section-card"><h3>What needs attention</h3>'+
   (warnings.length?'<div class="stream-note">'+warnings.map(function(x){return'• '+x;}).join('<br>')+'</div>':'<div class="status-pill good">No major data warnings</div>')+
@@ -1568,7 +1567,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-4.0.4-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-4.0.5-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
