@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 5.2.1</title>
+<title>RyanOS 5.2.2</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -470,11 +470,24 @@ details.section-card[open]>summary:after{content:"−"}
 @media(max-width:900px){.vehicle-form,.vehicle-results,.vehicle-comparison{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.vehicle-form,.vehicle-results,.vehicle-comparison{grid-template-columns:1fr}}
 
+
+.travel-form{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;align-items:end}
+.travel-results{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}
+.travel-card{border:1px solid var(--border);border-radius:14px;padding:14px;background:#fff}
+.travel-card .label{font-size:.76rem;text-transform:uppercase;letter-spacing:.03em;font-weight:900;color:var(--muted)}
+.travel-card .value{font-size:1.3rem;font-weight:900;color:var(--brand);margin-top:5px}
+.travel-card .copy{font-size:.88rem;color:var(--muted);margin-top:5px}
+.travel-card.good{border-color:#b7d8c0;background:#f7fcf8}
+.travel-card.warn{border-color:#ead9a4;background:#fffdf5}
+.travel-card.bad{border-color:#e7b8b8;background:#fff8f8}
+@media(max-width:900px){.travel-form,.travel-results{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.travel-form,.travel-results{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>5.2.1 — Vehicle Replacement Planner</small></div>
+  <div><h1>RyanOS</h1><small>5.2.2 — Travel Planner</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -1040,6 +1053,56 @@ function renderHome(){
 }
 
 
+
+function ensureTravelPlanner(){
+ if(!data.travelPlanner||typeof data.travelPlanner!=="object"){
+  var d=new Date();
+  d.setMonth(d.getMonth()+18);
+  data.travelPlanner={
+   name:"Major trip",
+   travellers:2,
+   tripDays:21,
+   transport:5000,
+   lodgingPerNight:180,
+   foodPerDay:120,
+   activities:2500,
+   insurance:600,
+   other:1000,
+   saved:0,
+   targetDate:d.toISOString().slice(0,10)
+  };
+ }
+ return data.travelPlanner;
+}
+function travelPlanAnalysis(){
+ var v=ensureTravelPlanner(),t=totals();
+ var nights=Math.max(0,Number(v.tripDays||0)-1);
+ var total=
+  Number(v.transport||0)+
+  nights*Number(v.lodgingPerNight||0)+
+  Number(v.tripDays||0)*Number(v.foodPerDay||0)+
+  Number(v.activities||0)+
+  Number(v.insurance||0)+
+  Number(v.other||0);
+ var target=new Date(String(v.targetDate||""));
+ var now=new Date();
+ var months=!isNaN(target.getTime())?Math.max(1,(target.getFullYear()-now.getFullYear())*12+(target.getMonth()-now.getMonth())+(target.getDate()>=now.getDate()?0:-1)):1;
+ var remaining=Math.max(0,total-Number(v.saved||0));
+ var monthly=remaining/months;
+ var capacity=Number(t.surplus||0);
+ var gap=monthly-capacity;
+ var perDay=Number(v.tripDays||0)>0?total/Number(v.tripDays||0):0;
+ return{
+  total:total,
+  months:months,
+  remaining:remaining,
+  monthly:monthly,
+  capacity:capacity,
+  gap:gap,
+  perDay:perDay,
+  affordable:capacity>=monthly
+ };
+}
 function ensureVehiclePlanner(){
  if(!data.vehiclePlanner||typeof data.vehiclePlanner!=="object"){
   data.vehiclePlanner={
@@ -1120,7 +1183,7 @@ function purchasePlanAnalysis(){
  };
 }
 function renderMoney(){
- var s=data.settings,purchase=ensurePurchasePlanner(),purchaseResult=purchasePlanAnalysis(),vehicle=ensureVehiclePlanner(),vehicleResult=vehiclePlanAnalysis();
+ var s=data.settings,purchase=ensurePurchasePlanner(),purchaseResult=purchasePlanAnalysis(),vehicle=ensureVehiclePlanner(),vehicleResult=vehiclePlanAnalysis(),travel=ensureTravelPlanner(),travelResult=travelPlanAnalysis();
  var month=data.reportMonth||data.review.month||new Date().toISOString().slice(0,7);
  var cat=byCategoryForMonth(month),estimate=spendingEstimate();
  var monthTx=monthTransactions(month);
@@ -1230,6 +1293,30 @@ function renderMoney(){
     vehicleResult.affordableFinance?"The savings target does not fully fit, but the estimated finance payment fits current cash flow.":
     "Neither the savings target nor the estimated finance payment fits current planned cash flow.")+
   '</div></div>'+
+ '<div class="section-card"><div class="page-intro"><div><h3>Travel planner</h3><p>Build a trip budget and test whether the monthly savings target fits your current cash flow.</p></div><span class="status-pill '+(travelResult.affordable?'good':'warn')+'">'+(travelResult.affordable?'On track':'Funding gap')+'</span></div>'+
+  '<div class="travel-form">'+
+   '<label>Trip name<input id="travelName" value="'+esc(travel.name||"")+'"></label>'+
+   '<label>Travellers<input id="travelTravellers" type="number" min="1" step="1" value="'+Number(travel.travellers||1)+'"></label>'+
+   '<label>Trip length days<input id="travelDays" type="number" min="1" step="1" value="'+Number(travel.tripDays||0)+'"></label>'+
+   '<label>Target date<input id="travelDate" type="date" value="'+esc(travel.targetDate||"")+'"></label>'+
+   '<label>Transportation<input id="travelTransport" type="number" min="0" step="100" value="'+Number(travel.transport||0)+'"></label>'+
+   '<label>Lodging per night<input id="travelLodging" type="number" min="0" step="10" value="'+Number(travel.lodgingPerNight||0)+'"></label>'+
+   '<label>Food per day<input id="travelFood" type="number" min="0" step="10" value="'+Number(travel.foodPerDay||0)+'"></label>'+
+   '<label>Activities<input id="travelActivities" type="number" min="0" step="100" value="'+Number(travel.activities||0)+'"></label>'+
+   '<label>Insurance<input id="travelInsurance" type="number" min="0" step="50" value="'+Number(travel.insurance||0)+'"></label>'+
+   '<label>Other costs<input id="travelOther" type="number" min="0" step="100" value="'+Number(travel.other||0)+'"></label>'+
+   '<label>Already saved<input id="travelSaved" type="number" min="0" step="100" value="'+Number(travel.saved||0)+'"></label>'+
+  '</div>'+
+  '<div class="travel-results">'+
+   '<div class="travel-card"><div class="label">Total trip budget</div><div class="value">'+money(travelResult.total)+'</div><div class="copy">Transportation, lodging, food, activities, insurance and other costs.</div></div>'+
+   '<div class="travel-card"><div class="label">Cost per day</div><div class="value">'+money(travelResult.perDay)+'</div><div class="copy">Average cost across the full trip.</div></div>'+
+   '<div class="travel-card '+(travelResult.affordable?'good':'warn')+'"><div class="label">Required monthly saving</div><div class="value">'+money(travelResult.monthly)+'</div><div class="copy">Amount needed each month until departure.</div></div>'+
+   '<div class="travel-card '+(travelResult.gap<=0?'good':'bad')+'"><div class="label">'+(travelResult.gap<=0?"Monthly room left":"Monthly funding gap")+'</div><div class="value">'+money(Math.abs(travelResult.gap))+'</div><div class="copy">'+(travelResult.gap<=0?"Cash remaining after funding the trip.":"Additional monthly capacity required.")+'</div></div>'+
+  '</div>'+
+  '<div class="quick-actions" style="margin-top:12px"><button id="saveTravelPlan" type="button">Save travel plan</button><button id="travelToGoal" type="button" class="secondary">Add as savings goal</button></div>'+
+  '<div class="notice '+(travelResult.affordable?'good':'warn')+'">'+
+   (travelResult.affordable?"Your current planned surplus can fund this trip by the target date.":"The current monthly surplus does not fully fund this trip by the target date. Reduce the budget, extend the date or redirect other commitments.")+
+  '</div></div>'+
  '<details class="section-card"><summary>Retirement spending estimate</summary><div class="details-body">'+
   '<div class="hero-grid">'+
    '<div class="hero-card"><div class="label">Core annual spending</div><div class="value">'+money(estimate.annualizedCore)+'</div></div>'+
@@ -1293,6 +1380,33 @@ function renderMoney(){
    targetDate:d.toISOString().slice(0,10)
   };
   localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderMoney();
+ };
+ document.getElementById("saveTravelPlan").onclick=function(){
+  data.travelPlanner={
+   name:document.getElementById("travelName").value||"Major trip",
+   travellers:Number(document.getElementById("travelTravellers").value||1),
+   tripDays:Number(document.getElementById("travelDays").value||1),
+   targetDate:document.getElementById("travelDate").value,
+   transport:Number(document.getElementById("travelTransport").value||0),
+   lodgingPerNight:Number(document.getElementById("travelLodging").value||0),
+   foodPerDay:Number(document.getElementById("travelFood").value||0),
+   activities:Number(document.getElementById("travelActivities").value||0),
+   insurance:Number(document.getElementById("travelInsurance").value||0),
+   other:Number(document.getElementById("travelOther").value||0),
+   saved:Number(document.getElementById("travelSaved").value||0)
+  };
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderMoney();
+ };
+ document.getElementById("travelToGoal").onclick=function(){
+  var v=ensureTravelPlanner(),r=travelPlanAnalysis();
+  var name=v.name||"Major trip";
+  var existing=(data.goals||[]).find(function(g){return String(g.name||"").toLowerCase()===String(name).toLowerCase();});
+  if(existing){
+   existing.target=r.total;existing.current=Number(v.saved||0);existing.monthly=Math.ceil(r.monthly);
+  }else{
+   data.goals.push({name:name,target:r.total,current:Number(v.saved||0),monthly:Math.ceil(r.monthly),priority:(data.goals||[]).length+1});
+  }
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));render();showPage("goals");
  };
  document.querySelectorAll(".budget-input").forEach(function(el){el.onchange=function(){
   data.budget[Number(el.dataset.i)][1]=Number(el.value||0);save();
@@ -2764,7 +2878,7 @@ function exportBackupFile(){
  var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
  var a=document.createElement("a");
  a.href=URL.createObjectURL(blob);
- a.download="RyanOS-5.2.1-backup.json";
+ a.download="RyanOS-5.2.2-backup.json";
  a.click();
  setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
 }
@@ -2890,7 +3004,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.2.1-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.2.2-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
