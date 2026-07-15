@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 5.3.2</title>
+<title>RyanOS 5.3.3</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -531,11 +531,26 @@ details.section-card[open]>summary:after{content:"−"}
  .setup-actions button{width:100%}
 }
 
+
+.setup-validation-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}
+.setup-validation-card{border:1px solid var(--border);border-radius:14px;padding:14px;background:#fff}
+.setup-validation-card .count{font-size:1.6rem;font-weight:900;color:var(--brand)}
+.setup-validation-card .label{font-size:.8rem;font-weight:900;text-transform:uppercase;letter-spacing:.03em;color:var(--muted)}
+.setup-validation-list{display:grid;gap:10px;margin-top:12px}
+.setup-validation-item{display:grid;grid-template-columns:34px 1fr;gap:10px;border:1px solid var(--border);border-radius:14px;padding:12px;background:#fff}
+.setup-validation-item.ready{border-color:#b7d8c0;background:#f7fcf8}
+.setup-validation-item.attention{border-color:#e7b8b8;background:#fff8f8}
+.setup-validation-item.optional{border-color:#ead9a4;background:#fffdf5}
+.setup-validation-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;background:#eef3f8}
+.setup-validation-title{font-weight:900;color:#26364a}
+.setup-validation-copy{font-size:.9rem;color:var(--muted);margin-top:3px}
+@media(max-width:650px){.setup-validation-summary{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>5.3.2 — Spouse TFSA</small></div>
+  <div><h1>RyanOS</h1><small>5.3.3 — Setup Review & Validation</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -3089,7 +3104,7 @@ function exportBackupFile(){
  var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
  var a=document.createElement("a");
  a.href=URL.createObjectURL(blob);
- a.download="RyanOS-5.3.2-backup.json";
+ a.download="RyanOS-5.3.3-backup.json";
  a.click();
  setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
 }
@@ -3131,6 +3146,68 @@ function saveSetupFields(){
  document.querySelectorAll(".setup-select").forEach(function(el){data.settings[el.dataset.k]=Number(el.value||0);});
  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
 }
+
+function setupValidation(){
+ var s=data.settings,items=[];
+ function add(level,title,copy){items.push({level:level,title:title,copy:copy});}
+ function nonNegative(keys,label){
+  var bad=keys.some(function(k){return Number(s[k]||0)<0;});
+  if(bad)add("attention",label+" contains a negative value","Financial balances, income and contributions should not be negative.");
+ }
+ if(Number(s.age||0)<=0)add("attention","Current age is missing","Enter your current age so retirement timing can be calculated.");
+ else add("ready","Current age recorded","RyanOS is using age "+Number(s.age).toFixed(2)+".");
+ if(Number(s.retireAge||0)<=Number(s.age||0))add("attention","Retirement age must be later than current age","Your retirement age is currently "+Number(s.retireAge||0).toFixed(1)+".");
+ else add("ready","Retirement timing is valid","Retirement is approximately "+(Number(s.retireAge)-Number(s.age)).toFixed(1)+" years away.");
+ if(Number(s.retirementEndAge||0)<=Number(s.retireAge||0))add("attention","Plan-through age is too early","The plan horizon must be later than your retirement age.");
+ else add("ready","Planning horizon is valid","The plan runs through age "+Number(s.retirementEndAge||0).toFixed(0)+".");
+ if(Number(s.wifeAgeDiff||0)<0||Number(s.wifeAgeDiff||0)>30)add("attention","Spouse age difference looks unusual","Review the spouse age difference entered in Setup.");
+ else add("ready","Spouse age difference recorded","RyanOS uses a "+Number(s.wifeAgeDiff||0).toFixed(1)+"-year age difference.");
+ if(Number(s.wifeRetireAge||0)<=0)add("attention","Spouse retirement age is missing","Enter the spouse retirement age.");
+ if(Number(s.wifeWorkUntilUserAge||0)<Number(s.age||0))add("attention","Spouse work-end age is in the past","The spouse work-until age should be at least your current age.");
+ if(Number(s.userCppStart||0)<60||Number(s.userCppStart||0)>70)add("attention","Your CPP start age is outside 60–70","Review the CPP start age.");
+ else add("ready","Your CPP start age is valid","CPP is set to start at age "+Number(s.userCppStart).toFixed(0)+".");
+ if(Number(s.wifeCppStart||0)<60||Number(s.wifeCppStart||0)>70)add("attention","Spouse CPP start age is outside 60–70","Review the spouse CPP start age.");
+ else add("ready","Spouse CPP start age is valid","Spouse CPP is set to start at age "+Number(s.wifeCppStart).toFixed(0)+".");
+ if(Number(s.userOasStart||0)<65||Number(s.userOasStart||0)>70)add("attention","Your OAS start age is outside 65–70","Review the OAS start age.");
+ else add("ready","Your OAS start age is valid","OAS is set to start at age "+Number(s.userOasStart).toFixed(0)+".");
+ if(Number(s.wifeOasStart||0)<65||Number(s.wifeOasStart||0)>70)add("attention","Spouse OAS start age is outside 65–70","Review the spouse OAS start age.");
+ else add("ready","Spouse OAS start age is valid","Spouse OAS is set to start at age "+Number(s.wifeOasStart).toFixed(0)+".");
+ ["user","spouse"].forEach(function(prefix){
+  var who=prefix==="user"?"Your":"Spouse";
+  var enabled=Number(s[prefix+"PensionEnabled"]||0)===1;
+  var type=Number(s[prefix+"PensionType"]||1);
+  var monthly=Number(s[prefix+"PensionMonthly"]||0);
+  var start=Number(s[prefix+"PensionStartAge"]||0);
+  var indexed=Number(s[prefix+"PensionIndexed"]||0);
+  var indexRate=Number(s[prefix+"PensionIndexRate"]||0);
+  var bridge=Number(s[prefix+"PensionBridgeMonthly"]||0);
+  var bridgeEnd=Number(s[prefix+"PensionBridgeEndAge"]||0);
+  if(!enabled){add("optional",who+" workplace pension is not included","This is fine when there is no workplace pension.");return;}
+  if(type===1&&monthly<=0)add("attention",who+" defined benefit pension has no monthly amount","Enter the expected monthly pension before tax.");
+  else if(type===1)add("ready",who+" defined benefit pension is recorded",money(monthly)+" per month starting at age "+start.toFixed(1)+".");
+  if(type===2&&monthly>0)add("attention",who+" defined contribution pension is entered as monthly income","Defined contribution balances should be included with investments, not guaranteed monthly pension income.");
+  else if(type===2)add("optional",who+" defined contribution pension needs an account balance","Include its current balance and contributions in the investment section.");
+  if(start<=0)add("attention",who+" pension start age is missing","Enter the expected pension start age.");
+  if((indexed===1||indexed===2)&&indexRate<=0)add("attention",who+" indexed pension has no index rate","Enter the expected annual indexing rate or choose Unknown.");
+  if(indexed===3)add("optional",who+" pension indexing is unknown","RyanOS will not increase this pension until an index rate is supplied.");
+  if(bridge>0&&bridgeEnd<=start)add("attention",who+" bridge benefit ends before the pension starts","Bridge-end age must be later than the pension start age.");
+  if(bridge>0&&bridgeEnd>start)add("ready",who+" bridge benefit is valid",money(bridge)+" per month until age "+bridgeEnd.toFixed(1)+".");
+ });
+ nonNegative(["income1","income2","wcb","wifeEmploymentNetAnnual"],"Income");
+ nonNegative(["rrspBalance","userTfsaBalance","wifeRrspBalance","spouseTfsaBalance","nonRegisteredBalance"],"Investment balances");
+ nonNegative(["rrspMonthlyContribution","userTfsaMonthlyContribution","wifeRrspMonthlyContribution","spouseTfsaMonthlyContribution","nonRegisteredMonthlyContribution"],"Investment contributions");
+ if(detailedInvestmentTotal()<=0)add("optional","No investment balances are entered","The retirement plan can still run, but results may not represent the household.");
+ else add("ready","Investment balances reconcile",money(detailedInvestmentTotal())+" is included in the plan.");
+ if(Number(s.retireSpend||0)<=0)add("attention","Retirement spending is missing","Enter an annual retirement spending target.");
+ else if(Number(s.retireSpend)<12000)add("optional","Retirement spending looks very low","Confirm that "+money(Number(s.retireSpend))+" per year includes all household costs.");
+ else if(Number(s.retireSpend)>240000)add("optional","Retirement spending looks unusually high","Confirm that "+money(Number(s.retireSpend))+" per year is intentional.");
+ else add("ready","Retirement spending is recorded",money(Number(s.retireSpend))+" per year.");
+ if(Number(s.returnRate||0)<0||Number(s.returnRate||0)>15)add("attention","Investment return assumption is outside 0–15%","Use a realistic long-term expected return.");
+ if(Number(s.inflation||0)<0||Number(s.inflation||0)>10)add("attention","Inflation assumption is outside 0–10%","Review the inflation assumption.");
+ var counts={ready:0,attention:0,optional:0};
+ items.forEach(function(x){counts[x.level]++;});
+ return{items:items,counts:counts,canFinish:counts.attention===0};
+}
 function renderSetup(){
  var s=data.settings,step=Math.max(0,Math.min(6,Number(s.setupStep||0)));
  var titles=["Welcome","About your household","Income","Investments","Workplace pensions","Retirement plan","Review"];
@@ -3162,19 +3239,27 @@ function renderSetup(){
    setupInput("Your CPP start age","userCppStart","number","1")+setupInput("Spouse CPP start age","wifeCppStart","number","1")+
    setupInput("Your OAS start age","userOasStart","number","1")+setupInput("Spouse OAS start age","wifeOasStart","number","1")+'</div>';
  }else{
-  body='<h2>Review your setup</h2><p>RyanOS will use these values to build the first plan.</p><div class="setup-review">'+
+  var validation=setupValidation();
+  body='<h2>Review your setup</h2><p>RyanOS checked the information before building the plan.</p>'+
+   '<div class="setup-validation-summary">'+
+    '<div class="setup-validation-card"><div class="count">'+validation.counts.ready+'</div><div class="label">Ready</div></div>'+
+    '<div class="setup-validation-card"><div class="count">'+validation.counts.attention+'</div><div class="label">Needs attention</div></div>'+
+    '<div class="setup-validation-card"><div class="count">'+validation.counts.optional+'</div><div class="label">Optional</div></div>'+
+   '</div><div class="setup-review">'+
    '<div class="setup-review-card"><strong>Retirement</strong><div>You: age '+Number(s.retireAge).toFixed(1)+'</div><div>Spouse: age '+Number(s.wifeRetireAge).toFixed(1)+'</div></div>'+
    '<div class="setup-review-card"><strong>Monthly household income</strong><div>'+money(Number(s.income1||0)+Number(s.income2||0)+Number(s.wcb||0))+'</div></div>'+
    '<div class="setup-review-card"><strong>Investments</strong><div>'+money(detailedInvestmentTotal())+'</div></div>'+
    '<div class="setup-review-card"><strong>Your pension</strong><div>'+(Number(s.userPensionEnabled)===1?pensionTypeLabel(s.userPensionType)+' · '+money(Number(s.userPensionMonthly||0))+'/mo':'None')+'</div></div>'+
    '<div class="setup-review-card"><strong>Spouse pension</strong><div>'+(Number(s.spousePensionEnabled)===1?pensionTypeLabel(s.spousePensionType)+' · '+money(Number(s.spousePensionMonthly||0))+'/mo':'None')+'</div></div>'+
    '<div class="setup-review-card"><strong>Retirement spending</strong><div>'+money(Number(s.retireSpend||0))+'/year</div></div>'+
-  '</div>';
+  '</div>'+
+  '<div class="setup-validation-list">'+validation.items.map(function(x){return'<div class="setup-validation-item '+x.level+'"><div class="setup-validation-icon">'+(x.level==="ready"?"✓":x.level==="attention"?"!":"?")+'</div><div><div class="setup-validation-title">'+esc(x.title)+'</div><div class="setup-validation-copy">'+esc(x.copy)+'</div></div></div>';}).join("")+'</div>'+
+  '<div class="notice '+(validation.canFinish?"good":"bad")+'">'+(validation.canFinish?"Setup is ready. Optional items can be completed later.":"Review the items marked Needs attention. You may still continue, but the plan may be unreliable.")+'</div>';
  }
  document.getElementById("setup").innerHTML=
   '<div class="setup-shell"><div class="setup-card"><div class="tx-muted">Step '+(step+1)+' of 7 · '+titles[step]+'</div><div class="setup-progress"><span style="width:'+((step+1)/7*100)+'%"></span></div>'+body+
   '<div class="setup-actions">'+(step>0?'<button id="setupBack" class="secondary">Back</button>':'<span></span>')+
-  '<button id="setupNext">'+(step===6?'Build my RyanOS plan':'Continue')+'</button></div></div></div>';
+  '<button id="setupNext">'+(step===6?(setupValidation().canFinish?'Build my RyanOS plan':'Continue with warnings'):'Continue')+'</button></div></div></div>';
  document.querySelectorAll(".pension-setting").forEach(function(el){el.onchange=function(){data.settings[el.dataset.k]=Number(el.value||0);localStorage.setItem(STORAGE_KEY,JSON.stringify(data));};});
  var back=document.getElementById("setupBack");if(back)back.onclick=function(){saveSetupFields();s.setupStep=Math.max(0,step-1);localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderSetup();};
  document.getElementById("setupNext").onclick=function(){
@@ -3300,7 +3385,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.3.2-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.3.3-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
