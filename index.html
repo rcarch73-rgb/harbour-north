@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 5.1.0</title>
+<title>RyanOS 5.1.1</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -365,11 +365,23 @@ details.section-card[open]>summary:after{content:"−"}
 .insight-priority{font-size:.75rem;font-weight:900;text-transform:uppercase;letter-spacing:.03em}
 @media(max-width:560px){.insight-item{grid-template-columns:auto 1fr}.insight-priority{grid-column:2}}
 
+
+.action-list{display:grid;gap:10px}
+.action-item{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;border:1px solid var(--border);border-radius:14px;padding:13px;background:#fff}
+.action-rank{width:34px;height:34px;border-radius:999px;display:grid;place-items:center;font-weight:900;background:#eef3f8;color:var(--brand)}
+.action-title{font-weight:900;color:var(--brand)}
+.action-copy{font-size:.9rem;color:var(--muted);margin-top:3px}
+.action-impact{font-size:.76rem;font-weight:900;text-transform:uppercase;letter-spacing:.03em}
+.action-item.high{border-color:#e7b8b8;background:#fff8f8}
+.action-item.medium{border-color:#ead9a4;background:#fffdf5}
+.action-item.low{border-color:#b7d8c0;background:#f7fcf8}
+@media(max-width:560px){.action-item{grid-template-columns:40px 1fr}.action-impact{grid-column:2}}
+
 </style>
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>5.1.0 — Financial Insights</small></div>
+  <div><h1>RyanOS</h1><small>5.1.1 — Recommended Actions</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -733,6 +745,51 @@ function nextFutureExpense(){
  return items[0]||null;
 }
 
+
+function recommendedActions(){
+ var s=data.settings,t=totals(),ret=retirementHeadline(),debt=debtTotals();
+ var actions=[];
+
+ if(t.surplus<0){
+  actions.push({priority:1,level:"high",impact:"High impact",title:"Fix the monthly cash-flow shortfall",copy:"Reduce planned spending or commitments by about "+money(Math.abs(t.surplus))+" per month before adding new goals."});
+ }
+
+ if(!ret.ok){
+  actions.push({priority:1,level:"high",impact:"High impact",title:"Strengthen the retirement plan",copy:"The plan first shows a shortfall at age "+ret.shortfall+". Review retirement age, spending or investment assumptions."});
+ }
+
+ if(debt.problems){
+  actions.push({priority:1,level:"high",impact:"High impact",title:"Correct a debt payment",copy:"At least one included debt has no payment or a payment too low to reduce principal."});
+ }else if(debt.balance>0){
+  var highest=(data.debts||[]).filter(function(d){return Number(d.include)!==0;}).sort(function(a,b){return Number(b.interestRate||0)-Number(a.interestRate||0);})[0];
+  if(highest){
+   actions.push({priority:2,level:"medium",impact:"Medium impact",title:"Focus extra payments on "+(highest.name||"the highest-rate debt"),copy:"This debt has the highest listed rate at "+Number(highest.interestRate||0).toFixed(2)+"%. Directing extra payments here should reduce total interest fastest."});
+  }
+ }
+
+ var incompleteGoals=(data.goals||[]).filter(function(g){return Number(g.current||0)<Number(g.target||0)&&g.name!=="LOC";}).sort(function(a,b){return Number(a.priority||999)-Number(b.priority||999);});
+ if(incompleteGoals.length){
+  var g=incompleteGoals[0],remaining=Math.max(0,Number(g.target||0)-Number(g.current||0));
+  actions.push({priority:3,level:"medium",impact:"Next priority",title:"Continue funding "+g.name,copy:money(remaining)+" remains to reach the target. Current monthly funding is "+money(Number(g.monthly||0))+"."});
+ }
+
+ var history=(data.netWorthHistory||[]);
+ if(history.length<2){
+  actions.push({priority:4,level:"low",impact:"Tracking",title:"Save another net worth snapshot",copy:"A second snapshot will create a meaningful trend line and month-to-month comparison."});
+ }
+
+ var audit=foundationAudit();
+ if(audit.passed<audit.total){
+  actions.push({priority:1,level:"high",impact:"Data quality",title:"Resolve Foundation Audit issues",copy:(audit.total-audit.passed)+" automated check(s) need attention in Settings & Data."});
+ }
+
+ if(!actions.length){
+  actions.push({priority:5,level:"low",impact:"Maintain",title:"Stay the course",copy:"No urgent actions are currently identified. Continue monthly reviews and update balances regularly."});
+ }
+
+ actions.sort(function(a,b){return a.priority-b.priority;});
+ return actions.slice(0,5);
+}
 function financialInsights(){
  var s=data.settings,t=totals(),ret=retirementHeadline(),debt=debtTotals();
  var insights=[];
@@ -797,6 +854,7 @@ function renderHomeStreamlined(){
   '<div class="hero-card"><div class="label">Net worth</div><div class="value">'+money(estimatedNetWorth)+'</div><div class="sub">Matches the Net Worth page</div></div>'+
  '</div>'+
  '<div class="section-card"><div class="page-intro"><div><h3>Financial insights</h3><p>What RyanOS thinks deserves your attention right now.</p></div></div><div class="insight-list">'+financialInsights().map(function(x){return'<div class="insight-item '+x.type+'"><div class="insight-icon">'+x.icon+'</div><div><div class="insight-title">'+esc(x.title)+'</div><div class="insight-copy">'+esc(x.copy)+'</div></div><div class="insight-priority">'+esc(x.priority)+'</div></div>';}).join("")+'</div></div>'+
+ '<div class="section-card"><div class="page-intro"><div><h3>Recommended actions</h3><p>The highest-value steps based on your current numbers.</p></div></div><div class="action-list">'+recommendedActions().map(function(x,i){return'<div class="action-item '+x.level+'"><div class="action-rank">'+(i+1)+'</div><div><div class="action-title">'+esc(x.title)+'</div><div class="action-copy">'+esc(x.copy)+'</div></div><div class="action-impact">'+esc(x.impact)+'</div></div>';}).join("")+'</div></div>'+
  '<div class="section-card"><h3>Next large expense</h3>'+(next?'<p><strong>'+esc(next.name)+'</strong> is planned for age '+Number(next.age).toFixed(0)+' at '+money(Number(next.amount||0))+' in today’s dollars.</p>':'<div class="notice">No future expenses are currently scheduled.</div>')+'</div>'+
  '';
 
@@ -2205,7 +2263,7 @@ function exportBackupFile(){
  var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
  var a=document.createElement("a");
  a.href=URL.createObjectURL(blob);
- a.download="RyanOS-5.1.0-backup.json";
+ a.download="RyanOS-5.1.1-backup.json";
  a.click();
  setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
 }
@@ -2331,7 +2389,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.1.0-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.1.1-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
