@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 4.5.0</title>
+<title>RyanOS 4.5.1</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -235,7 +235,7 @@ main{
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>4.5.0 — Net Worth History</small></div>
+  <div><h1>RyanOS</h1><small>4.5.1 — Net Worth & Settings Repair</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -1584,50 +1584,37 @@ function ensureMonthlyNetWorthSnapshot(){
 function drawNetWorthHistoryChart(){
  var canvas=document.getElementById("netWorthHistoryChart");
  var rows=(data.netWorthHistory||[]).slice().sort(function(a,b){return String(a.date).localeCompare(String(b.date));});
- if(!canvas||!canvas.getContext||!rows.length)return;
+ if(!canvas||!canvas.getContext)return;
  var rect=canvas.getBoundingClientRect?canvas.getBoundingClientRect():{width:900,height:360};
  var width=Math.max(720,Math.floor(rect.width||900)),height=360,dpr=window.devicePixelRatio||1;
  canvas.width=width*dpr;canvas.height=height*dpr;canvas.style.width=width+"px";canvas.style.height=height+"px";
  var ctx=canvas.getContext("2d");ctx.scale(dpr,dpr);ctx.clearRect(0,0,width,height);
- var pad={l:76,r:24,t:32,b:54},plotW=width-pad.l-pad.r,plotH=height-pad.t-pad.b;
- var series=[
-  {key:"assets",label:"Assets"},
-  {key:"debts",label:"Debt"},
-  {key:"networth",label:"Net worth"},
-  {key:"investments",label:"Investments"}
- ];
- var values=[];
- rows.forEach(function(r){series.forEach(function(s){values.push(Number(r[s.key]||0));});});
+ var pad={l:76,r:24,t:40,b:54},plotW=width-pad.l-pad.r,plotH=height-pad.t-pad.b;
+ ctx.font="12px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif";
+ if(!rows.length){
+  ctx.fillStyle="#667085";ctx.font="16px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif";
+  ctx.fillText("Save a net worth snapshot to begin the trend chart.",pad.l,160);return;
+ }
+ var series=[{key:"assets",label:"Assets"},{key:"debts",label:"Debt"},{key:"networth",label:"Net worth"},{key:"investments",label:"Investments"}];
+ var values=[];rows.forEach(function(r){series.forEach(function(s){values.push(Number(r[s.key]||0));});});
  var max=Math.max.apply(null,values.concat([1])),min=Math.min.apply(null,values.concat([0]));
- if(min>0)min=0;
+ if(min>0)min=0;max=Math.ceil(max/100000)*100000||100000;min=Math.floor(min/100000)*100000;
  var span=Math.max(1,max-min);
- max=Math.ceil(max/100000)*100000;
- min=Math.floor(min/100000)*100000;
- span=Math.max(1,max-min);
  function x(i){return pad.l+(rows.length===1?plotW/2:i/(rows.length-1)*plotW);}
  function y(v){return pad.t+plotH-(Number(v||0)-min)/span*plotH;}
- ctx.font="12px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif";
  ctx.strokeStyle="#d8dee8";ctx.fillStyle="#586174";ctx.lineWidth=1;
- for(var g=0;g<=5;g++){
-  var val=min+span*g/5,yy=y(val);
-  ctx.beginPath();ctx.moveTo(pad.l,yy);ctx.lineTo(width-pad.r,yy);ctx.stroke();
-  ctx.fillText("$"+Math.round(val/1000)+"k",8,yy+4);
- }
+ for(var g=0;g<=5;g++){var val=min+span*g/5,yy=y(val);ctx.beginPath();ctx.moveTo(pad.l,yy);ctx.lineTo(width-pad.r,yy);ctx.stroke();ctx.fillText("$"+Math.round(val/1000)+"k",8,yy+4);}
  var step=Math.max(1,Math.ceil(rows.length/7));
- rows.forEach(function(r,i){
-  if(i%step===0||i===rows.length-1){
-   var xx=x(i);ctx.beginPath();ctx.moveTo(xx,pad.t);ctx.lineTo(xx,pad.t+plotH);ctx.stroke();
-   ctx.fillText(String(r.date).slice(0,7),xx-24,height-18);
-  }
- });
+ rows.forEach(function(r,i){if(i%step===0||i===rows.length-1){var xx=x(i);ctx.beginPath();ctx.moveTo(xx,pad.t);ctx.lineTo(xx,pad.t+plotH);ctx.stroke();ctx.fillText(String(r.date).slice(0,7),xx-24,height-18);}});
  var palette=["#1f5f99","#a61b1b","#111827","#2b8a5a"];
  series.forEach(function(s,si){
-  ctx.strokeStyle=palette[si];ctx.lineWidth=s.key==="networth"?3:2;ctx.beginPath();
-  rows.forEach(function(r,i){var yy=y(r[s.key]);if(i===0)ctx.moveTo(x(i),yy);else ctx.lineTo(x(i),yy);});
-  ctx.stroke();
+  ctx.strokeStyle=palette[si];ctx.fillStyle=palette[si];ctx.lineWidth=s.key==="networth"?3:2;
+  if(rows.length>1){ctx.beginPath();rows.forEach(function(r,i){var yy=y(r[s.key]);if(i===0)ctx.moveTo(x(i),yy);else ctx.lineTo(x(i),yy);});ctx.stroke();}
+  rows.forEach(function(r,i){ctx.beginPath();ctx.arc(x(i),y(r[s.key]),s.key==="networth"?5:4,0,Math.PI*2);ctx.fill();});
  });
- var lx=pad.l,ly=16;
+ var lx=pad.l,ly=20;
  series.forEach(function(s,si){ctx.fillStyle=palette[si];ctx.fillRect(lx,ly-8,14,3);ctx.fillStyle="#263244";ctx.fillText(s.label,lx+20,ly-3);lx+=s.label.length*7+54;});
+ if(rows.length===1){ctx.fillStyle="#667085";ctx.font="13px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif";ctx.fillText("One snapshot is shown. Add another snapshot to create trend lines.",pad.l,height-2);}
 }
 function renderNetWorth(){
  ensureMonthlyNetWorthSnapshot();
@@ -1652,7 +1639,7 @@ function renderNetWorth(){
   '<div class="hero-card"><div class="label">Highest recorded</div><div class="value">'+money(high)+'</div><div class="sub">'+history.length+' snapshot'+(history.length===1?'':'s')+'</div></div>'+
  '</div>'+
  '<div class="section-card"><h3>Save a snapshot</h3><div class="money-toolbar"><label>Note<input id="netWorthSnapshotNote" placeholder="Market update, vehicle purchase…"></label><button id="saveNetWorthSnapshot" type="button">Save today’s snapshot</button></div><div class="notice">One automatic snapshot is saved each month. Saving again on the same day updates today’s entry.</div></div>'+
- '<div class="section-card"><h3>Net worth trend</h3><div class="nw-chart-wrap"><canvas id="netWorthHistoryChart" class="nw-chart"></canvas></div></div>'+
+ '<div class="section-card"><h3>Net worth trend</h3><p class="tx-muted">Dots show saved snapshots. Trend lines appear after two or more snapshots.</p><div class="nw-chart-wrap"><canvas id="netWorthHistoryChart" class="nw-chart"></canvas></div></div>'+
  '<div class="section-card"><h3>Current values</h3><table><tbody>'+
   '<tr><td>Total assets</td><td><strong>'+money(t.assets)+'</strong></td><td>Total debt</td><td><strong>'+money(t.debt)+'</strong></td></tr>'+
   '<tr><td>Investments</td><td>'+money(Number(data.settings.investments||0))+'</td><td>Net worth</td><td><strong>'+money(t.networth)+'</strong></td></tr>'+
@@ -1926,7 +1913,7 @@ function exportBackupFile(){
  var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
  var a=document.createElement("a");
  a.href=URL.createObjectURL(blob);
- a.download="RyanOS-4.5.0-backup.json";
+ a.download="RyanOS-4.5.1-backup.json";
  a.click();
  setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
 }
@@ -1943,7 +1930,7 @@ function restoreSnapshot(id){
 }
 function renderSettings(){
  var s=data.settings,summary=backupSummary(data),health=validateBackupObject(data);
- var fields=[];
+ var fields=[["income1","Yellowhead monthly income"],["income2","Province monthly income"],["wcb","WorkSafeBC monthly income"],["investing","Retirement investing"],["bills","Annual-bills reserve"],["chores","Son's chores"],["loc","LOC balance"],["rate","LOC rate (%)"],["months","LOC months"],["investments","Current investments"],["rrspBalance","RRSP balance"],["userTfsaBalance","Your TFSA balance"],["wifeRrspBalance","Spouse RRSP balance"],["nonRegisteredBalance","Non-registered balance"],["rrspMonthlyContribution","RRSP monthly contribution"],["userTfsaMonthlyContribution","Your TFSA monthly contribution"],["wifeRrspMonthlyContribution","Spouse RRSP monthly contribution"],["nonRegisteredMonthlyContribution","Non-registered monthly contribution"],["withdrawalStrategy","Withdrawal strategy: 1=Both RRSPs first, 2=TFSA first, 3=Non-reg first"],["nonRegisteredWithdrawalTaxRate","Non-registered withdrawal tax rate (%)"],["rrspDrawdownEnabled","RRSP-to-TFSA drawdown: 1=on, 0=off"],["rrspDrawdownStartAge","RRSP drawdown start age"],["rrspDrawdownEndAge","RRSP drawdown end age"],["lowestTaxBracketCeiling","Lowest tax-bracket ceiling"],["lowestBracketMarginalTaxRate","Lowest bracket marginal tax rate (%)"],["tfsaAnnualLimit","Annual TFSA limit"],["tfsaAvailableRoom","Available TFSA room now"],["age","Current age"],["currentAgePrecisionCorrected","Current-age precision correction applied"],["retireAge","Retirement age"],["retirementScenarioUserAge","Retirement page scenario: your age"],["retirementScenarioSpouseAge","Retirement page scenario: wife age"],["retirementEndAge","Retirement plan end age"],["retirementTaxRate","Effective retirement tax rate (%)"],["conservativeReturn","Conservative return (%)"],["optimisticReturn","Optimistic return (%)"],["inheritanceAmount","Inheritance amount"],["inheritanceAge","Inheritance received at your age"],["oneTimeExpenseAmount","One-time future expense"],["oneTimeExpenseAge","One-time expense at your age"],["returnRate","Expected return (%)"],["inflation","Inflation (%)"],["retireSpend","Annual retirement spending"],["retirementSpendingMode","Retirement spending mode: 1=manual, 2=budget, 3=transactions"],["retirementSpendingPhasesEnabled","Retirement spending phases: 1=on, 0=off"],["activeSpendingEndAge","Active spending phase ends at age"],["midSpendingEndAge","Mid spending phase ends at age"],["midSpendingPercent","Mid phase spending percent"],["lateSpendingPercent","Late phase spending percent"],["scenarioRetireAge1","Retirement comparison age 1"],["scenarioRetireAge2","Retirement comparison age 2"],["scenarioRetireAge3","Retirement comparison age 3"],["spendingGuardrailsEnabled","Spending guardrails: 1=on, 0=off"],["guardrailLowerPercent","Guardrail lower portfolio threshold (%)"],["guardrailUpperPercent","Guardrail upper portfolio threshold (%)"],["guardrailCutPercent","Guardrail spending cut (%)"],["guardrailRaisePercent","Guardrail spending increase (%)"],["freezeAfterNegativeReturn","Freeze inflation after negative return: 1=yes, 0=no"],["taxAuditEnabled","Spouse tax audit: 1=on, 0=off"],["pensionSplitPercent","Eligible pension split percent"],["federalBasicPersonalAmount","2026 federal basic personal amount"],["bcBasicPersonalAmount","2026 B.C. basic personal amount"],["wifePension","Spouse monthly pension"],["wifeAgeDiff","Spouse age difference"],["wifeRetireAge","Spouse retirement age"],["wifeEmploymentAnnual","Spouse annual employment income"],["wifeEmploymentNetAnnual","Spouse annual take-home employment income"],["wifeWorkUntilUserAge","Spouse works until your age"],["wifeEmploymentGrowth","Spouse salary growth (%)"],["userOasMonthly","Your monthly OAS"],["userOasStart","Your OAS start age"],["wifeOasMonthly","Spouse monthly OAS"],["wifeOasStart","Spouse OAS start age"],["spendingLookbackMonths","Spending estimate lookback months"],["irregularAnnualAllowance","Annual irregular-spending allowance"],["userCpp65","User CPP at 65"],["userCpp70","User CPP at 70"],["userCppStart","User CPP start age"],["wifeCpp60","Spouse CPP at 60"],["wifeCpp65","Spouse CPP at 65"],["wifeCpp70","Spouse CPP at 70"],["wifeCppStart","Spouse CPP start age"],["home","Home value"],["ns1","NS property 1"],["ns2","NS property 2"],["vehicles","Vehicle value"],["boat","Boat value"],["camper","Camper value"],["cash","Cash"],["ccDebt","Credit-card debt"]];
  document.getElementById("settings").innerHTML=
  '<div class="page-intro"><div><h2>Settings & Data</h2><p>Back up, restore and verify RyanOS data.</p></div><span class="status-pill '+(health.length?'bad':'good')+'">'+(health.length?health.length+' data issue'+(health.length===1?'':'s'):'Data healthy')+'</span></div>'+
  '<div class="backup-grid">'+
@@ -1961,9 +1948,9 @@ function renderSettings(){
  ((data.backupHistory||[]).length?(data.backupHistory||[]).map(function(x){var sm=backupSummary(x.data);return'<div class="backup-item"><div><strong>'+esc(x.label||"Snapshot")+'</strong><div class="tx-muted">'+new Date(x.createdAt).toLocaleString()+' · '+sm.transactions+' transactions · '+sm.debts+' debts</div></div><button class="restore-snapshot" data-id="'+x.id+'" type="button">Restore</button></div>';}).join(""):'<div class="notice">No recovery points yet.</div>')+
  '</div></div>'+
  '<div class="section-card"><h3>Data health</h3><div class="notice '+(health.length?'bad':'good')+'">'+(health.length?health.map(function(x){return'• '+x;}).join('<br>'):'No major data problems detected.')+'</div></div>'+
- '<details class="section-card"><summary>Advanced settings</summary><div class="details-body"><div class="form-grid">'+
+ '<div class="section-card"><h3>Financial and retirement settings</h3><p class="tx-muted">All existing data-entry fields are restored below.</p><div class="form-grid">'+
  fields.map(function(f){return'<label>'+esc(f[1])+'<input class="setting-field" data-k="'+f[0]+'" value="'+esc(String(s[f[0]]==null?"":s[f[0]]))+'"></label>';}).join("")+
- '</div><div class="quick-actions"><button id="saveSettings" type="button">Save settings</button><button id="resetAll" class="danger" type="button">Reset all data</button></div></div></details>';
+ '</div><div class="quick-actions"><button id="saveSettings" type="button">Save settings</button><button id="resetAll" class="danger" type="button">Reset all data</button></div></div>';
 
  document.getElementById("exportBackupNow").onclick=exportBackupFile;
  document.getElementById("createSnapshotNow").onclick=function(){snapshotCurrentData("Manual recovery point");renderSettings();};
@@ -2027,7 +2014,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-4.5.0-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-4.5.1-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
