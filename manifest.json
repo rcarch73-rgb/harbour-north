@@ -1,9 +1,9 @@
 {
-  "name": "RyanOS 5.3.12",
+  "name": "RyanOS 5.3.13",
   "short_name": "RyanOS",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f4f7fb",
   "theme_color": "#17365d",
-  "description": "RyanOS with a concise, clickable consumer action plan."
+  "description": "RyanOS with neutral fresh-install defaults and optional fictional demo data."
 }

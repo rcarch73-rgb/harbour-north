@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 5.3.12</title>
+<title>RyanOS 5.3.13</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -652,11 +652,19 @@ details.section-card[open]>summary:after{content:"−"}
 .consumer-status-card .value{font-size:1.2rem;font-weight:900;color:var(--brand);margin-top:4px}
 @media(max-width:700px){.consumer-step{grid-template-columns:38px 1fr}.consumer-step button{grid-column:2;width:fit-content}.consumer-status{grid-template-columns:1fr}}
 
+
+.demo-banner{border:1px solid #c8d7e8;background:#f4f8fc;border-radius:14px;padding:13px;margin:12px 0}
+.demo-banner strong{display:block;color:#17365d;margin-bottom:4px}
+.clean-start-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.clean-start-card{border:1px solid var(--border);border-radius:14px;padding:14px;background:#fff}
+.clean-start-card h4{margin:0 0 6px;color:var(--brand)}
+@media(max-width:650px){.clean-start-grid{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>5.3.12 — Consumer Action Plan</small></div>
+  <div><h1>RyanOS</h1><small>5.3.13 — Clean Start & Demo Data</small></div>
   <div class="header-actions"><button class="mode-toggle" id="modeToggle" type="button">Simple mode</button><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -681,60 +689,39 @@ details.section-card[open]>summary:after{content:"−"}
 "use strict";
 
 var STORAGE_KEY="ryanos2-data";
-var defaults={appVersion:"5.3.12",dataSchemaVersion:12,
+var defaults={appVersion:"5.3.13",dataSchemaVersion:13,
  settings:{
-  setupComplete:0,setupStep:0,interfaceMode:1,hasUserFhsa:0,hasSpouseFhsa:0,hasNonRegistered:0,
+  setupComplete:0,setupStep:0,interfaceMode:1,demoData:0,hasUserFhsa:0,hasSpouseFhsa:0,hasNonRegistered:0,
   userPensionEnabled:0,userPensionType:1,userPensionMonthly:0,userPensionStartAge:65,userPensionIndexed:0,userPensionIndexRate:0,userPensionBridgeMonthly:0,userPensionBridgeEndAge:65,
-  spousePensionEnabled:1,spousePensionType:1,spousePensionMonthly:3200,spousePensionStartAge:55,spousePensionIndexed:1,spousePensionIndexRate:2.5,spousePensionBridgeMonthly:0,spousePensionBridgeEndAge:65,
-  income1:5428.78,income2:5147.32,wcb:1352.34,investing:2600,bills:1200,chores:173,
-  loc:23000,rate:5.19,months:24,investments:520000,rrspBalance:442000,userTfsaBalance:45000,wifeRrspBalance:33000,spouseTfsaBalance:0,
+  spousePensionEnabled:0,spousePensionType:1,spousePensionMonthly:0,spousePensionStartAge:65,spousePensionIndexed:0,spousePensionIndexRate:0,spousePensionBridgeMonthly:0,spousePensionBridgeEndAge:65,
+  income1:0,income2:0,wcb:0,investing:0,bills:0,chores:0,
+  loc:0,rate:0,months:0,investments:0,rrspBalance:0,userTfsaBalance:0,wifeRrspBalance:0,spouseTfsaBalance:0,
   userFhsaBalance:0,userFhsaMonthlyContribution:0,userFhsaAvailableRoom:0,userFhsaLifetimeContributions:0,userFhsaOpenedYear:0,userFhsaUse:3,userFhsaHomeYear:0,
   spouseFhsaBalance:0,spouseFhsaMonthlyContribution:0,spouseFhsaAvailableRoom:0,spouseFhsaLifetimeContributions:0,spouseFhsaOpenedYear:0,spouseFhsaUse:3,spouseFhsaHomeYear:0,
-  nonRegisteredBalance:0,rrspMonthlyContribution:1800,userTfsaMonthlyContribution:500,wifeRrspMonthlyContribution:300,spouseTfsaMonthlyContribution:0,nonRegisteredMonthlyContribution:0,withdrawalStrategy:1,nonRegisteredWithdrawalTaxRate:5,rrspDrawdownEnabled:1,rrspDrawdownStartAge:55,rrspDrawdownEndAge:70,lowestTaxBracketCeiling:50363,lowestBracketMarginalTaxRate:19.6,tfsaAnnualLimit:7000,tfsaAvailableRoom:7000,retirementSpendingMode:1,retirementSpendingPhasesEnabled:1,activeSpendingEndAge:70,midSpendingEndAge:80,midSpendingPercent:90,lateSpendingPercent:80,scenarioRetireAge1:55.5,scenarioRetireAge2:58,scenarioRetireAge3:60,spendingGuardrailsEnabled:1,guardrailLowerPercent:80,guardrailUpperPercent:120,guardrailCutPercent:5,guardrailRaisePercent:5,freezeAfterNegativeReturn:1,pensionSplitPercent:50,taxAuditEnabled:1,federalBasicPersonalAmount:16452,bcBasicPersonalAmount:13216,age:52.96,retireAge:58,returnRate:7,
-  inflation:2.5,retireSpend:72000,wifePension:3200,wifeAgeDiff:7,wifeRetireAge:55,wifeEmploymentAnnual:110000,wifeEmploymentNetAnnual:65000,wifeWorkUntilUserAge:62,wifeEmploymentGrowth:0,userOasMonthly:751.97,userOasStart:65,wifeOasMonthly:751.97,wifeOasStart:65,spendingLookbackMonths:12,irregularAnnualAllowance:9000,retirementScenarioUserAge:58,retirementScenarioSpouseAge:51,retirementEndAge:95,retirementTaxRate:15,conservativeReturn:4,optimisticReturn:8,inheritanceAmount:0,inheritanceAge:65,oneTimeExpenseAmount:0,oneTimeExpenseAge:60,
+  nonRegisteredBalance:0,rrspMonthlyContribution:0,userTfsaMonthlyContribution:0,wifeRrspMonthlyContribution:0,spouseTfsaMonthlyContribution:0,nonRegisteredMonthlyContribution:0,withdrawalStrategy:1,nonRegisteredWithdrawalTaxRate:5,rrspDrawdownEnabled:1,rrspDrawdownStartAge:55,rrspDrawdownEndAge:70,lowestTaxBracketCeiling:50363,lowestBracketMarginalTaxRate:19.6,tfsaAnnualLimit:7000,tfsaAvailableRoom:7000,retirementSpendingMode:1,retirementSpendingPhasesEnabled:1,activeSpendingEndAge:70,midSpendingEndAge:80,midSpendingPercent:90,lateSpendingPercent:80,scenarioRetireAge1:55.5,scenarioRetireAge2:58,scenarioRetireAge3:60,spendingGuardrailsEnabled:1,guardrailLowerPercent:80,guardrailUpperPercent:120,guardrailCutPercent:5,guardrailRaisePercent:5,freezeAfterNegativeReturn:1,pensionSplitPercent:50,taxAuditEnabled:1,federalBasicPersonalAmount:16452,bcBasicPersonalAmount:13216,age:40,retireAge:65,returnRate:5,
+  inflation:2,retireSpend:0,wifePension:0,wifeAgeDiff:0,wifeRetireAge:65,wifeEmploymentAnnual:0,wifeEmploymentNetAnnual:0,wifeWorkUntilUserAge:65,wifeEmploymentGrowth:0,userOasMonthly:751.97,userOasStart:65,wifeOasMonthly:751.97,wifeOasStart:65,spendingLookbackMonths:12,irregularAnnualAllowance:9000,retirementScenarioUserAge:58,retirementScenarioSpouseAge:51,retirementEndAge:95,retirementTaxRate:15,conservativeReturn:4,optimisticReturn:8,inheritanceAmount:0,inheritanceAge:65,oneTimeExpenseAmount:0,oneTimeExpenseAge:60,
   userCpp65:1308.21,userCpp70:1857.66,userCppStart:70,wifeCpp60:878,wifeCpp65:1372,
-  wifeCpp70:1948,wifeCppStart:65,home:650000,ns1:100000,ns2:40000,vehicles:25000,
-  boat:18000,camper:15000,cash:0,ccDebt:0
+  wifeCpp70:1948,wifeCppStart:65,home:0,ns1:0,ns2:0,vehicles:0,
+  boat:0,camper:0,cash:0,ccDebt:0
  },
  budget:[
-  ["Groceries",1400],["Dining",700],["Transportation",550],["Vehicle",500],
-  ["Home & Garden",600],["Utilities",600],["Subscriptions",175],["Shopping & Personal",550],
-  ["Pets",150],["Entertainment",200],["Alcohol",250],["Boat & Outdoor",300],
-  ["Travel",500],["Medical",75],["Education",70],["Donations & Family",75],["Miscellaneous",300]
+  ["Groceries",0],["Dining",0],["Transportation",0],["Housing",0],["Utilities",0],
+  ["Insurance",0],["Healthcare",0],["Travel",0],["Personal",0],["Other",0]
  ],
- goals:[
-  {name:"Son's car",target:6000,current:0,monthly:500,priority:1},
-  {name:"LOC",target:23000,current:23000,monthly:0,priority:2},
-  {name:"Emergency fund",target:4000,current:0,monthly:150,priority:3},
-  {name:"Garmin",target:1300,current:0,monthly:100,priority:4},
-  {name:"Fence",target:6000,current:0,monthly:0,priority:5}
- ],
- life:[
-  {name:"Future home build",target:500000,saved:0,year:2032,notes:"House, well, septic, shop and site work"},
-  {name:"Vehicle replacement",target:45000,saved:0,year:2029,notes:"2017 Subaru replacement"},
-  {name:"Caribbean trip",target:15000,saved:0,year:2028,notes:"Backpacking and sail crewing"},
-  {name:"Desolation Sound",target:6000,saved:0,year:2027,notes:"Sailing trip"}
- ],
- futureExpenses:[
-  {name:"Spouse replacement vehicle",age:58,amount:45000,inflates:1,account:"nonReg",include:1},
-  {name:"Fence",age:56,amount:6000,inflates:1,account:"nonReg",include:1},
-  {name:"Major travel",age:60,amount:15000,inflates:1,account:"tfsa",include:1}
- ],
+ goals:[],
+ life:[],
+ futureExpenses:[],
  debts:[],
  backupHistory:[],
  lastBackupAt:"",
  transactions:[],
  rules:[
-  {keyword:"YELLOWHEAD",category:"Income",include:"No"},{keyword:"PROVINCE",category:"Income",include:"No"},
-  {keyword:"WCB",category:"Income",include:"No"},{keyword:"SAVE ON",category:"Groceries",include:"Yes"},
-  {keyword:"SAFEWAY",category:"Groceries",include:"Yes"},{keyword:"TIM HORTONS",category:"Dining",include:"Yes"},
-  {keyword:"MCDONALD",category:"Dining",include:"Yes"},{keyword:"SHELL",category:"Transportation",include:"Yes"},
-  {keyword:"PETRO",category:"Transportation",include:"Yes"},{keyword:"HOME DEPOT",category:"Home & Garden",include:"Yes"},
-  {keyword:"ROGERS",category:"Utilities",include:"Yes"},{keyword:"SHAW",category:"Utilities",include:"Yes"},
-  {keyword:"NETFLIX",category:"Subscriptions",include:"Yes"},{keyword:"SPOTIFY",category:"Subscriptions",include:"Yes"},
-  {keyword:"AMZN",category:"Shopping & Personal",include:"Yes"},{keyword:"LIQUOR",category:"Alcohol",include:"Yes"},
-  {keyword:"WESTJET",category:"Travel",include:"Yes"},{keyword:"EXPEDIA",category:"Travel",include:"Yes"},
-  {keyword:"LOC",category:"Debt",include:"No"},{keyword:"TRANSFER",category:"Transfers",include:"No"}
+  {keyword:"PAYROLL",category:"Income",include:"No"},
+  {keyword:"GROCERY",category:"Groceries",include:"Yes"},
+  {keyword:"RESTAURANT",category:"Dining",include:"Yes"},
+  {keyword:"GAS",category:"Transportation",include:"Yes"},
+  {keyword:"INSURANCE",category:"Insurance",include:"Yes"},
+  {keyword:"TRANSFER",category:"Transfers",include:"No"}
  ]
 };
 
@@ -788,8 +775,8 @@ function migrate(raw){
  if(raw.vehiclePlanner&&typeof raw.vehiclePlanner==="object")out.vehiclePlanner=clone(raw.vehiclePlanner);
  if(raw.travelPlanner&&typeof raw.travelPlanner==="object")out.travelPlanner=clone(raw.travelPlanner);
  if(raw.healthcarePlanner&&typeof raw.healthcarePlanner==="object")out.healthcarePlanner=clone(raw.healthcarePlanner);
- out.appVersion="5.3.12";
- out.dataSchemaVersion=12;
+ out.appVersion="5.3.13";
+ out.dataSchemaVersion=13;
  if(raw&&raw.settings&&Number(raw.settings.age)===52&&!raw.settings.currentAgePrecisionCorrected){
  out.settings.age=52.96;
  out.settings.currentAgePrecisionCorrected=1;
@@ -1211,6 +1198,66 @@ function financialInsights(){
  return insights;
 }
 
+
+function loadDemoData(){
+ var demo=clone(defaults);
+ demo.settings.setupComplete=1;
+ demo.settings.interfaceMode=1;
+ demo.settings.demoData=1;
+ demo.settings.age=50;
+ demo.settings.retireAge=60;
+ demo.settings.wifeAgeDiff=3;
+ demo.settings.wifeRetireAge=60;
+ demo.settings.income1=5200;
+ demo.settings.income2=4800;
+ demo.settings.investments=410000;
+ demo.settings.rrspBalance=300000;
+ demo.settings.userTfsaBalance=55000;
+ demo.settings.wifeRrspBalance=35000;
+ demo.settings.spouseTfsaBalance=20000;
+ demo.settings.rrspMonthlyContribution=1200;
+ demo.settings.userTfsaMonthlyContribution=400;
+ demo.settings.wifeRrspMonthlyContribution=300;
+ demo.settings.spouseTfsaMonthlyContribution=200;
+ demo.settings.investing=2100;
+ demo.settings.retireSpend=65000;
+ demo.settings.spousePensionEnabled=1;
+ demo.settings.spousePensionMonthly=2200;
+ demo.settings.spousePensionStartAge=60;
+ demo.settings.userCpp65=1100;
+ demo.settings.userCpp70=1560;
+ demo.settings.userCppStart=65;
+ demo.settings.wifeCpp60=700;
+ demo.settings.wifeCpp65=1100;
+ demo.settings.wifeCpp70=1560;
+ demo.settings.wifeCppStart=65;
+ demo.settings.home=550000;
+ demo.settings.vehicles=25000;
+ demo.budget=[["Groceries",1100],["Dining",350],["Transportation",500],["Housing",900],["Utilities",450],["Insurance",600],["Healthcare",150],["Travel",300],["Personal",300],["Other",250]];
+ demo.goals=[{name:"Emergency fund",target:12000,current:5000,monthly:300,priority:1},{name:"Vehicle replacement",target:30000,current:8000,monthly:400,priority:2}];
+ demo.debts=[{name:"Line of credit",type:"Line of credit",balance:12000,interestRate:6.5,payment:500,frequency:"Monthly",extraPayment:0,dueDay:1,linkedAsset:"",notes:"",include:1}];
+ demo.futureExpenses=[{name:"Vehicle replacement",age:57,amount:30000,inflates:1,account:"nonReg",include:1}];
+ demo.transactions=[];
+ demo.netWorthHistory=[];
+ demo.review={month:new Date().toISOString().slice(0,7),notes:"",lastBackup:""};
+ demo.reportMonth=demo.review.month;
+ demo.purchasePlanner=null;
+ demo.vehiclePlanner=null;
+ demo.travelPlanner=null;
+ demo.healthcarePlanner=null;
+ demo.optimizerExtra=0;
+ demo.appVersion="5.3.13";
+ demo.dataSchemaVersion=13;
+ data=demo;
+ localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+ nav();render();showPage("home");
+}
+function clearAllData(){
+ if(!confirm("Clear all RyanOS data on this device? Export a backup first if you may need it later."))return;
+ data=clone(defaults);
+ localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+ nav();render();showPage("setup");
+}
 function consumerActionTarget(action){
  var title=String(action.title||"").toLowerCase();
  if(title.indexOf("cash-flow")>=0||title.indexOf("goal")>=0)return{page:"money",label:"Review Money"};
@@ -1247,7 +1294,7 @@ function renderHomeStreamlined(){
  var recommendedSection=isSimpleMode()?simpleActions:'<div class="section-card"><div class="page-intro"><div><h3>Recommended actions</h3><p>The highest-value steps based on your current numbers.</p></div></div><div class="action-list">'+recommendedActions().map(function(x,i){return'<div class="action-item '+x.level+'"><div class="action-rank">'+(i+1)+'</div><div><div class="action-title">'+esc(x.title)+'</div><div class="action-copy">'+esc(x.copy)+'</div></div><div class="action-impact">'+esc(x.impact)+'</div></div>';}).join("")+'</div></div>';
  var opportunitySection=isSimpleMode()?"":'<div class="section-card"><div class="page-intro"><div><h3>Opportunity alerts</h3><p>Where your current cash flow could create additional options.</p></div></div><div class="opportunity-grid">'+opportunityAlerts().map(function(x){return'<div class="opportunity-card '+x.type+'"><div class="op-label">'+esc(x.label)+'</div><div class="op-value">'+esc(x.value)+'</div><div class="op-copy">'+esc(x.copy)+'</div></div>';}).join("")+'</div></div>';
  document.getElementById("home").innerHTML=
- '<div class="page-intro"><div><h2>Home</h2><p>Your financial position, priorities and retirement status at a glance.</p></div><div class="quick-actions"><button id="openSetupFromHome" type="button">Open Setup</button><span class="status-pill '+(retirement.ok?'good':'bad')+'">'+(retirement.ok?'Funded under assumptions':'Retirement shortfall')+'</span></div></div>'+'<div class="trust-banner"><strong>Planning estimate—not financial, tax or legal advice</strong>RyanOS uses your assumptions and a simplified tax model. Confirm major retirement, tax and investment decisions with qualified Canadian professionals.</div>'+
+ '<div class="page-intro"><div><h2>Home</h2><p>Your financial position, priorities and retirement status at a glance.</p></div><div class="quick-actions"><button id="openSetupFromHome" type="button">Open Setup</button><span class="status-pill '+(retirement.ok?'good':'bad')+'">'+(retirement.ok?'Funded under assumptions':'Retirement shortfall')+'</span></div></div>'+(Number(s.demoData||0)===1?'<div class="demo-banner"><strong>Demo data is active</strong>This is a fictional household. Open More to clear it and enter your own information.</div>':'')+'<div class="trust-banner"><strong>Planning estimate—not financial, tax or legal advice</strong>RyanOS uses your assumptions and a simplified tax model. Confirm major retirement, tax and investment decisions with qualified Canadian professionals.</div>'+
  '<div class="hero-grid">'+
   '<div class="hero-card"><div class="label">Monthly cash remaining</div><div class="value">'+money(cash)+'</div><div class="sub">After budget, bills, investing, goals and debt</div></div>'+
   '<div class="hero-card"><div class="label">Investments used by plan</div><div class="value">'+money(detailed)+'</div><div class="sub">Detailed account balances</div></div>'+
@@ -3378,7 +3425,7 @@ function exportBackupFile(){
  var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
  var a=document.createElement("a");
  a.href=URL.createObjectURL(blob);
- a.download="RyanOS-5.3.12-backup.json";
+ a.download="RyanOS-5.3.13-backup.json";
  a.click();
  setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
 }
@@ -3608,7 +3655,7 @@ function backupCompatibilityAudit(){
  add(Number(migratedOld.settings.userFhsaBalance||0)===0&&Number(migratedOld.settings.spouseFhsaBalance||0)===0,"Missing FHSA fields default safely","Older backups without FHSA data open with zero balances.");
  add(Number(migratedOld.settings.userPensionEnabled||0)===0,"Missing user pension defaults safely","Older backups do not invent a user pension.");
  var current=migrate(data);
- add(Number(current.dataSchemaVersion||0)===12,"Current schema version","Migrated data is tagged with schema version 6.");
+ add(Number(current.dataSchemaVersion||0)===13,"Current schema version","Migrated data is tagged with schema version 6.");
  add(Array.isArray(current.netWorthHistory),"Net worth history preserved","Existing net worth snapshots remain available.");
  add(Array.isArray(current.backupHistory),"Recovery history preserved","Recovery points remain attached to the profile.");
  add(!!current.purchasePlanner&&!!current.vehiclePlanner&&!!current.travelPlanner&&!!current.healthcarePlanner,"Planner data preserved","All four planning tools survive migration.");
@@ -3648,7 +3695,7 @@ function fullRegressionAudit(){
   add(Number(data.settings.userFhsaBalance||0)>=0&&Number(data.settings.spouseFhsaBalance||0)>=0,"FHSA accounts valid","User and spouse FHSA balances are present and non-negative.");
   add(typeof pensionIncomeAudit==="function"&&pensionIncomeAudit(rows).rows.length>0,"Pension timeline audit available","Milestone income rows are generated.");
   add(typeof validateBackupObject==="function"&&validateBackupObject(data).length===0,"Current backup validates","Current saved data passes backup validation.");
-  add(Number(data.dataSchemaVersion||0)===12,"Current schema version","Data is tagged with schema version 7.");
+  add(Number(data.dataSchemaVersion||0)===13,"Current schema version","Data is tagged with schema version 7.");
  }catch(err){
   add(false,"Regression audit execution","Audit stopped because: "+(err.message||String(err)));
  }
@@ -3661,11 +3708,13 @@ function renderSimpleSettings(){
  document.getElementById("settings").innerHTML=
   '<div class="page-intro"><div><h2>More</h2><p>Setup, backups and advanced controls.</p></div><span class="status-pill good">Simple mode</span></div>'+
   '<div class="mode-note"><strong>Simple mode hides technical controls.</strong><div>All calculations and saved information remain available. Switch to Advanced mode for detailed assumptions, withdrawal strategies and diagnostic tables.</div></div>'+
-  '<div class="section-card"><h3>Guided setup</h3><p>Review household income, accounts, pensions and retirement assumptions.</p><button id="simpleRunSetup" type="button">Run Setup Wizard</button></div>'+
+  '<div class="section-card"><h3>Guided setup</h3><p>Review household income, accounts, pensions and retirement assumptions.</p><button id="simpleRunSetup" type="button">Run Setup Wizard</button></div>'+  '<div class="section-card"><h3>Start or explore</h3><div class="clean-start-grid"><div class="clean-start-card"><h4>Use my own information</h4><p>Start with empty balances and build your plan through Guided Setup.</p><button id="simpleCleanStart" type="button">Start clean</button></div><div class="clean-start-card"><h4>Explore with sample data</h4><p>Load a fictional Canadian household to see how RyanOS works.</p><button id="simpleLoadDemo" class="secondary" type="button">Load demo</button></div></div></div>'+
   '<div class="section-card"><h3>Backup and recovery</h3><p>Export a backup before making major changes or moving to another device.</p><div class="simple-actions"><button id="simpleExport" type="button">Export backup</button><button id="simpleAdvancedSettings" class="secondary" type="button">Open advanced settings</button></div></div>'+
-  '<div class="section-card"><h3>Data health</h3><div class="simple-next-grid"><div class="simple-next-card"><div class="label">Compatibility checks</div><div class="value">'+c.pass+'/'+c.total+'</div></div><div class="simple-next-card"><div class="label">Schema</div><div class="value">12</div></div><div class="simple-next-card"><div class="label">Storage</div><div class="value">This device</div></div></div></div>'+
+  '<div class="section-card"><h3>Data health</h3><div class="simple-next-grid"><div class="simple-next-card"><div class="label">Compatibility checks</div><div class="value">'+c.pass+'/'+c.total+'</div></div><div class="simple-next-card"><div class="label">Schema</div><div class="value">13</div></div><div class="simple-next-card"><div class="label">Storage</div><div class="value">This device</div></div></div></div>'+
   '<div class="trust-banner"><strong>Privacy reminder</strong>RyanOS stores data in this browser. Keep exported backups in a secure location.</div>';
  document.getElementById("simpleRunSetup").onclick=function(){data.settings.setupStep=0;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));showPage("setup");};
+ document.getElementById("simpleCleanStart").onclick=clearAllData;
+ document.getElementById("simpleLoadDemo").onclick=function(){if(confirm("Replace current RyanOS data with fictional demo data?"))loadDemoData();};
  document.getElementById("simpleExport").onclick=exportBackupFile;
  document.getElementById("simpleAdvancedSettings").onclick=function(){data.settings.interfaceMode=2;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));nav();render();showPage("settings");};
 }
@@ -3718,7 +3767,7 @@ function renderSettings(){
  '<div class="section-card"><h3>Data health</h3><div class="notice '+(health.length?'bad':'good')+'">'+(health.length?health.map(function(x){return'• '+x;}).join('<br>'):'No major data problems detected.')+'</div></div>'+
  (function(){var audit=foundationAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Foundation audit</h3><p>Automated checks for the calculations and data connections RyanOS depends on.</p></div><span class="status-pill '+(audit.passed===audit.total?'good':audit.passed>=audit.total-2?'warn':'bad')+'">'+audit.passed+' of '+audit.total+' passed</span></div><div class="audit-grid">'+audit.checks.map(function(x){return'<div class="audit-card '+(x.ok?'pass':'fail')+'"><div class="audit-title">'+(x.ok?'✓ ':'⚠ ')+esc(x.name)+'</div><div class="audit-copy">'+esc(x.copy)+'</div></div>';}).join("")+'</div><div class="quick-actions" style="margin-top:12px"><button id="runFoundationAudit" type="button">Run audit again</button></div></div>';})()+
  '<div class="section-card"><div class="page-intro"><div><h3>Calculation scope</h3><p>What RyanOS currently calculates and what still requires professional confirmation.</p></div><span class="estimate-tag">Planning estimate</span></div><div class="method-grid"><div class="method-card"><div class="label">Included</div><div class="value">Cash flow, account growth, pensions, CPP/OAS, stress scenarios and year-by-year balances</div></div><div class="method-card"><div class="label">Simplified</div><div class="value">Income tax, non-registered taxation and withdrawal sequencing</div></div><div class="method-card"><div class="label">Not included yet</div><div class="value">Full federal/provincial tax, RRIF minimums, survivor and estate calculations</div></div></div></div>'+
- (function(){var r=fullRegressionAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Full regression test</h3><p>Checks the primary pages, financial engines, planners, backup system and retirement calculations together.</p></div><span class="status-pill '+(r.failed===0?'good':'bad')+'">'+r.pass+' of '+r.total+' passed</span></div><div class="regression-grid"><div class="regression-card"><div class="label">Schema version</div><div class="value">12</div></div><div class="regression-card"><div class="label">Tests</div><div class="value">'+r.total+'</div></div><div class="regression-card"><div class="label">Passed</div><div class="value">'+r.pass+'</div></div><div class="regression-card"><div class="label">Failed</div><div class="value">'+r.failed+'</div></div></div><div class="regression-list">'+r.tests.map(function(x){return'<div class="regression-item '+(x.ok?'pass':'fail')+'"><div>'+(x.ok?'✓':'!')+'</div><div><strong>'+esc(x.name)+'</strong><div class="tx-muted">'+esc(x.copy)+'</div></div></div>';}).join("")+'</div><div class="quick-actions" style="margin-top:12px"><button id="runRegressionAudit" type="button">Run regression test again</button></div></div>';})()+
+ (function(){var r=fullRegressionAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Full regression test</h3><p>Checks the primary pages, financial engines, planners, backup system and retirement calculations together.</p></div><span class="status-pill '+(r.failed===0?'good':'bad')+'">'+r.pass+' of '+r.total+' passed</span></div><div class="regression-grid"><div class="regression-card"><div class="label">Schema version</div><div class="value">13</div></div><div class="regression-card"><div class="label">Tests</div><div class="value">'+r.total+'</div></div><div class="regression-card"><div class="label">Passed</div><div class="value">'+r.pass+'</div></div><div class="regression-card"><div class="label">Failed</div><div class="value">'+r.failed+'</div></div></div><div class="regression-list">'+r.tests.map(function(x){return'<div class="regression-item '+(x.ok?'pass':'fail')+'"><div>'+(x.ok?'✓':'!')+'</div><div><strong>'+esc(x.name)+'</strong><div class="tx-muted">'+esc(x.copy)+'</div></div></div>';}).join("")+'</div><div class="quick-actions" style="margin-top:12px"><button id="runRegressionAudit" type="button">Run regression test again</button></div></div>';})()+
  (function(){var c=backupCompatibilityAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Backup migration compatibility</h3><p>Checks whether older RyanOS data can be upgraded without losing important information.</p></div><span class="status-pill '+(c.pass===c.total?'good':'warn')+'">'+c.pass+' of '+c.total+' passed</span></div><div class="compat-grid"><div class="compat-card"><div class="label">Schema version</div><div class="value">9</div></div><div class="compat-card"><div class="label">Compatibility tests</div><div class="value">'+c.total+'</div></div><div class="compat-card"><div class="label">Passed</div><div class="value">'+c.pass+'</div></div><div class="compat-card"><div class="label">Warnings</div><div class="value">'+(c.total-c.pass)+'</div></div></div><div class="compat-list">'+c.tests.map(function(x){return'<div class="compat-item '+(x.ok?'pass':'warn')+'"><div>'+(x.ok?'✓':'!')+'</div><div><strong>'+esc(x.name)+'</strong><div class="tx-muted">'+esc(x.copy)+'</div></div></div>';}).join("")+'</div></div>';})()+
  '<div class="section-card"><div class="page-intro"><div><h3>Guided setup</h3><p>Run the question-and-answer setup again without deleting transactions, net worth history or backups.</p></div><button id="rerunSetup" type="button">Run Setup Wizard</button></div></div>'+
  '<div class="pension-grid">'+pensionEditor("user","Your workplace pension")+pensionEditor("spouse","Spouse workplace pension")+'</div>'+
@@ -3794,7 +3843,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.3.12-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.3.13-backup.json";a.click();};
 var modeToggle=document.getElementById("modeToggle");
 if(modeToggle)modeToggle.onclick=function(){
  data.settings.interfaceMode=isSimpleMode()?2:1;
