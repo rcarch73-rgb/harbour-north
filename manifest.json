@@ -1,9 +1,9 @@
 {
-  "name": "RyanOS 5.1.5",
+  "name": "RyanOS 5.1.6",
   "short_name": "RyanOS",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f4f7fb",
   "theme_color": "#17365d",
-  "description": "RyanOS with a sustainable retirement spending range."
+  "description": "RyanOS with retirement margin and key risk-driver analysis."
 }
