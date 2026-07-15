@@ -1,9 +1,9 @@
 {
-  "name": "RyanOS 5.3.15",
+  "name": "RyanOS 5.3.16",
   "short_name": "RyanOS",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f4f7fb",
   "theme_color": "#17365d",
-  "description": "RyanOS with Canadian RRIF conversion ages and mandatory minimum withdrawals."
+  "description": "RyanOS setup, net worth, transactions and retirement-income repair."
 }
