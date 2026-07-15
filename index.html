@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 5.2.3</title>
+<title>RyanOS 5.2.4</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -496,11 +496,21 @@ details.section-card[open]>summary:after{content:"−"}
 @media(max-width:900px){.health-form,.health-results{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.health-form,.health-results{grid-template-columns:1fr}}
 
+
+.planning-intro-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.planning-summary-card{border:1px solid var(--border);border-radius:14px;padding:14px;background:#fff}
+.planning-summary-card .label{font-size:.76rem;text-transform:uppercase;letter-spacing:.03em;font-weight:900;color:var(--muted)}
+.planning-summary-card .value{font-size:1.2rem;font-weight:900;color:var(--brand);margin-top:5px}
+.planning-summary-card .copy{font-size:.86rem;color:var(--muted);margin-top:5px}
+#planningTools .section-card{margin-top:12px}
+@media(max-width:850px){.planning-intro-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.planning-intro-grid{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>5.2.3 — Healthcare Reserve Planner</small></div>
+  <div><h1>RyanOS</h1><small>5.2.4 — Planning Page Cleanup</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -508,6 +518,7 @@ details.section-card[open]>summary:after{content:"−"}
 <main>
 <section id="home" class="page active"></section>
 <section id="money" class="page"></section>
+<section id="planning" class="page"></section>
 <section id="transactions" class="page"></section>
 <section id="goals" class="page"></section>
 <section id="retirement" class="page"></section>
@@ -779,7 +790,7 @@ function showPage(pageId){
 }
 window.showPage=showPage;
 function nav(){
- var items=[["home","Home"],["money","Money"],["transactions","Transactions"],["goals","Debt"],["networth","Net Worth"],["retirement","Retirement"],["settings","Settings & Data"]];
+ var items=[["home","Home"],["money","Money"],["planning","Planning"],["transactions","Transactions"],["goals","Debt"],["networth","Net Worth"],["retirement","Retirement"],["settings","Settings & Data"]];
  document.getElementById("nav").innerHTML=items.map(function(x,i){return'<button data-page="'+x[0]+'" class="'+(i===0?"active":"")+'">'+x[1]+"</button>";}).join("");
  document.querySelectorAll("#nav button").forEach(function(b){b.addEventListener("click",function(){showPage(b.dataset.page);});});
 }
@@ -1263,6 +1274,7 @@ function renderMoney(){
   '<label>Month being reviewed<input id="moneyMonth" type="month" value="'+esc(month)+'"></label>'+
   '<button id="moneyImportCsv" type="button">Import CSV</button>'+
   '<button id="moneyManageDebt" type="button">Manage debt</button>'+
+  '<button id="moneyOpenPlanning" type="button">Open Planning</button>'+
   '<span class="status-pill '+(monthTx.length?'good':'warn')+'">'+monthTx.length+' transactions</span>'+
  '</div></div>'+
 
@@ -1409,6 +1421,7 @@ function renderMoney(){
  };
  document.getElementById("moneyImportCsv").onclick=function(){showPage("transactions");};
  document.getElementById("moneyManageDebt").onclick=function(){showPage("goals");};
+ document.getElementById("moneyOpenPlanning").onclick=function(){showPage("planning");};
  document.getElementById("savePurchasePlan").onclick=function(){
   data.purchasePlanner={
    name:document.getElementById("purchaseName").value||"Major purchase",
@@ -1512,6 +1525,38 @@ function renderMoney(){
  document.querySelectorAll(".budget-input").forEach(function(el){el.onchange=function(){
   data.budget[Number(el.dataset.i)][1]=Number(el.value||0);save();
  };});
+}
+
+
+function renderPlanning(){
+ var p=ensurePurchasePlanner(),pr=purchasePlanAnalysis();
+ var v=ensureVehiclePlanner(),vr=vehiclePlanAnalysis();
+ var tr=ensureTravelPlanner(),tra=travelPlanAnalysis();
+ var h=ensureHealthcarePlanner(),hr=healthcarePlanAnalysis();
+ var page=document.getElementById("planning");
+ page.innerHTML=
+  '<div class="page-intro"><div><h2>Planning</h2><p>Plan major purchases, vehicle replacement, travel and healthcare reserves without crowding monthly cash flow.</p></div><span class="status-pill '+(totals().surplus>=0?'good':'bad')+'">'+money(totals().surplus)+' monthly capacity</span></div>'+
+  '<div class="planning-intro-grid">'+
+   '<div class="planning-summary-card"><div class="label">Major purchase</div><div class="value">'+money(pr.remaining)+'</div><div class="copy">Remaining for '+esc(p.name||"Major purchase")+'.</div></div>'+
+   '<div class="planning-summary-card"><div class="label">Vehicle replacement</div><div class="value">'+money(vr.monthlySave)+'/mo</div><div class="copy">Required saving over '+vr.months+' months.</div></div>'+
+   '<div class="planning-summary-card"><div class="label">Travel plan</div><div class="value">'+money(tra.total)+'</div><div class="copy">'+esc(tr.name||"Major trip")+' total budget.</div></div>'+
+   '<div class="planning-summary-card"><div class="label">Healthcare reserve</div><div class="value">'+hr.fundedPercent.toFixed(0)+'%</div><div class="copy">'+money(hr.reserveGap)+' remaining to target.</div></div>'+
+  '</div>'+
+  '<div id="planningTools"></div>';
+
+ var moneyPage=document.getElementById("money");
+ var target=document.getElementById("planningTools");
+ if(!moneyPage||!target)return;
+ var names={
+  "Major purchase planner":1,
+  "Vehicle replacement planner":1,
+  "Travel planner":1,
+  "Healthcare reserve planner":1
+ };
+ Array.prototype.slice.call(moneyPage.querySelectorAll(".section-card")).forEach(function(card){
+  var heading=card.querySelector("h3");
+  if(heading&&names[String(heading.textContent||"").trim()])target.appendChild(card);
+ });
 }
 
 var smartRules=[
@@ -2979,7 +3024,7 @@ function exportBackupFile(){
  var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
  var a=document.createElement("a");
  a.href=URL.createObjectURL(blob);
- a.download="RyanOS-5.2.3-backup.json";
+ a.download="RyanOS-5.2.4-backup.json";
  a.click();
  setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
 }
@@ -3087,6 +3132,7 @@ function render(){
  syncLegacyTotals();
  safeRender("home",renderHome);
  safeRender("money",renderMoney);
+ safeRender("planning",renderPlanning);
  var moneyPage=document.getElementById("money");
  if(moneyPage&&moneyPage.innerHTML.indexOf("Import bank or credit-card CSV")<0){
   moneyPage.innerHTML=
@@ -3105,7 +3151,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.2.3-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.2.4-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
