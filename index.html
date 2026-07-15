@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 4.1.0</title>
+<title>RyanOS 4.2.0</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -192,11 +192,23 @@ main{
  main{padding:12px!important}
 }
 
+
+.money-flow{display:grid;grid-template-columns:1fr auto;gap:9px 18px;align-items:center}
+.money-flow .group{grid-column:1/-1;font-weight:800;color:#17365d;border-bottom:1px solid #dbe3ee;padding-top:8px}
+.money-flow .amount{text-align:right;font-weight:700}
+.money-flow .total{font-size:1.08rem;font-weight:800;border-top:2px solid #dbe3ee;padding-top:9px}
+.budget-bar{height:8px;background:#e8edf4;border-radius:999px;overflow:hidden;min-width:120px}
+.budget-bar span{display:block;height:100%;background:#2d5f90;border-radius:999px}
+.budget-bar.over span{background:#a61b1b}
+.money-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:end}
+.money-toolbar label{min-width:190px;flex:1}
+@media(max-width:650px){.money-flow{grid-template-columns:1fr auto}.money-hide-mobile{display:none}}
+
 </style>
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>4.1.0 — Debt Planner</small></div>
+  <div><h1>RyanOS</h1><small>4.2.0 — Money Section Cleanup</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -548,11 +560,7 @@ function renderHomeStreamlined(){
   (warnings.length?'<div class="stream-note">'+warnings.map(function(x){return'• '+x;}).join('<br>')+'</div>':'<div class="status-pill good">No major data warnings</div>')+
   (next?'<p><strong>Next large expense:</strong> '+esc(next.name)+' at age '+Number(next.age).toFixed(0)+' — '+money(Number(next.amount||0))+' in today’s dollars.</p>':'<p>No future expenses are currently scheduled.</p>')+
  '</div>'+
- '<div class="section-card"><h3>Quick actions</h3><div class="quick-actions">'+
-  '<button onclick="showPage(\'money\')">Review money</button><button onclick="showPage(\'transactions\')">Import transactions</button><button onclick="showPage(\'goals\')">Manage debt</button><button onclick="showPage(\'networth\')">View net worth</button>'+
-  '<button onclick="showPage(\'retirement\')">Open retirement plan</button>'+
-  '<button onclick="showPage(\'settings\')">Backup or settings</button>'+
- '</div></div>';
+ '';
 }
 function renderHome(){
  renderHomeStreamlined();return;
@@ -575,39 +583,91 @@ function renderHome(){
  '<div class="card"><h3>Next actions</h3><div class="notice">Import this month’s transactions.</div><p>Update LOC and goal balances.</p><p>Export a backup after your monthly review.</p></div></div>';
 }
 function renderMoney(){
+ var s=data.settings;
  var month=data.reportMonth||data.review.month||new Date().toISOString().slice(0,7);
- var t=totals(),cat=byCategoryForMonth(month),estimate=spendingEstimate();
+ var cat=byCategoryForMonth(month),estimate=spendingEstimate();
  var monthTx=monthTransactions(month);
  var monthSpend=monthTx.filter(function(x){return x.include==="Yes";}).reduce(function(a,x){return a+Math.abs(Number(x.amount||0));},0);
- document.getElementById("money").innerHTML='<h2>Money</h2>'+
- '<div class="card" style="margin-bottom:12px"><div class="form-grid"><label>Money page month<input id="moneyMonth" type="month" value="'+esc(month)+'"></label><label>Transactions this month<input value="'+monthTx.length+'" disabled></label><label>Included spending this month<input value="'+money(monthSpend)+'" disabled></label></div><div class="notice">Actual spending and remaining budget use only the selected month.</div></div>'+
- '<div class="grid"><div class="card"><h3>Monthly budget</h3><div class="metric">'+money(t.spending)+'</div></div><div class="card"><h3>Actual this month</h3><div class="metric">'+money(monthSpend)+'</div></div><div class="card"><h3>LOC payment</h3><div class="metric">'+money(t.locPayment)+'</div></div><div class="card"><h3>Monthly plan result</h3><div class="metric '+(t.surplus>=0?"good":"bad")+'">'+money(t.surplus)+'</div></div></div>'+
- '<div class="card" style="margin-top:12px"><table><thead><tr><th>Category</th><th>Monthly budget</th><th>Actual</th><th>Remaining</th></tr></thead><tbody>'+
- data.budget.map(function(x,i){var actual=cat[x[0]]||0;return'<tr><td>'+esc(x[0])+'</td><td><input class="budget-input" data-i="'+i+'" type="number" value="'+x[1]+'"></td><td>'+money(actual)+'</td><td class="'+(Number(x[1])-actual>=0?"good":"bad")+'">'+money(Number(x[1])-actual)+'</td></tr>';}).join("")+
- '</tbody></table></div>'+
- '<div class="card" style="margin-top:12px"><h3>Annual spending estimate</h3><div class="grid">'+
- '<div class="card"><h3>Core annual spending</h3><div class="metric">'+money(estimate.annualizedCore)+'</div></div>'+
- '<div class="card"><h3>Total annualized spending</h3><div class="metric">'+money(estimate.annualizedTotal)+'</div></div>'+
- '<div class="card"><h3>Retirement spending estimate used by Retirement</h3><div class="metric">'+money(estimate.retirementEstimate)+'</div></div>'+
- '<div class="card"><h3>Complete months used</h3><div class="metric">'+estimate.observedMonths+'</div></div></div>'+
- '<div class="notice">Core spending excludes Travel, Boat & Outdoor, Home & Garden, Vehicle, Income, Transfers, Investments, Debt and Bank Fees. The current partial month is excluded. Method: <strong>'+estimate.method+'</strong>. The retirement estimate adds the annual irregular-spending allowance.</div></div>'+
- '<div class="card" style="margin-top:12px"><h3>Spending-estimate audit</h3><table><tbody>'+
- '<tr><td>Average monthly core spending</td><td>'+money(estimate.averageMonthlyCore)+'</td><td>Median monthly core spending</td><td>'+money(estimate.medianMonthlyCore)+'</td></tr>'+
- '<tr><td>Selected monthly core amount</td><td>'+money(estimate.selectedMonthlyCore)+'</td><td>Annual irregular allowance</td><td>'+money(estimate.irregularAllowance)+'</td></tr>'+
- '<tr><td><strong>Retirement spending used</strong></td><td colspan="3"><strong>'+money(estimate.retirementEstimate)+' per year in today’s dollars</strong></td></tr>'+
- '</tbody></table><div class="notice '+(estimate.observedMonths<6?'bad':'good')+'">'+(estimate.observedMonths<6?'Warning: fewer than six complete months are being used, so the estimate may be unreliable.':'The estimate is based on at least six complete months.')+'</div></div>';
- document.getElementById("moneyMonth").onchange=function(){
-  data.reportMonth=this.value;
-  data.review.month=this.value;
-  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
-  renderMoney();
- var moneyEl=document.getElementById("money");
- if(moneyEl&&moneyEl.innerHTML.indexOf("More money tools")<0){
-  moneyEl.innerHTML+='<div class="section-card"><h3>More money tools</h3><div class="quick-actions"><button onclick="showPage(\'transactions\')">Transactions</button><button onclick="showPage(\'goals\')">Goals & Debt</button><button onclick="showPage(\'review\')">Monthly Review</button><button onclick="showPage(\'reports\')">Reports & Optimizer</button><button onclick="showPage(\'life\')">Life Goals</button></div></div>';
- }
 
+ var income1=Number(s.income1||0),income2=Number(s.income2||0),wcb=Number(s.wcb||0);
+ var income=income1+income2+wcb;
+ var budgetTotal=data.budget.reduce(function(a,x){return a+Number(x[1]||0);},0);
+ var detailedInvesting=Number(s.rrspMonthlyContribution||0)+Number(s.userTfsaMonthlyContribution||0)+Number(s.wifeRrspMonthlyContribution||0)+Number(s.nonRegisteredMonthlyContribution||0);
+ var goalFunding=data.goals.filter(function(g){return g.name!=="LOC";}).reduce(function(a,g){return a+Number(g.monthly||0);},0);
+ var activeDebts=(data.debts||[]).filter(function(d){return Number(d.include)!==0;});
+ var debtMonthly=activeDebts.length?debtTotals().monthly:pmt(Number(s.rate||0),Number(s.months||0),Number(s.loc||0));
+ var fixedBills=Number(s.bills||0)+Number(s.chores||0);
+ var totalPlannedOut=budgetTotal+detailedInvesting+goalFunding+debtMonthly+fixedBills;
+ var plannedRemaining=income-totalPlannedOut;
+ var actualRemaining=income-fixedBills-detailedInvesting-goalFunding-debtMonthly-monthSpend;
+ var contributionMismatch=Number(s.investing||0)-detailedInvesting;
+
+ document.getElementById("money").innerHTML=
+ '<div class="page-intro"><div><h2>Money</h2><p>Monthly cash flow, budget and actual spending in one place.</p></div><span class="status-pill '+(plannedRemaining>=0?'good':'bad')+'">'+(plannedRemaining>=0?money(plannedRemaining)+' planned remaining':money(Math.abs(plannedRemaining))+' planned shortfall')+'</span></div>'+
+
+ '<div class="section-card"><div class="money-toolbar">'+
+  '<label>Month being reviewed<input id="moneyMonth" type="month" value="'+esc(month)+'"></label>'+
+  '<button id="moneyImportCsv" type="button">Import CSV</button>'+
+  '<button id="moneyManageDebt" type="button">Manage debt</button>'+
+  '<span class="status-pill '+(monthTx.length?'good':'warn')+'">'+monthTx.length+' transactions</span>'+
+ '</div></div>'+
+
+ '<div class="hero-grid">'+
+  '<div class="hero-card"><div class="label">Monthly income</div><div class="value">'+money(income)+'</div><div class="sub">All regular take-home income</div></div>'+
+  '<div class="hero-card"><div class="label">Planned outflow</div><div class="value">'+money(totalPlannedOut)+'</div><div class="sub">Budget, bills, savings and debt</div></div>'+
+  '<div class="hero-card"><div class="label">Actual spending</div><div class="value">'+money(monthSpend)+'</div><div class="sub">Included transactions for '+esc(month)+'</div></div>'+
+  '<div class="hero-card"><div class="label">Actual cash remaining</div><div class="value '+(actualRemaining>=0?'good':'bad')+'">'+money(actualRemaining)+'</div><div class="sub">Using actual spending this month</div></div>'+
+ '</div>'+
+
+ '<div class="section-card"><h3>Monthly cash-flow plan</h3><div class="money-flow">'+
+  '<div class="group">Income</div>'+
+  '<div>Your monthly income</div><div class="amount">'+money(income1)+'</div>'+
+  '<div>Wife’s monthly income</div><div class="amount">'+money(income2)+'</div>'+
+  '<div>WorkSafeBC</div><div class="amount">'+money(wcb)+'</div>'+
+  '<div class="total">Total monthly income</div><div class="amount total">'+money(income)+'</div>'+
+
+  '<div class="group">Committed money</div>'+
+  '<div>Bills, insurance and property-tax reserve</div><div class="amount">'+money(Number(s.bills||0))+'</div>'+
+  '<div>Chores and regular commitments</div><div class="amount">'+money(Number(s.chores||0))+'</div>'+
+  '<div>Investment contributions</div><div class="amount">'+money(detailedInvesting)+'</div>'+
+  '<div>Savings-goal contributions</div><div class="amount">'+money(goalFunding)+'</div>'+
+  '<div>Debt payments</div><div class="amount">'+money(debtMonthly)+'</div>'+
+  '<div>Spending budget</div><div class="amount">'+money(budgetTotal)+'</div>'+
+  '<div class="total">Planned monthly outflow</div><div class="amount total">'+money(totalPlannedOut)+'</div>'+
+  '<div class="total">Planned cash remaining</div><div class="amount total '+(plannedRemaining>=0?'good':'bad')+'">'+money(plannedRemaining)+'</div>'+
+ '</div>'+
+ (Math.abs(contributionMismatch)>1?'<div class="notice bad">The main investing setting differs from the detailed account contributions by '+money(contributionMismatch)+'. This page uses the detailed account contributions.</div>':'')+
+ '</div>'+
+
+ '<div class="section-card"><h3>Budget versus actual — '+esc(month)+'</h3><div style="overflow-x:auto"><table><thead><tr><th>Category</th><th>Budget</th><th>Actual</th><th>Remaining</th><th class="money-hide-mobile">Used</th></tr></thead><tbody>'+
+ data.budget.map(function(x,i){
+  var budget=Number(x[1]||0),actual=Number(cat[x[0]]||0),remaining=budget-actual;
+  var used=budget>0?actual/budget*100:(actual>0?100:0);
+  return'<tr><td>'+esc(x[0])+'</td><td><input class="budget-input" data-i="'+i+'" type="number" step="10" value="'+budget+'"></td><td>'+money(actual)+'</td><td class="'+(remaining>=0?'good':'bad')+'">'+money(remaining)+'</td><td class="money-hide-mobile"><div class="budget-bar '+(used>100?'over':'')+'"><span style="width:'+Math.min(100,Math.max(0,used))+'%"></span></div><small>'+used.toFixed(0)+'%</small></td></tr>';
+ }).join("")+
+ '<tr><td><strong>Total</strong></td><td><strong>'+money(budgetTotal)+'</strong></td><td><strong>'+money(monthSpend)+'</strong></td><td class="'+(budgetTotal-monthSpend>=0?'good':'bad')+'"><strong>'+money(budgetTotal-monthSpend)+'</strong></td><td></td></tr>'+
+ '</tbody></table></div><div class="notice">Only transactions marked “Include: Yes” are counted. Transfers, income and investments should normally be excluded from spending.</div></div>'+
+
+ '<details class="section-card"><summary>Retirement spending estimate</summary><div class="details-body">'+
+  '<div class="hero-grid">'+
+   '<div class="hero-card"><div class="label">Core annual spending</div><div class="value">'+money(estimate.annualizedCore)+'</div></div>'+
+   '<div class="hero-card"><div class="label">Total annualized spending</div><div class="value">'+money(estimate.annualizedTotal)+'</div></div>'+
+   '<div class="hero-card"><div class="label">Retirement estimate</div><div class="value">'+money(estimate.retirementEstimate)+'</div></div>'+
+   '<div class="hero-card"><div class="label">Complete months used</div><div class="value">'+estimate.observedMonths+'</div></div>'+
+  '</div>'+
+  '<table><tbody><tr><td>Average monthly core spending</td><td>'+money(estimate.averageMonthlyCore)+'</td><td>Median monthly core spending</td><td>'+money(estimate.medianMonthlyCore)+'</td></tr><tr><td>Selected monthly core amount</td><td>'+money(estimate.selectedMonthlyCore)+'</td><td>Annual irregular allowance</td><td>'+money(estimate.irregularAllowance)+'</td></tr></tbody></table>'+
+  '<div class="notice '+(estimate.observedMonths<6?'bad':'good')+'">Method: <strong>'+estimate.method+'</strong>. '+(estimate.observedMonths<6?'Fewer than six complete months are available, so the estimate may still be unreliable.':'At least six complete months are included.')+'</div>'+
+ '</div></details>';
+
+ document.getElementById("moneyMonth").onchange=function(){
+  data.reportMonth=this.value;data.review.month=this.value;
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderMoney();
  };
- document.querySelectorAll(".budget-input").forEach(function(el){el.addEventListener("change",function(){data.budget[Number(el.dataset.i)][1]=Number(el.value);save();});});
+ document.getElementById("moneyImportCsv").onclick=function(){showPage("transactions");};
+ document.getElementById("moneyManageDebt").onclick=function(){showPage("goals");};
+ document.querySelectorAll(".budget-input").forEach(function(el){el.onchange=function(){
+  data.budget[Number(el.dataset.i)][1]=Number(el.value||0);save();
+ };});
 }
 
 var smartRules=[
@@ -1652,7 +1712,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-4.1.0-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-4.2.0-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
