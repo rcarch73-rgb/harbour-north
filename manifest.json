@@ -1,9 +1,9 @@
 {
-  "name": "RyanOS 5.3.6",
+  "name": "RyanOS 5.3.7",
   "short_name": "RyanOS",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f4f7fb",
   "theme_color": "#17365d",
-  "description": "RyanOS with backup migration and compatibility auditing."
+  "description": "RyanOS with a complete built-in regression audit."
 }

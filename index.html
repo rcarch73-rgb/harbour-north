@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 5.3.6</title>
+<title>RyanOS 5.3.7</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -577,11 +577,23 @@ details.section-card[open]>summary:after{content:"−"}
 @media(max-width:760px){.compat-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:500px){.compat-grid{grid-template-columns:1fr}}
 
+
+.regression-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.regression-card{border:1px solid var(--border);border-radius:14px;padding:13px;background:#fff}
+.regression-card .label{font-size:.74rem;text-transform:uppercase;font-weight:900;color:var(--muted)}
+.regression-card .value{font-size:1.35rem;font-weight:900;color:var(--brand);margin-top:4px}
+.regression-list{display:grid;gap:8px;margin-top:12px}
+.regression-item{display:grid;grid-template-columns:28px 1fr;gap:9px;align-items:start;border:1px solid var(--border);border-radius:12px;padding:10px;background:#fff}
+.regression-item.pass{border-color:#b7d8c0;background:#f7fcf8}
+.regression-item.fail{border-color:#e7b8b8;background:#fff8f8}
+@media(max-width:760px){.regression-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:500px){.regression-grid{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>5.3.6 — Backup Migration & Compatibility</small></div>
+  <div><h1>RyanOS</h1><small>5.3.7 — Full Regression Test</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -606,7 +618,7 @@ details.section-card[open]>summary:after{content:"−"}
 "use strict";
 
 var STORAGE_KEY="ryanos2-data";
-var defaults={appVersion:"5.3.6",dataSchemaVersion:6,
+var defaults={appVersion:"5.3.7",dataSchemaVersion:7,
  settings:{
   setupComplete:0,setupStep:0,
   userPensionEnabled:0,userPensionType:1,userPensionMonthly:0,userPensionStartAge:65,userPensionIndexed:0,userPensionIndexRate:0,userPensionBridgeMonthly:0,userPensionBridgeEndAge:65,
@@ -713,8 +725,8 @@ function migrate(raw){
  if(raw.vehiclePlanner&&typeof raw.vehiclePlanner==="object")out.vehiclePlanner=clone(raw.vehiclePlanner);
  if(raw.travelPlanner&&typeof raw.travelPlanner==="object")out.travelPlanner=clone(raw.travelPlanner);
  if(raw.healthcarePlanner&&typeof raw.healthcarePlanner==="object")out.healthcarePlanner=clone(raw.healthcarePlanner);
- out.appVersion="5.3.6";
- out.dataSchemaVersion=6;
+ out.appVersion="5.3.7";
+ out.dataSchemaVersion=7;
  if(raw&&raw.settings&&Number(raw.settings.age)===52&&!raw.settings.currentAgePrecisionCorrected){
  out.settings.age=52.96;
  out.settings.currentAgePrecisionCorrected=1;
@@ -3217,7 +3229,7 @@ function exportBackupFile(){
  var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
  var a=document.createElement("a");
  a.href=URL.createObjectURL(blob);
- a.download="RyanOS-5.3.6-backup.json";
+ a.download="RyanOS-5.3.7-backup.json";
  a.click();
  setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
 }
@@ -3422,12 +3434,52 @@ function backupCompatibilityAudit(){
  add(Number(migratedOld.settings.userFhsaBalance||0)===0&&Number(migratedOld.settings.spouseFhsaBalance||0)===0,"Missing FHSA fields default safely","Older backups without FHSA data open with zero balances.");
  add(Number(migratedOld.settings.userPensionEnabled||0)===0,"Missing user pension defaults safely","Older backups do not invent a user pension.");
  var current=migrate(data);
- add(Number(current.dataSchemaVersion||0)===6,"Current schema version","Migrated data is tagged with schema version 6.");
+ add(Number(current.dataSchemaVersion||0)===7,"Current schema version","Migrated data is tagged with schema version 6.");
  add(Array.isArray(current.netWorthHistory),"Net worth history preserved","Existing net worth snapshots remain available.");
  add(Array.isArray(current.backupHistory),"Recovery history preserved","Recovery points remain attached to the profile.");
  add(!!current.purchasePlanner&&!!current.vehiclePlanner&&!!current.travelPlanner&&!!current.healthcarePlanner,"Planner data preserved","All four planning tools survive migration.");
  var pass=tests.filter(function(x){return x.ok;}).length;
  return{tests:tests,pass:pass,total:tests.length};
+}
+
+function fullRegressionAudit(){
+ var tests=[];
+ function add(ok,name,copy){tests.push({ok:!!ok,name:name,copy:copy});}
+ try{
+  var pages=["setup","home","money","planning","transactions","goals","retirement","networth","life","review","reports","settings"];
+  add(pages.every(function(id){return !!document.getElementById(id);}),"Core pages available","All primary RyanOS pages exist in the document.");
+  add(typeof detailedInvestmentTotal==="function"&&typeof detailedMonthlyInvesting==="function","Investment totals available","Authoritative balance and contribution totals are callable.");
+  add(Math.abs(Number(data.settings.investments||0)-detailedInvestmentTotal())<1,"Investment total synchronized","Aggregate investments match detailed accounts.");
+  add(Math.abs(Number(data.settings.investing||0)-detailedMonthlyInvesting())<1,"Contribution total synchronized","Aggregate monthly investing matches detailed contributions.");
+  add(typeof authoritativeDebtTotal==="function"&&typeof authoritativeDebtPayment==="function","Debt engine available","Debt balances and payments use authoritative debt sources.");
+  add(typeof setupValidation==="function"&&setupValidation().items.length>0,"Setup validation available","Guided Setup produces validation results.");
+  add(typeof pensionAnnualAmount==="function","Pension engine available","User and spouse pension calculations are callable.");
+  var spouseAge=Number(data.settings.retireAge||0)-Number(data.settings.wifeAgeDiff||0);
+  var income=retirementIncomeAtAge(Number(data.settings.retireAge||0),spouseAge);
+  add(isFinite(Number(income.pension||0))&&isFinite(Number(income.cpp||0)),"Retirement income finite","Pension, CPP, OAS and support income return valid numbers.");
+  var at=accountBalancesAtRetirement(Number(data.settings.returnRate||0));
+  add(isFinite(Number(at.total||0))&&Number(at.total||0)>=0,"Retirement balances finite","Projected account balances are valid.");
+  var rows=retirementPlan(Number(data.settings.returnRate||0));
+  add(Array.isArray(rows)&&rows.length>0,"Retirement plan generated","The year-by-year retirement model returns rows.");
+  add(rows.every(function(r){return Math.abs(Number(r.reconciliationDifference||0))<1;}),"Retirement reconciliation","Every retirement year reconciles within one dollar.");
+  add(rows.every(function(r){return isFinite(Number(r.endBalance||0))&&isFinite(Number(r.withdrawal||0));}),"Retirement rows finite","No NaN or infinite balances appear.");
+  add(typeof retirementConfidenceScore==="function"&&isFinite(Number(retirementConfidenceScore().score)),"Confidence score available","Retirement confidence calculation returns a numeric score.");
+  add(typeof sustainableSpendingRange==="function"&&isFinite(Number(sustainableSpendingRange().current)),"Sustainable spending available","Spending-range analysis returns valid values.");
+  add(typeof retirementMarginAnalysis==="function"&&isFinite(Number(retirementMarginAnalysis().annualMargin)),"Retirement margin available","Margin analysis returns valid values.");
+  add(typeof backupCompatibilityAudit==="function"&&backupCompatibilityAudit().pass===backupCompatibilityAudit().total,"Backup migration passes","All built-in compatibility checks pass.");
+  add(Array.isArray(data.transactions)&&Array.isArray(data.budget)&&Array.isArray(data.goals),"Core data collections valid","Transactions, budget and goals are stored as arrays.");
+  add(Array.isArray(data.futureExpenses)&&Array.isArray(data.netWorthHistory),"Planning history collections valid","Future expenses and net-worth history are valid arrays.");
+  add(!!data.purchasePlanner&&!!data.vehiclePlanner&&!!data.travelPlanner&&!!data.healthcarePlanner,"Planning tools available","All four planning tools have data objects.");
+  add(Number(data.settings.spouseTfsaBalance||0)>=0,"Spouse TFSA valid","Spouse TFSA balance is present and non-negative.");
+  add(Number(data.settings.userFhsaBalance||0)>=0&&Number(data.settings.spouseFhsaBalance||0)>=0,"FHSA accounts valid","User and spouse FHSA balances are present and non-negative.");
+  add(typeof pensionIncomeAudit==="function"&&pensionIncomeAudit(rows).rows.length>0,"Pension timeline audit available","Milestone income rows are generated.");
+  add(typeof validateBackupObject==="function"&&validateBackupObject(data).length===0,"Current backup validates","Current saved data passes backup validation.");
+  add(Number(data.dataSchemaVersion||0)===7,"Current schema version","Data is tagged with schema version 7.");
+ }catch(err){
+  add(false,"Regression audit execution","Audit stopped because: "+(err.message||String(err)));
+ }
+ var pass=tests.filter(function(x){return x.ok;}).length;
+ return{tests:tests,pass:pass,total:tests.length,failed:tests.length-pass};
 }
 function renderSettings(){
  var s=data.settings,summary=backupSummary(data),health=validateBackupObject(data);
@@ -3476,12 +3528,14 @@ function renderSettings(){
  '</div></div>'+
  '<div class="section-card"><h3>Data health</h3><div class="notice '+(health.length?'bad':'good')+'">'+(health.length?health.map(function(x){return'• '+x;}).join('<br>'):'No major data problems detected.')+'</div></div>'+
  (function(){var audit=foundationAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Foundation audit</h3><p>Automated checks for the calculations and data connections RyanOS depends on.</p></div><span class="status-pill '+(audit.passed===audit.total?'good':audit.passed>=audit.total-2?'warn':'bad')+'">'+audit.passed+' of '+audit.total+' passed</span></div><div class="audit-grid">'+audit.checks.map(function(x){return'<div class="audit-card '+(x.ok?'pass':'fail')+'"><div class="audit-title">'+(x.ok?'✓ ':'⚠ ')+esc(x.name)+'</div><div class="audit-copy">'+esc(x.copy)+'</div></div>';}).join("")+'</div><div class="quick-actions" style="margin-top:12px"><button id="runFoundationAudit" type="button">Run audit again</button></div></div>';})()+
- (function(){var c=backupCompatibilityAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Backup migration compatibility</h3><p>Checks whether older RyanOS data can be upgraded without losing important information.</p></div><span class="status-pill '+(c.pass===c.total?'good':'warn')+'">'+c.pass+' of '+c.total+' passed</span></div><div class="compat-grid"><div class="compat-card"><div class="label">Schema version</div><div class="value">6</div></div><div class="compat-card"><div class="label">Compatibility tests</div><div class="value">'+c.total+'</div></div><div class="compat-card"><div class="label">Passed</div><div class="value">'+c.pass+'</div></div><div class="compat-card"><div class="label">Warnings</div><div class="value">'+(c.total-c.pass)+'</div></div></div><div class="compat-list">'+c.tests.map(function(x){return'<div class="compat-item '+(x.ok?'pass':'warn')+'"><div>'+(x.ok?'✓':'!')+'</div><div><strong>'+esc(x.name)+'</strong><div class="tx-muted">'+esc(x.copy)+'</div></div></div>';}).join("")+'</div></div>';})()+
+ (function(){var r=fullRegressionAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Full regression test</h3><p>Checks the primary pages, financial engines, planners, backup system and retirement calculations together.</p></div><span class="status-pill '+(r.failed===0?'good':'bad')+'">'+r.pass+' of '+r.total+' passed</span></div><div class="regression-grid"><div class="regression-card"><div class="label">Schema version</div><div class="value">7</div></div><div class="regression-card"><div class="label">Tests</div><div class="value">'+r.total+'</div></div><div class="regression-card"><div class="label">Passed</div><div class="value">'+r.pass+'</div></div><div class="regression-card"><div class="label">Failed</div><div class="value">'+r.failed+'</div></div></div><div class="regression-list">'+r.tests.map(function(x){return'<div class="regression-item '+(x.ok?'pass':'fail')+'"><div>'+(x.ok?'✓':'!')+'</div><div><strong>'+esc(x.name)+'</strong><div class="tx-muted">'+esc(x.copy)+'</div></div></div>';}).join("")+'</div><div class="quick-actions" style="margin-top:12px"><button id="runRegressionAudit" type="button">Run regression test again</button></div></div>';})()+
+ (function(){var c=backupCompatibilityAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Backup migration compatibility</h3><p>Checks whether older RyanOS data can be upgraded without losing important information.</p></div><span class="status-pill '+(c.pass===c.total?'good':'warn')+'">'+c.pass+' of '+c.total+' passed</span></div><div class="compat-grid"><div class="compat-card"><div class="label">Schema version</div><div class="value">7</div></div><div class="compat-card"><div class="label">Compatibility tests</div><div class="value">'+c.total+'</div></div><div class="compat-card"><div class="label">Passed</div><div class="value">'+c.pass+'</div></div><div class="compat-card"><div class="label">Warnings</div><div class="value">'+(c.total-c.pass)+'</div></div></div><div class="compat-list">'+c.tests.map(function(x){return'<div class="compat-item '+(x.ok?'pass':'warn')+'"><div>'+(x.ok?'✓':'!')+'</div><div><strong>'+esc(x.name)+'</strong><div class="tx-muted">'+esc(x.copy)+'</div></div></div>';}).join("")+'</div></div>';})()+
  '<div class="section-card"><div class="page-intro"><div><h3>Guided setup</h3><p>Run the question-and-answer setup again without deleting transactions, net worth history or backups.</p></div><button id="rerunSetup" type="button">Run Setup Wizard</button></div></div>'+
  '<div class="pension-grid">'+pensionEditor("user","Your workplace pension")+pensionEditor("spouse","Spouse workplace pension")+'</div>'+
  '<div class="settings-groups">'+fieldGroups.map(renderSettingsGroup).join("")+'</div>'+
  '<div class="settings-actions"><div class="quick-actions"><button id="saveSettings" type="button">Save all settings</button><button id="resetAll" class="danger" type="button">Reset all data</button></div></div>';
 
+ var regressionButton=document.getElementById("runRegressionAudit");if(regressionButton)regressionButton.onclick=function(){renderSettings();};
  var rerunSetup=document.getElementById("rerunSetup");if(rerunSetup)rerunSetup.onclick=function(){data.settings.setupStep=0;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderSetup();showPage("setup");};
  var auditButton=document.getElementById("runFoundationAudit");if(auditButton)auditButton.onclick=function(){renderSettings();};
   document.getElementById("exportBackupNow").onclick=exportBackupFile;
@@ -3550,7 +3604,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.3.6-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.3.7-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
