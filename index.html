@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 4.0.3</title>
+<title>RyanOS 4.0.4</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -196,7 +196,7 @@ main{
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>4.0.3 — Transactions & Actions Repair</small></div>
+  <div><h1>RyanOS</h1><small>4.0.4 — Net Worth Restored</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -428,7 +428,7 @@ function showPage(pageId){
 }
 window.showPage=showPage;
 function nav(){
- var items=[["home","Home"],["money","Money"],["transactions","Transactions"],["retirement","Retirement"],["settings","Settings & Data"]];
+ var items=[["home","Home"],["money","Money"],["transactions","Transactions"],["networth","Net Worth"],["retirement","Retirement"],["settings","Settings & Data"]];
  document.getElementById("nav").innerHTML=items.map(function(x,i){return'<button data-page="'+x[0]+'" class="'+(i===0?"active":"")+'">'+x[1]+"</button>";}).join("");
  document.querySelectorAll("#nav button").forEach(function(b){b.addEventListener("click",function(){showPage(b.dataset.page);});});
 }
@@ -520,6 +520,9 @@ function renderHomeStreamlined(){
  var retirement=retirementHeadline();
  var next=nextFutureExpense();
  var detailed=Number(s.rrspBalance||0)+Number(s.userTfsaBalance||0)+Number(s.wifeRrspBalance||0)+Number(s.nonRegisteredBalance||0);
+ var estimatedAssets=detailed+Number(s.homeValue||0)+Number(s.property1Value||0)+Number(s.property2Value||0)+Number(s.vehicleValue||0)+Number(s.boatValue||0)+Number(s.otherAssets||0);
+ var estimatedLiabilities=Number(s.locBalance||0)+Number(s.mortgageBalance||0)+Number(s.otherDebt||0);
+ var estimatedNetWorth=estimatedAssets-estimatedLiabilities;
  var warnings=[];
  if(Math.abs(Number(s.investments||0)-detailed)>1)warnings.push("Investment totals do not match detailed accounts.");
  if(Math.abs(Number(s.investing||0)-(Number(s.rrspMonthlyContribution||0)+Number(s.userTfsaMonthlyContribution||0)+Number(s.wifeRrspMonthlyContribution||0)+Number(s.nonRegisteredMonthlyContribution||0)))>1)warnings.push("Monthly investing totals do not match account contributions.");
@@ -530,13 +533,14 @@ function renderHomeStreamlined(){
   '<div class="hero-card"><div class="label">Investments used by plan</div><div class="value">'+money(detailed)+'</div><div class="sub">Detailed account balances</div></div>'+
   '<div class="hero-card"><div class="label">Line of credit</div><div class="value">'+money(Number(s.locBalance||0))+'</div><div class="sub">'+Number(s.locRate||0).toFixed(2)+'% interest</div></div>'+
   '<div class="hero-card"><div class="label">Retirement result</div><div class="value">'+(retirement.ok?'Funded':'Age '+retirement.shortfall)+'</div><div class="sub">Projected ending balance '+money(retirement.end)+'</div></div>'+
+  '<div class="hero-card"><div class="label">Estimated net worth</div><div class="value">'+money(estimatedNetWorth)+'</div><div class="sub">Assets less debts</div></div>'+
  '</div>'+
  '<div class="section-card"><h3>What needs attention</h3>'+
   (warnings.length?'<div class="stream-note">'+warnings.map(function(x){return'• '+x;}).join('<br>')+'</div>':'<div class="status-pill good">No major data warnings</div>')+
   (next?'<p><strong>Next large expense:</strong> '+esc(next.name)+' at age '+Number(next.age).toFixed(0)+' — '+money(Number(next.amount||0))+' in today’s dollars.</p>':'<p>No future expenses are currently scheduled.</p>')+
  '</div>'+
  '<div class="section-card"><h3>Quick actions</h3><div class="quick-actions">'+
-  '<button onclick="showPage(\'money\')">Review money</button><button onclick="showPage(\'transactions\')">Import transactions</button>'+
+  '<button onclick="showPage(\'money\')">Review money</button><button onclick="showPage(\'transactions\')">Import transactions</button><button onclick="showPage(\'networth\')">View net worth</button>'+
   '<button onclick="showPage(\'retirement\')">Open retirement plan</button>'+
   '<button onclick="showPage(\'settings\')">Backup or settings</button>'+
  '</div></div>';
@@ -590,7 +594,7 @@ function renderMoney(){
   renderMoney();
  var moneyEl=document.getElementById("money");
  if(moneyEl&&moneyEl.innerHTML.indexOf("More money tools")<0){
-  moneyEl.innerHTML+='<div class="section-card"><h3>More money tools</h3><div class="quick-actions"><button onclick="showPage(\'transactions\')">Transactions</button><button onclick="showPage(\'goals\')">Goals & Debt</button><button onclick="showPage(\'networth\')">Net Worth</button><button onclick="showPage(\'review\')">Monthly Review</button><button onclick="showPage(\'reports\')">Reports & Optimizer</button><button onclick="showPage(\'life\')">Life Goals</button></div></div>';
+  moneyEl.innerHTML+='<div class="section-card"><h3>More money tools</h3><div class="quick-actions"><button onclick="showPage(\'transactions\')">Transactions</button><button onclick="showPage(\'goals\')">Goals & Debt</button><button onclick="showPage(\'review\')">Monthly Review</button><button onclick="showPage(\'reports\')">Reports & Optimizer</button><button onclick="showPage(\'life\')">Life Goals</button></div></div>';
  }
 
  };
@@ -1288,7 +1292,7 @@ function renderRetirement(){
 }
 function renderNetWorth(){
  var t=totals(),s=data.settings,assets=[["Primary home",s.home],["NS property 1",s.ns1],["NS property 2",s.ns2],["Investments",s.investments],["Cash",s.cash],["Vehicles",s.vehicles],["Boat",s.boat],["Camper",s.camper]];
- document.getElementById("networth").innerHTML='<h2>Net Worth</h2><div class="grid"><div class="card"><h3>Assets</h3><div class="metric">'+money(t.assets)+'</div></div><div class="card"><h3>Debt</h3><div class="metric">'+money(t.debt)+'</div></div><div class="card"><h3>Net worth</h3><div class="metric">'+money(t.networth)+'</div></div></div><div class="card" style="margin-top:12px"><table><thead><tr><th>Asset</th><th>Value</th></tr></thead><tbody>'+assets.map(function(x){return"<tr><td>"+x[0]+"</td><td>"+money(x[1])+"</td></tr>";}).join("")+"</tbody></table></div>";
+ document.getElementById("networth").innerHTML='<div class="page-intro"><div><h2>Net Worth</h2><p>Track assets, debts and your progress over time.</p></div></div><div class="grid"><div class="card"><h3>Assets</h3><div class="metric">'+money(t.assets)+'</div></div><div class="card"><h3>Debt</h3><div class="metric">'+money(t.debt)+'</div></div><div class="card"><h3>Net worth</h3><div class="metric">'+money(t.networth)+'</div></div></div><div class="card" style="margin-top:12px"><table><thead><tr><th>Asset</th><th>Value</th></tr></thead><tbody>'+assets.map(function(x){return"<tr><td>"+x[0]+"</td><td>"+money(x[1])+"</td></tr>";}).join("")+"</tbody></table></div>";
 }
 function renderLife(){
  document.getElementById("life").innerHTML='<h2>Life Goals</h2><div class="toolbar"><button id="addLife">Add life goal</button></div><div class="card"><table><thead><tr><th>Goal</th><th>Target</th><th>Saved</th><th>Year</th><th>Progress</th><th>Notes</th><th></th></tr></thead><tbody>'+
@@ -1564,7 +1568,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-4.0.3-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-4.0.4-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
