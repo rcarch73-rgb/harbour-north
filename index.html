@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 5.3.9</title>
+<title>RyanOS 5.3.10</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -612,11 +612,21 @@ details.section-card[open]>summary:after{content:"−"}
 .simple-detail summary{cursor:pointer;font-weight:900;color:var(--brand)}
 @media(max-width:700px){.simple-next-grid{grid-template-columns:1fr}.header-actions{gap:5px}.mode-toggle,.header-actions .secondary{padding:8px 9px;font-size:.82rem}}
 
+
+.setup-choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}
+.setup-choice{border:1px solid var(--border);border-radius:14px;padding:13px;background:#fff}
+.setup-choice label{font-size:.9rem;color:var(--text)}
+.setup-help{font-size:.84rem;color:var(--muted);margin-top:4px}
+.setup-subsection{border:1px solid var(--border);border-radius:14px;padding:14px;background:#fff;margin-top:12px}
+.setup-subsection h3{margin:0 0 8px;color:var(--brand)}
+.setup-plain-note{border-left:4px solid #4c7aa8;background:#f4f8fc;padding:11px 12px;border-radius:8px;margin-top:10px}
+@media(max-width:650px){.setup-choice-grid{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>5.3.9 — Simple & Advanced Modes</small></div>
+  <div><h1>RyanOS</h1><small>5.3.10 — Simpler Guided Setup</small></div>
   <div class="header-actions"><button class="mode-toggle" id="modeToggle" type="button">Simple mode</button><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -641,9 +651,9 @@ details.section-card[open]>summary:after{content:"−"}
 "use strict";
 
 var STORAGE_KEY="ryanos2-data";
-var defaults={appVersion:"5.3.9",dataSchemaVersion:9,
+var defaults={appVersion:"5.3.10",dataSchemaVersion:10,
  settings:{
-  setupComplete:0,setupStep:0,interfaceMode:1,
+  setupComplete:0,setupStep:0,interfaceMode:1,hasUserFhsa:0,hasSpouseFhsa:0,hasNonRegistered:0,
   userPensionEnabled:0,userPensionType:1,userPensionMonthly:0,userPensionStartAge:65,userPensionIndexed:0,userPensionIndexRate:0,userPensionBridgeMonthly:0,userPensionBridgeEndAge:65,
   spousePensionEnabled:1,spousePensionType:1,spousePensionMonthly:3200,spousePensionStartAge:55,spousePensionIndexed:1,spousePensionIndexRate:2.5,spousePensionBridgeMonthly:0,spousePensionBridgeEndAge:65,
   income1:5428.78,income2:5147.32,wcb:1352.34,investing:2600,bills:1200,chores:173,
@@ -748,8 +758,8 @@ function migrate(raw){
  if(raw.vehiclePlanner&&typeof raw.vehiclePlanner==="object")out.vehiclePlanner=clone(raw.vehiclePlanner);
  if(raw.travelPlanner&&typeof raw.travelPlanner==="object")out.travelPlanner=clone(raw.travelPlanner);
  if(raw.healthcarePlanner&&typeof raw.healthcarePlanner==="object")out.healthcarePlanner=clone(raw.healthcarePlanner);
- out.appVersion="5.3.9";
- out.dataSchemaVersion=9;
+ out.appVersion="5.3.10";
+ out.dataSchemaVersion=10;
  if(raw&&raw.settings&&Number(raw.settings.age)===52&&!raw.settings.currentAgePrecisionCorrected){
  out.settings.age=52.96;
  out.settings.currentAgePrecisionCorrected=1;
@@ -3284,7 +3294,7 @@ function exportBackupFile(){
  var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
  var a=document.createElement("a");
  a.href=URL.createObjectURL(blob);
- a.download="RyanOS-5.3.9-backup.json";
+ a.download="RyanOS-5.3.10-backup.json";
  a.click();
  setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
 }
@@ -3315,6 +3325,11 @@ function pensionEditor(prefix,title){
   '<label>Bridge ends at age<input class="pension-setting" data-k="'+prefix+'PensionBridgeEndAge" type="number" step=".1" value="'+Number(s[prefix+"PensionBridgeEndAge"]||65)+'"></label>'+
  '</div><div class="notice">Defined contribution pensions should be entered as an investment balance. RyanOS does not treat them as guaranteed monthly pension income.</div></div>';
 }
+
+function setupYesNo(label,key,help){
+ var s=data.settings,v=Number(s[key]||0);
+ return'<div class="setup-choice"><label>'+esc(label)+'<select class="setup-select" data-k="'+key+'"><option value="0" '+(v===0?"selected":"")+'>No</option><option value="1" '+(v===1?"selected":"")+'>Yes</option></select></label>'+(help?'<div class="setup-help">'+esc(help)+'</div>':'')+'</div>';
+}
 function setupInput(label,key,type,step){
  var s=data.settings;
  return'<label>'+esc(label)+'<input class="setup-field" data-k="'+key+'" type="'+(type||"number")+'" '+(step?'step="'+step+'"':'')+' value="'+esc(String(s[key]==null?"":s[key]))+'"></label>';
@@ -3324,6 +3339,12 @@ function saveSetupFields(){
   data.settings[el.dataset.k]=el.type==="text"?el.value:Number(el.value||0);
  });
  document.querySelectorAll(".setup-select").forEach(function(el){data.settings[el.dataset.k]=Number(el.value||0);});
+ var branchChanged=false;
+ document.querySelectorAll(".setup-select").forEach(function(el){
+  if(["hasUserFhsa","hasSpouseFhsa","hasNonRegistered"].indexOf(el.dataset.k)>=0&&el.onchange==null){
+   el.onchange=function(){data.settings[el.dataset.k]=Number(el.value||0);localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderSetup();};
+  }
+ });
  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
 }
 
@@ -3409,32 +3430,46 @@ function renderSetup(){
  if(step===0){
   body='<h2>Welcome to RyanOS</h2><p>RyanOS will guide you through the information needed to build or update your financial plan. You can return here anytime from the Setup tab.</p><div class="notice good">This setup takes about 10 minutes. Your progress is saved after every step.</div>';
  }else if(step===1){
-  body='<h2>About your household</h2><div class="setup-question">When do you and your spouse plan to retire?</div><div class="setup-grid">'+
+  body='<h2>Your household</h2><div class="setup-question">Tell RyanOS your ages and when each of you hopes to retire.</div><div class="setup-grid">'+
    setupInput("Your current age","age","number",".01")+setupInput("Your retirement age","retireAge","number",".1")+
-   setupInput("Spouse age difference","wifeAgeDiff","number",".1")+setupInput("Spouse retirement age","wifeRetireAge","number",".1")+
+   setupInput("Age difference between spouses","wifeAgeDiff","number",".1")+setupInput("Spouse retirement age","wifeRetireAge","number",".1")+
    setupInput("Plan through your age","retirementEndAge","number","1")+'</div>';
  }else if(step===2){
-  body='<h2>Income</h2><div class="setup-question">What regular monthly income comes into the household?</div><div class="setup-grid">'+
+  body='<h2>Household income</h2><div class="setup-question">Enter regular take-home income. Use monthly amounts unless the label says annual.</div><div class="setup-grid">'+
    setupInput("Your monthly take-home income","income1")+setupInput("Spouse monthly take-home income","income2")+
    setupInput("Tax-free or other monthly income","wcb")+setupInput("Spouse annual take-home income while you are retired","wifeEmploymentNetAnnual")+
    setupInput("Spouse works until your age","wifeWorkUntilUserAge","number",".1")+'</div>';
  }else if(step===3){
-  body='<h2>Investments</h2><div class="setup-question">What investment accounts do you have today?</div><div class="setup-grid">'+
-   setupInput("Your RRSP balance","rrspBalance")+setupInput("Your TFSA balance","userTfsaBalance")+
-   setupInput("Spouse RRSP balance","wifeRrspBalance")+setupInput("Spouse TFSA balance","spouseTfsaBalance")+
-   setupInput("Your FHSA balance","userFhsaBalance")+setupInput("Your FHSA monthly contribution","userFhsaMonthlyContribution")+
-   setupInput("Your FHSA available room","userFhsaAvailableRoom")+setupInput("Your FHSA lifetime contributions","userFhsaLifetimeContributions")+
-   setupInput("Year your FHSA opened","userFhsaOpenedYear","number","1")+setupInput("Expected home-purchase year","userFhsaHomeYear","number","1")+
-   setupInput("Spouse FHSA balance","spouseFhsaBalance")+setupInput("Spouse FHSA monthly contribution","spouseFhsaMonthlyContribution")+
-   setupInput("Spouse FHSA available room","spouseFhsaAvailableRoom")+setupInput("Spouse FHSA lifetime contributions","spouseFhsaLifetimeContributions")+
-   setupInput("Year spouse FHSA opened","spouseFhsaOpenedYear","number","1")+setupInput("Spouse expected home-purchase year","spouseFhsaHomeYear","number","1")+
-   '<label>Your FHSA intended use<select class="setup-select" data-k="userFhsaUse"><option value="1" '+(Number(s.userFhsaUse)===1?"selected":"")+'>First-home purchase</option><option value="2" '+(Number(s.userFhsaUse)===2?"selected":"")+'>Transfer for retirement later</option><option value="3" '+(Number(s.userFhsaUse)===3?"selected":"")+'>Undecided</option></select></label>'+
-   '<label>Spouse FHSA intended use<select class="setup-select" data-k="spouseFhsaUse"><option value="1" '+(Number(s.spouseFhsaUse)===1?"selected":"")+'>First-home purchase</option><option value="2" '+(Number(s.spouseFhsaUse)===2?"selected":"")+'>Transfer for retirement later</option><option value="3" '+(Number(s.spouseFhsaUse)===3?"selected":"")+'>Undecided</option></select></label>'+
-   setupInput("Non-registered balance","nonRegisteredBalance")+
-   setupInput("Your RRSP monthly contribution","rrspMonthlyContribution")+setupInput("Your TFSA monthly contribution","userTfsaMonthlyContribution")+
-   setupInput("Spouse RRSP monthly contribution","wifeRrspMonthlyContribution")+setupInput("Spouse TFSA monthly contribution","spouseTfsaMonthlyContribution")+setupInput("Non-registered monthly contribution","nonRegisteredMonthlyContribution")+'</div><div class="fhsa-note"><span class="fhsa-badge">FHSA</span> RyanOS uses an $8,000 annual room benchmark and $40,000 lifetime contribution limit. Confirm actual room in CRA My Account. FHSA money marked for a home is included in net worth but excluded from retirement spending assets.</div>';
+  body='<h2>Investments</h2><div class="setup-question">Start with the accounts you actually have. Extra questions appear only when needed.</div>'+
+   '<div class="setup-subsection"><h3>Retirement accounts</h3><div class="setup-grid">'+
+    setupInput("Your RRSP balance","rrspBalance")+setupInput("Your RRSP monthly contribution","rrspMonthlyContribution")+
+    setupInput("Your TFSA balance","userTfsaBalance")+setupInput("Your TFSA monthly contribution","userTfsaMonthlyContribution")+
+    setupInput("Spouse RRSP balance","wifeRrspBalance")+setupInput("Spouse RRSP monthly contribution","wifeRrspMonthlyContribution")+
+    setupInput("Spouse TFSA balance","spouseTfsaBalance")+setupInput("Spouse TFSA monthly contribution","spouseTfsaMonthlyContribution")+
+   '</div></div>'+
+   '<div class="setup-choice-grid">'+
+    setupYesNo("Do you have an FHSA?","hasUserFhsa","A First Home Savings Account for you.")+
+    setupYesNo("Does your spouse have an FHSA?","hasSpouseFhsa","A separate First Home Savings Account for your spouse.")+
+    setupYesNo("Do you have non-registered investments?","hasNonRegistered","Investments outside RRSP, TFSA and FHSA accounts.")+
+   '</div>'+
+   (Number(s.hasUserFhsa||0)===1?'<div class="setup-subsection"><h3>Your FHSA</h3><div class="setup-grid">'+
+    setupInput("Current balance","userFhsaBalance")+setupInput("Monthly contribution","userFhsaMonthlyContribution")+
+    setupInput("Available contribution room","userFhsaAvailableRoom")+setupInput("Lifetime contributions made","userFhsaLifetimeContributions")+
+    setupInput("Year the account opened","userFhsaOpenedYear","number","1")+setupInput("Expected home-purchase year","userFhsaHomeYear","number","1")+
+    '<label>Planned use<select class="setup-select" data-k="userFhsaUse"><option value="1" '+(Number(s.userFhsaUse)===1?"selected":"")+'>Buy a first home</option><option value="2" '+(Number(s.userFhsaUse)===2?"selected":"")+'>Transfer for retirement later</option><option value="3" '+(Number(s.userFhsaUse)===3?"selected":"")+'>Not sure yet</option></select></label>'+
+    '</div></div>':'')+
+   (Number(s.hasSpouseFhsa||0)===1?'<div class="setup-subsection"><h3>Spouse FHSA</h3><div class="setup-grid">'+
+    setupInput("Current balance","spouseFhsaBalance")+setupInput("Monthly contribution","spouseFhsaMonthlyContribution")+
+    setupInput("Available contribution room","spouseFhsaAvailableRoom")+setupInput("Lifetime contributions made","spouseFhsaLifetimeContributions")+
+    setupInput("Year the account opened","spouseFhsaOpenedYear","number","1")+setupInput("Expected home-purchase year","spouseFhsaHomeYear","number","1")+
+    '<label>Planned use<select class="setup-select" data-k="spouseFhsaUse"><option value="1" '+(Number(s.spouseFhsaUse)===1?"selected":"")+'>Buy a first home</option><option value="2" '+(Number(s.spouseFhsaUse)===2?"selected":"")+'>Transfer for retirement later</option><option value="3" '+(Number(s.spouseFhsaUse)===3?"selected":"")+'>Not sure yet</option></select></label>'+
+    '</div></div>':'')+
+   (Number(s.hasNonRegistered||0)===1?'<div class="setup-subsection"><h3>Other investments</h3><div class="setup-grid">'+
+    setupInput("Non-registered balance","nonRegisteredBalance")+setupInput("Monthly contribution","nonRegisteredMonthlyContribution")+
+    '</div><div class="setup-plain-note">Non-registered means investments held outside registered accounts such as RRSPs, TFSAs and FHSAs.</div></div>':'')+
+   '<div class="fhsa-note"><span class="fhsa-badge">FHSA</span> Confirm your actual FHSA room with CRA. RyanOS uses these entries for planning only.</div>';
  }else if(step===4){
-  body='<h2>Workplace pensions</h2><div class="setup-question">Do either of you have a workplace pension?</div><div class="pension-grid">'+pensionEditor("user","Your pension")+pensionEditor("spouse","Spouse pension")+'</div>';
+  body='<h2>Workplace pensions</h2><div class="setup-question">Add only pensions that provide a future monthly payment. Defined contribution balances belong with investments.</div><div class="pension-grid">'+pensionEditor("user","Your pension")+pensionEditor("spouse","Spouse pension")+'</div>';
  }else if(step===5){
   body='<h2>Retirement plan</h2><div class="setup-question">What assumptions should RyanOS use?</div><div class="setup-grid">'+
    setupInput("Annual retirement spending","retireSpend")+setupInput("Expected investment return %","returnRate","number",".1")+
@@ -3489,7 +3524,7 @@ function backupCompatibilityAudit(){
  add(Number(migratedOld.settings.userFhsaBalance||0)===0&&Number(migratedOld.settings.spouseFhsaBalance||0)===0,"Missing FHSA fields default safely","Older backups without FHSA data open with zero balances.");
  add(Number(migratedOld.settings.userPensionEnabled||0)===0,"Missing user pension defaults safely","Older backups do not invent a user pension.");
  var current=migrate(data);
- add(Number(current.dataSchemaVersion||0)===9,"Current schema version","Migrated data is tagged with schema version 6.");
+ add(Number(current.dataSchemaVersion||0)===10,"Current schema version","Migrated data is tagged with schema version 6.");
  add(Array.isArray(current.netWorthHistory),"Net worth history preserved","Existing net worth snapshots remain available.");
  add(Array.isArray(current.backupHistory),"Recovery history preserved","Recovery points remain attached to the profile.");
  add(!!current.purchasePlanner&&!!current.vehiclePlanner&&!!current.travelPlanner&&!!current.healthcarePlanner,"Planner data preserved","All four planning tools survive migration.");
@@ -3529,7 +3564,7 @@ function fullRegressionAudit(){
   add(Number(data.settings.userFhsaBalance||0)>=0&&Number(data.settings.spouseFhsaBalance||0)>=0,"FHSA accounts valid","User and spouse FHSA balances are present and non-negative.");
   add(typeof pensionIncomeAudit==="function"&&pensionIncomeAudit(rows).rows.length>0,"Pension timeline audit available","Milestone income rows are generated.");
   add(typeof validateBackupObject==="function"&&validateBackupObject(data).length===0,"Current backup validates","Current saved data passes backup validation.");
-  add(Number(data.dataSchemaVersion||0)===9,"Current schema version","Data is tagged with schema version 7.");
+  add(Number(data.dataSchemaVersion||0)===10,"Current schema version","Data is tagged with schema version 7.");
  }catch(err){
   add(false,"Regression audit execution","Audit stopped because: "+(err.message||String(err)));
  }
@@ -3544,7 +3579,7 @@ function renderSimpleSettings(){
   '<div class="mode-note"><strong>Simple mode hides technical controls.</strong><div>All calculations and saved information remain available. Switch to Advanced mode for detailed assumptions, withdrawal strategies and diagnostic tables.</div></div>'+
   '<div class="section-card"><h3>Guided setup</h3><p>Review household income, accounts, pensions and retirement assumptions.</p><button id="simpleRunSetup" type="button">Run Setup Wizard</button></div>'+
   '<div class="section-card"><h3>Backup and recovery</h3><p>Export a backup before making major changes or moving to another device.</p><div class="simple-actions"><button id="simpleExport" type="button">Export backup</button><button id="simpleAdvancedSettings" class="secondary" type="button">Open advanced settings</button></div></div>'+
-  '<div class="section-card"><h3>Data health</h3><div class="simple-next-grid"><div class="simple-next-card"><div class="label">Compatibility checks</div><div class="value">'+c.pass+'/'+c.total+'</div></div><div class="simple-next-card"><div class="label">Schema</div><div class="value">9</div></div><div class="simple-next-card"><div class="label">Storage</div><div class="value">This device</div></div></div></div>'+
+  '<div class="section-card"><h3>Data health</h3><div class="simple-next-grid"><div class="simple-next-card"><div class="label">Compatibility checks</div><div class="value">'+c.pass+'/'+c.total+'</div></div><div class="simple-next-card"><div class="label">Schema</div><div class="value">10</div></div><div class="simple-next-card"><div class="label">Storage</div><div class="value">This device</div></div></div></div>'+
   '<div class="trust-banner"><strong>Privacy reminder</strong>RyanOS stores data in this browser. Keep exported backups in a secure location.</div>';
  document.getElementById("simpleRunSetup").onclick=function(){data.settings.setupStep=0;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));showPage("setup");};
  document.getElementById("simpleExport").onclick=exportBackupFile;
@@ -3553,10 +3588,10 @@ function renderSimpleSettings(){
 function renderSettings(){
  if(isSimpleMode()){renderSimpleSettings();return;}
  var s=data.settings,summary=backupSummary(data),health=validateBackupObject(data);
- var fields=[["userPensionEnabled","Your pension enabled"],["userPensionType","Your pension type"],["userPensionMonthly","Your monthly pension"],["userPensionStartAge","Your pension start age"],["userPensionIndexed","Your pension indexing"],["userPensionIndexRate","Your pension index rate (%)"],["userPensionBridgeMonthly","Your monthly bridge benefit"],["userPensionBridgeEndAge","Your bridge ends at age"],["spousePensionEnabled","Spouse pension enabled"],["spousePensionType","Spouse pension type"],["spousePensionMonthly","Spouse monthly pension"],["spousePensionStartAge","Spouse pension start age"],["spousePensionIndexed","Spouse pension indexing"],["spousePensionIndexRate","Spouse pension index rate (%)"],["spousePensionBridgeMonthly","Spouse monthly bridge benefit"],["spousePensionBridgeEndAge","Spouse bridge ends at age"],["income1","Yellowhead monthly income"],["income2","Province monthly income"],["wcb","WorkSafeBC monthly income"],["investing","Retirement investing"],["bills","Annual-bills reserve"],["chores","Son's chores"],["loc","LOC balance"],["rate","LOC rate (%)"],["months","LOC months"],["investments","Current investments"],["rrspBalance","RRSP balance"],["userTfsaBalance","Your TFSA balance"],["wifeRrspBalance","Spouse RRSP balance"],["spouseTfsaBalance","Spouse TFSA balance"],
+ var fields=[["userPensionEnabled","Your pension enabled"],["userPensionType","Your pension type"],["userPensionMonthly","Your monthly pension"],["userPensionStartAge","Your pension start age"],["userPensionIndexed","Your pension indexing"],["userPensionIndexRate","Your pension index rate (%)"],["userPensionBridgeMonthly","Your monthly bridge benefit"],["userPensionBridgeEndAge","Your bridge ends at age"],["spousePensionEnabled","Spouse pension enabled"],["spousePensionType","Spouse pension type"],["spousePensionMonthly","Spouse monthly pension"],["spousePensionStartAge","Spouse pension start age"],["spousePensionIndexed","Spouse pension indexing"],["spousePensionIndexRate","Spouse pension index rate (%)"],["spousePensionBridgeMonthly","Spouse monthly bridge benefit"],["spousePensionBridgeEndAge","Spouse bridge ends at age"],["income1","Your monthly take-home income"],["income2","Spouse monthly take-home income"],["wcb","Tax-free or other monthly income"],["investing","Retirement investing"],["bills","Annual-bills reserve"],["chores","Other monthly commitment"],["loc","LOC balance"],["rate","LOC rate (%)"],["months","LOC months"],["investments","Current investments"],["rrspBalance","RRSP balance"],["userTfsaBalance","Your TFSA balance"],["wifeRrspBalance","Spouse RRSP balance"],["spouseTfsaBalance","Spouse TFSA balance"],
 ["userFhsaBalance","Your FHSA balance"],["userFhsaMonthlyContribution","Your FHSA monthly contribution"],["userFhsaAvailableRoom","Your FHSA available room"],["userFhsaLifetimeContributions","Your FHSA lifetime contributions"],["userFhsaOpenedYear","Year your FHSA opened"],["userFhsaUse","Your FHSA use: 1=Home, 2=Retirement transfer, 3=Undecided"],["userFhsaHomeYear","Your expected home-purchase year"],
 ["spouseFhsaBalance","Spouse FHSA balance"],["spouseFhsaMonthlyContribution","Spouse FHSA monthly contribution"],["spouseFhsaAvailableRoom","Spouse FHSA available room"],["spouseFhsaLifetimeContributions","Spouse FHSA lifetime contributions"],["spouseFhsaOpenedYear","Year spouse FHSA opened"],["spouseFhsaUse","Spouse FHSA use: 1=Home, 2=Retirement transfer, 3=Undecided"],["spouseFhsaHomeYear","Spouse expected home-purchase year"],
-["nonRegisteredBalance","Non-registered balance"],["rrspMonthlyContribution","RRSP monthly contribution"],["userTfsaMonthlyContribution","Your TFSA monthly contribution"],["wifeRrspMonthlyContribution","Spouse RRSP monthly contribution"],["spouseTfsaMonthlyContribution","Spouse TFSA monthly contribution"],["nonRegisteredMonthlyContribution","Non-registered monthly contribution"],["withdrawalStrategy","Withdrawal strategy: 1=Both RRSPs first, 2=TFSA first, 3=Non-reg first"],["nonRegisteredWithdrawalTaxRate","Non-registered withdrawal tax rate (%)"],["rrspDrawdownEnabled","RRSP-to-TFSA drawdown: 1=on, 0=off"],["rrspDrawdownStartAge","RRSP drawdown start age"],["rrspDrawdownEndAge","RRSP drawdown end age"],["lowestTaxBracketCeiling","Lowest tax-bracket ceiling"],["lowestBracketMarginalTaxRate","Lowest bracket marginal tax rate (%)"],["tfsaAnnualLimit","Annual TFSA limit"],["tfsaAvailableRoom","Available TFSA room now"],["age","Current age"],["currentAgePrecisionCorrected","Current-age precision correction applied"],["retireAge","Retirement age"],["retirementScenarioUserAge","Retirement page scenario: your age"],["retirementScenarioSpouseAge","Retirement page scenario: wife age"],["retirementEndAge","Retirement plan end age"],["retirementTaxRate","Effective retirement tax rate (%)"],["conservativeReturn","Conservative return (%)"],["optimisticReturn","Optimistic return (%)"],["inheritanceAmount","Inheritance amount"],["inheritanceAge","Inheritance received at your age"],["oneTimeExpenseAmount","One-time future expense"],["oneTimeExpenseAge","One-time expense at your age"],["returnRate","Expected return (%)"],["inflation","Inflation (%)"],["retireSpend","Annual retirement spending"],["retirementSpendingMode","Retirement spending mode: 1=manual, 2=budget, 3=transactions"],["retirementSpendingPhasesEnabled","Retirement spending phases: 1=on, 0=off"],["activeSpendingEndAge","Active spending phase ends at age"],["midSpendingEndAge","Mid spending phase ends at age"],["midSpendingPercent","Mid phase spending percent"],["lateSpendingPercent","Late phase spending percent"],["scenarioRetireAge1","Retirement comparison age 1"],["scenarioRetireAge2","Retirement comparison age 2"],["scenarioRetireAge3","Retirement comparison age 3"],["spendingGuardrailsEnabled","Spending guardrails: 1=on, 0=off"],["guardrailLowerPercent","Guardrail lower portfolio threshold (%)"],["guardrailUpperPercent","Guardrail upper portfolio threshold (%)"],["guardrailCutPercent","Guardrail spending cut (%)"],["guardrailRaisePercent","Guardrail spending increase (%)"],["freezeAfterNegativeReturn","Freeze inflation after negative return: 1=yes, 0=no"],["taxAuditEnabled","Spouse tax audit: 1=on, 0=off"],["pensionSplitPercent","Eligible pension split percent"],["federalBasicPersonalAmount","2026 federal basic personal amount"],["bcBasicPersonalAmount","2026 B.C. basic personal amount"],["wifePension","Spouse monthly pension"],["wifeAgeDiff","Spouse age difference"],["wifeRetireAge","Spouse retirement age"],["wifeEmploymentAnnual","Spouse annual employment income"],["wifeEmploymentNetAnnual","Spouse annual take-home employment income"],["wifeWorkUntilUserAge","Spouse works until your age"],["wifeEmploymentGrowth","Spouse salary growth (%)"],["userOasMonthly","Your monthly OAS"],["userOasStart","Your OAS start age"],["wifeOasMonthly","Spouse monthly OAS"],["wifeOasStart","Spouse OAS start age"],["spendingLookbackMonths","Spending estimate lookback months"],["irregularAnnualAllowance","Annual irregular-spending allowance"],["userCpp65","User CPP at 65"],["userCpp70","User CPP at 70"],["userCppStart","User CPP start age"],["wifeCpp60","Spouse CPP at 60"],["wifeCpp65","Spouse CPP at 65"],["wifeCpp70","Spouse CPP at 70"],["wifeCppStart","Spouse CPP start age"],["home","Home value"],["ns1","NS property 1"],["ns2","NS property 2"],["vehicles","Vehicle value"],["boat","Boat value"],["camper","Camper value"],["cash","Cash"],["ccDebt","Credit-card debt"]];
+["nonRegisteredBalance","Non-registered balance"],["rrspMonthlyContribution","RRSP monthly contribution"],["userTfsaMonthlyContribution","Your TFSA monthly contribution"],["wifeRrspMonthlyContribution","Spouse RRSP monthly contribution"],["spouseTfsaMonthlyContribution","Spouse TFSA monthly contribution"],["nonRegisteredMonthlyContribution","Non-registered monthly contribution"],["withdrawalStrategy","Withdrawal strategy: 1=Both RRSPs first, 2=TFSA first, 3=Non-reg first"],["nonRegisteredWithdrawalTaxRate","Non-registered withdrawal tax rate (%)"],["rrspDrawdownEnabled","RRSP-to-TFSA drawdown: 1=on, 0=off"],["rrspDrawdownStartAge","RRSP drawdown start age"],["rrspDrawdownEndAge","RRSP drawdown end age"],["lowestTaxBracketCeiling","Lowest tax-bracket ceiling"],["lowestBracketMarginalTaxRate","Lowest bracket marginal tax rate (%)"],["tfsaAnnualLimit","Annual TFSA limit"],["tfsaAvailableRoom","Available TFSA room now"],["age","Current age"],["currentAgePrecisionCorrected","Current-age precision correction applied"],["retireAge","Retirement age"],["retirementScenarioUserAge","Retirement page scenario: your age"],["retirementScenarioSpouseAge","Retirement page scenario: spouse age"],["retirementEndAge","Retirement plan end age"],["retirementTaxRate","Effective retirement tax rate (%)"],["conservativeReturn","Conservative return (%)"],["optimisticReturn","Optimistic return (%)"],["inheritanceAmount","Inheritance amount"],["inheritanceAge","Inheritance received at your age"],["oneTimeExpenseAmount","One-time future expense"],["oneTimeExpenseAge","One-time expense at your age"],["returnRate","Expected return (%)"],["inflation","Inflation (%)"],["retireSpend","Annual retirement spending"],["retirementSpendingMode","Retirement spending mode: 1=manual, 2=budget, 3=transactions"],["retirementSpendingPhasesEnabled","Retirement spending phases: 1=on, 0=off"],["activeSpendingEndAge","Active spending phase ends at age"],["midSpendingEndAge","Mid spending phase ends at age"],["midSpendingPercent","Mid phase spending percent"],["lateSpendingPercent","Late phase spending percent"],["scenarioRetireAge1","Retirement comparison age 1"],["scenarioRetireAge2","Retirement comparison age 2"],["scenarioRetireAge3","Retirement comparison age 3"],["spendingGuardrailsEnabled","Spending guardrails: 1=on, 0=off"],["guardrailLowerPercent","Guardrail lower portfolio threshold (%)"],["guardrailUpperPercent","Guardrail upper portfolio threshold (%)"],["guardrailCutPercent","Guardrail spending cut (%)"],["guardrailRaisePercent","Guardrail spending increase (%)"],["freezeAfterNegativeReturn","Freeze inflation after negative return: 1=yes, 0=no"],["taxAuditEnabled","Spouse tax audit: 1=on, 0=off"],["pensionSplitPercent","Eligible pension split percent"],["federalBasicPersonalAmount","2026 federal basic personal amount"],["bcBasicPersonalAmount","2026 B.C. basic personal amount"],["wifePension","Spouse monthly pension"],["wifeAgeDiff","Age difference between spouses"],["wifeRetireAge","Spouse retirement age"],["wifeEmploymentAnnual","Spouse annual employment income"],["wifeEmploymentNetAnnual","Spouse annual take-home employment income"],["wifeWorkUntilUserAge","Spouse works until your age"],["wifeEmploymentGrowth","Spouse salary growth (%)"],["userOasMonthly","Your monthly OAS"],["userOasStart","Your OAS start age"],["wifeOasMonthly","Spouse monthly OAS"],["wifeOasStart","Spouse OAS start age"],["spendingLookbackMonths","Spending estimate lookback months"],["irregularAnnualAllowance","Annual irregular-spending allowance"],["userCpp65","User CPP at 65"],["userCpp70","User CPP at 70"],["userCppStart","User CPP start age"],["wifeCpp60","Spouse CPP at 60"],["wifeCpp65","Spouse CPP at 65"],["wifeCpp70","Spouse CPP at 70"],["wifeCppStart","Spouse CPP start age"],["home","Home value"],["ns1","Other property 1"],["ns2","Other property 2"],["vehicles","Vehicle value"],["boat","Boat value"],["camper","Camper value"],["cash","Cash"],["ccDebt","Credit-card debt"]];
  var fieldGroups=[
   {title:"Income & Monthly Cash Flow",note:"Regular income and recurring monthly commitments.",keys:["income1","income2","wcb","bills","chores"]},
   {title:"Debt & Loans",note:"Legacy line-of-credit and credit-card values. Detailed debts are managed on the Debt page.",keys:["loc","rate","months","ccDebt"]},
@@ -3599,7 +3634,7 @@ function renderSettings(){
  '<div class="section-card"><h3>Data health</h3><div class="notice '+(health.length?'bad':'good')+'">'+(health.length?health.map(function(x){return'• '+x;}).join('<br>'):'No major data problems detected.')+'</div></div>'+
  (function(){var audit=foundationAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Foundation audit</h3><p>Automated checks for the calculations and data connections RyanOS depends on.</p></div><span class="status-pill '+(audit.passed===audit.total?'good':audit.passed>=audit.total-2?'warn':'bad')+'">'+audit.passed+' of '+audit.total+' passed</span></div><div class="audit-grid">'+audit.checks.map(function(x){return'<div class="audit-card '+(x.ok?'pass':'fail')+'"><div class="audit-title">'+(x.ok?'✓ ':'⚠ ')+esc(x.name)+'</div><div class="audit-copy">'+esc(x.copy)+'</div></div>';}).join("")+'</div><div class="quick-actions" style="margin-top:12px"><button id="runFoundationAudit" type="button">Run audit again</button></div></div>';})()+
  '<div class="section-card"><div class="page-intro"><div><h3>Calculation scope</h3><p>What RyanOS currently calculates and what still requires professional confirmation.</p></div><span class="estimate-tag">Planning estimate</span></div><div class="method-grid"><div class="method-card"><div class="label">Included</div><div class="value">Cash flow, account growth, pensions, CPP/OAS, stress scenarios and year-by-year balances</div></div><div class="method-card"><div class="label">Simplified</div><div class="value">Income tax, non-registered taxation and withdrawal sequencing</div></div><div class="method-card"><div class="label">Not included yet</div><div class="value">Full federal/provincial tax, RRIF minimums, survivor and estate calculations</div></div></div></div>'+
- (function(){var r=fullRegressionAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Full regression test</h3><p>Checks the primary pages, financial engines, planners, backup system and retirement calculations together.</p></div><span class="status-pill '+(r.failed===0?'good':'bad')+'">'+r.pass+' of '+r.total+' passed</span></div><div class="regression-grid"><div class="regression-card"><div class="label">Schema version</div><div class="value">9</div></div><div class="regression-card"><div class="label">Tests</div><div class="value">'+r.total+'</div></div><div class="regression-card"><div class="label">Passed</div><div class="value">'+r.pass+'</div></div><div class="regression-card"><div class="label">Failed</div><div class="value">'+r.failed+'</div></div></div><div class="regression-list">'+r.tests.map(function(x){return'<div class="regression-item '+(x.ok?'pass':'fail')+'"><div>'+(x.ok?'✓':'!')+'</div><div><strong>'+esc(x.name)+'</strong><div class="tx-muted">'+esc(x.copy)+'</div></div></div>';}).join("")+'</div><div class="quick-actions" style="margin-top:12px"><button id="runRegressionAudit" type="button">Run regression test again</button></div></div>';})()+
+ (function(){var r=fullRegressionAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Full regression test</h3><p>Checks the primary pages, financial engines, planners, backup system and retirement calculations together.</p></div><span class="status-pill '+(r.failed===0?'good':'bad')+'">'+r.pass+' of '+r.total+' passed</span></div><div class="regression-grid"><div class="regression-card"><div class="label">Schema version</div><div class="value">10</div></div><div class="regression-card"><div class="label">Tests</div><div class="value">'+r.total+'</div></div><div class="regression-card"><div class="label">Passed</div><div class="value">'+r.pass+'</div></div><div class="regression-card"><div class="label">Failed</div><div class="value">'+r.failed+'</div></div></div><div class="regression-list">'+r.tests.map(function(x){return'<div class="regression-item '+(x.ok?'pass':'fail')+'"><div>'+(x.ok?'✓':'!')+'</div><div><strong>'+esc(x.name)+'</strong><div class="tx-muted">'+esc(x.copy)+'</div></div></div>';}).join("")+'</div><div class="quick-actions" style="margin-top:12px"><button id="runRegressionAudit" type="button">Run regression test again</button></div></div>';})()+
  (function(){var c=backupCompatibilityAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Backup migration compatibility</h3><p>Checks whether older RyanOS data can be upgraded without losing important information.</p></div><span class="status-pill '+(c.pass===c.total?'good':'warn')+'">'+c.pass+' of '+c.total+' passed</span></div><div class="compat-grid"><div class="compat-card"><div class="label">Schema version</div><div class="value">9</div></div><div class="compat-card"><div class="label">Compatibility tests</div><div class="value">'+c.total+'</div></div><div class="compat-card"><div class="label">Passed</div><div class="value">'+c.pass+'</div></div><div class="compat-card"><div class="label">Warnings</div><div class="value">'+(c.total-c.pass)+'</div></div></div><div class="compat-list">'+c.tests.map(function(x){return'<div class="compat-item '+(x.ok?'pass':'warn')+'"><div>'+(x.ok?'✓':'!')+'</div><div><strong>'+esc(x.name)+'</strong><div class="tx-muted">'+esc(x.copy)+'</div></div></div>';}).join("")+'</div></div>';})()+
  '<div class="section-card"><div class="page-intro"><div><h3>Guided setup</h3><p>Run the question-and-answer setup again without deleting transactions, net worth history or backups.</p></div><button id="rerunSetup" type="button">Run Setup Wizard</button></div></div>'+
  '<div class="pension-grid">'+pensionEditor("user","Your workplace pension")+pensionEditor("spouse","Spouse workplace pension")+'</div>'+
@@ -3675,7 +3710,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.3.9-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.3.10-backup.json";a.click();};
 var modeToggle=document.getElementById("modeToggle");
 if(modeToggle)modeToggle.onclick=function(){
  data.settings.interfaceMode=isSimpleMode()?2:1;

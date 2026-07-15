@@ -1,9 +1,9 @@
 {
-  "name": "RyanOS 5.3.9",
+  "name": "RyanOS 5.3.10",
   "short_name": "RyanOS",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f4f7fb",
   "theme_color": "#17365d",
-  "description": "RyanOS with consumer-friendly Simple mode and full Advanced mode."
+  "description": "RyanOS with a simpler, progressive guided setup."
 }
