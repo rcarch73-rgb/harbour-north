@@ -1,9 +1,9 @@
 {
-  "name": "RyanOS 5.3.4",
+  "name": "RyanOS 5.3.5",
   "short_name": "RyanOS",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f4f7fb",
   "theme_color": "#17365d",
-  "description": "RyanOS with user and spouse First Home Savings Account support."
+  "description": "RyanOS with separate pension displays and a retirement income timeline audit."
 }

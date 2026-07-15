@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 5.3.4</title>
+<title>RyanOS 5.3.5</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -550,11 +550,26 @@ details.section-card[open]>summary:after{content:"−"}
 .fhsa-note{border:1px solid #c8d7e8;border-radius:14px;padding:13px;background:#f4f8fc;margin-top:10px}
 .fhsa-badge{display:inline-flex;align-items:center;border-radius:999px;padding:4px 9px;font-size:.78rem;font-weight:900;background:#e8f0f8;color:#17365d}
 
+
+.pension-summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.pension-summary-card{border:1px solid var(--border);border-radius:16px;padding:15px;background:#fff}
+.pension-summary-card h4{margin:0 0 8px;color:var(--brand)}
+.pension-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.pension-fact{border-radius:12px;background:#f6f8fb;padding:10px}
+.pension-fact .label{font-size:.74rem;text-transform:uppercase;font-weight:900;color:var(--muted)}
+.pension-fact .value{font-weight:900;margin-top:3px}
+.income-audit-table th,.income-audit-table td{white-space:nowrap}
+.income-cover{height:9px;border-radius:999px;background:#e8edf3;overflow:hidden;min-width:110px}
+.income-cover span{display:block;height:100%;border-radius:999px;background:#17365d}
+.audit-banner{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
+.audit-banner>div{border:1px solid var(--border);border-radius:14px;padding:12px;background:#fff}
+@media(max-width:720px){.pension-summary-grid,.audit-banner{grid-template-columns:1fr}.pension-facts{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>5.3.4 — FHSA Accounts</small></div>
+  <div><h1>RyanOS</h1><small>5.3.5 — Pension Timeline Audit</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -2076,7 +2091,7 @@ function retirementIncomeAtAge(age,wifeAge){
  var wcpp=wifeAge>=Number(s.wifeCppStart)?wifeCppBase*12*Math.pow(1+Number(s.inflation||0)/100,Math.max(0,wifeAge-Number(s.wifeCppStart))):0;
  var oas=age>=Number(s.userOasStart)?Number(s.userOasMonthly||0)*12*Math.pow(1+Number(s.inflation||0)/100,Math.max(0,age-Number(s.userOasStart))):0;
  var woas=wifeAge>=Number(s.wifeOasStart)?Number(s.wifeOasMonthly||0)*12*Math.pow(1+Number(s.inflation||0)/100,Math.max(0,wifeAge-Number(s.wifeOasStart))):0;
- return{wifeEmploymentNet:wifeEmploymentNet,pension:pension,userPension:userPension.total,spousePension:spousePension.total,wcb:wcb,cpp:cpp,wcpp:wcpp,oas:oas,woas:woas};
+ return{wifeEmploymentNet:wifeEmploymentNet,pension:pension,userPension:userPension.total,spousePension:spousePension.total,userPensionBase:userPension.base,userPensionBridge:userPension.bridge,spousePensionBase:spousePension.base,spousePensionBridge:spousePension.bridge,wcb:wcb,cpp:cpp,wcpp:wcpp,oas:oas,woas:woas};
 }
 function accountBalancesAtRetirement(returnRate){
  var s=data.settings;
@@ -2160,7 +2175,7 @@ function retirementPlan(returnRate,wifeAgeDifferenceOverride,stressType){
  var tfsaRoom=Math.max(0,Number(s.tfsaAvailableRoom||0)),rows=[];
  var retirementStartBalance=null,previousSpend=null,previousReturn=null;
  for(var age=Math.ceil(Number(s.retireAge));age<endAge;age++){
-  var wifeAge=age-wifeDiff,start={rrsp:account.rrsp,userTfsa:account.userTfsa,wifeRrsp:account.wifeRrsp,nonReg:account.nonReg};
+  var wifeAge=age-wifeDiff,start={rrsp:account.rrsp,userTfsa:account.userTfsa,wifeRrsp:account.wifeRrsp,spouseTfsa:account.spouseTfsa,userFhsa:account.userFhsa,spouseFhsa:account.spouseFhsa,nonReg:account.nonReg};
   var startBalance=start.rrsp+start.userTfsa+start.wifeRrsp+start.spouseTfsa+start.userFhsa+start.spouseFhsa+start.nonReg;
   if(age>Math.ceil(Number(s.retireAge)))tfsaRoom+=Math.max(0,Number(s.tfsaAnnualLimit||0));
   var inheritance=age===Number(s.inheritanceAge)?Number(s.inheritanceAmount||0):0; account.nonReg+=inheritance;
@@ -2221,7 +2236,7 @@ function retirementPlan(returnRate,wifeAgeDifferenceOverride,stressType){
   var growth={rrsp:account.rrsp*annualRate,userTfsa:account.userTfsa*annualRate,wifeRrsp:account.wifeRrsp*annualRate,spouseTfsa:account.spouseTfsa*annualRate,userFhsa:account.userFhsa*annualRate,spouseFhsa:account.spouseFhsa*annualRate,nonReg:account.nonReg*annualRate};
   account.rrsp+=growth.rrsp;account.userTfsa+=growth.userTfsa;account.wifeRrsp+=growth.wifeRrsp;account.spouseTfsa+=growth.spouseTfsa;account.userFhsa+=growth.userFhsa;account.spouseFhsa+=growth.spouseFhsa;account.nonReg+=growth.nonReg;
   var endBalance=account.rrsp+account.userTfsa+account.wifeRrsp+account.spouseTfsa+account.userFhsa+account.spouseFhsa+account.nonReg;
-  rows.push({age:age,wifeAge:wifeAge,startBalance:startBalance,startAccounts:start,inheritance:inheritance,extraExpense:extraExpense,legacyExpense:legacyExpense,scheduledExpense:extraExpense-legacyExpense,futureExpenseDetails:futureExpenseDetails,spend:spend,wifeEmployment:inc.wifeEmploymentNet,pension:inc.pension,wcb:inc.wcb,cpp:inc.cpp,wcpp:inc.wcpp,oas:inc.oas,woas:inc.woas,netExternal:netExternal,rrspWithdrawal:w.rrsp,userTfsaWithdrawal:w.userTfsa,wifeRrspWithdrawal:w.wifeRrsp,spouseTfsaWithdrawal:w.spouseTfsa,userFhsaWithdrawal:w.userFhsa,spouseFhsaWithdrawal:w.spouseFhsa,nonRegWithdrawal:w.nonReg,futureExpenseWithdrawal:futureExpenseGross,futureExpenseTax:futureExpenseTax,withdrawalTax:w.tax+strategicTax+futureExpenseTax,withdrawal:w.rrsp+w.userTfsa+w.wifeRrsp+w.spouseTfsa+w.userFhsa+w.spouseFhsa+w.nonReg+futureExpenseGross+strategicGross,netWithdrawal:w.net,strategicRrspWithdrawal:strategicGross,strategicRrspTax:strategicTax,tfsaDeposit:tfsaDeposit,nonRegDeposit:nonRegDeposit,growth:growth.rrsp+growth.userTfsa+growth.wifeRrsp+growth.spouseTfsa+growth.userFhsa+growth.spouseFhsa+growth.nonReg,endAccounts:{rrsp:account.rrsp,userTfsa:account.userTfsa,wifeRrsp:account.wifeRrsp,spouseTfsa:account.spouseTfsa,userFhsa:account.userFhsa,spouseFhsa:account.spouseFhsa,nonReg:account.nonReg},annualReturn:annualRate*100,baselineSpend:baselineSpend,guardrailSpend:spend,guardrailAction:guardrailAction,guardrailRatio:guardrailRatio,endBalance:endBalance,
+  rows.push({age:age,wifeAge:wifeAge,startBalance:startBalance,startAccounts:start,inheritance:inheritance,extraExpense:extraExpense,legacyExpense:legacyExpense,scheduledExpense:extraExpense-legacyExpense,futureExpenseDetails:futureExpenseDetails,spend:spend,wifeEmployment:inc.wifeEmploymentNet,pension:inc.pension,userPension:inc.userPension,spousePension:inc.spousePension,userPensionBase:inc.userPensionBase,userPensionBridge:inc.userPensionBridge,spousePensionBase:inc.spousePensionBase,spousePensionBridge:inc.spousePensionBridge,wcb:inc.wcb,cpp:inc.cpp,wcpp:inc.wcpp,oas:inc.oas,woas:inc.woas,netExternal:netExternal,rrspWithdrawal:w.rrsp,userTfsaWithdrawal:w.userTfsa,wifeRrspWithdrawal:w.wifeRrsp,spouseTfsaWithdrawal:w.spouseTfsa,userFhsaWithdrawal:w.userFhsa,spouseFhsaWithdrawal:w.spouseFhsa,nonRegWithdrawal:w.nonReg,futureExpenseWithdrawal:futureExpenseGross,futureExpenseTax:futureExpenseTax,withdrawalTax:w.tax+strategicTax+futureExpenseTax,withdrawal:w.rrsp+w.userTfsa+w.wifeRrsp+w.spouseTfsa+w.userFhsa+w.spouseFhsa+w.nonReg+futureExpenseGross+strategicGross,netWithdrawal:w.net,strategicRrspWithdrawal:strategicGross,strategicRrspTax:strategicTax,tfsaDeposit:tfsaDeposit,nonRegDeposit:nonRegDeposit,growth:growth.rrsp+growth.userTfsa+growth.wifeRrsp+growth.spouseTfsa+growth.userFhsa+growth.spouseFhsa+growth.nonReg,endAccounts:{rrsp:account.rrsp,userTfsa:account.userTfsa,wifeRrsp:account.wifeRrsp,spouseTfsa:account.spouseTfsa,userFhsa:account.userFhsa,spouseFhsa:account.spouseFhsa,nonReg:account.nonReg},annualReturn:annualRate*100,baselineSpend:baselineSpend,guardrailSpend:spend,guardrailAction:guardrailAction,guardrailRatio:guardrailRatio,endBalance:endBalance,
    expectedEnd:startBalance+inheritance+growth.rrsp+growth.userTfsa+growth.wifeRrsp+growth.spouseTfsa+growth.userFhsa+growth.spouseFhsa+growth.nonReg
     -w.rrsp-w.userTfsa-w.wifeRrsp-w.spouseTfsa-w.userFhsa-w.spouseFhsa-w.nonReg-futureExpenseGross-strategicTax,
    reconciliationDifference:endBalance-(startBalance+inheritance+growth.rrsp+growth.userTfsa+growth.wifeRrsp+growth.spouseTfsa+growth.userFhsa+growth.spouseFhsa+growth.nonReg
@@ -2662,6 +2677,60 @@ function retirementScenarioInsights(){
   return{name:x.name,copy:x.copy,ok:r.ok,shortfall:r.shortfall,endBalance:r.endBalance};
  });
 }
+
+function pensionDisplaySummary(prefix,label){
+ var s=data.settings,enabled=Number(s[prefix+"PensionEnabled"]||0)===1,type=Number(s[prefix+"PensionType"]||1);
+ return{
+  label:label,
+  enabled:enabled,
+  type:type,
+  typeLabel:pensionTypeLabel(type),
+  monthly:Number(s[prefix+"PensionMonthly"]||0),
+  start:Number(s[prefix+"PensionStartAge"]||0),
+  indexed:Number(s[prefix+"PensionIndexed"]||0),
+  indexLabel:pensionIndexLabel(s[prefix+"PensionIndexed"]),
+  indexRate:Number(s[prefix+"PensionIndexRate"]||0),
+  bridge:Number(s[prefix+"PensionBridgeMonthly"]||0),
+  bridgeEnd:Number(s[prefix+"PensionBridgeEndAge"]||0),
+  guaranteed:enabled&&type!==2
+ };
+}
+function pensionIncomeAudit(rows){
+ var s=data.settings;
+ var sampleAges=[];
+ [Math.ceil(Number(s.retireAge||0)),Number(s.userPensionStartAge||0),Number(s.spousePensionStartAge||0)+Number(s.wifeAgeDiff||0),Number(s.userOasStart||65),Number(s.userCppStart||70),Number(s.retirementEndAge||95)-1].forEach(function(a){
+  a=Math.round(Number(a||0));
+  if(a>=Math.ceil(Number(s.retireAge||0))&&a<Number(s.retirementEndAge||95)&&sampleAges.indexOf(a)<0)sampleAges.push(a);
+ });
+ rows.forEach(function(r){
+  if((r.userPensionBridge>0&&r.age===Math.round(Number(s.userPensionBridgeEndAge||65)-1))||
+     (r.spousePensionBridge>0&&r.wifeAge===Math.round(Number(s.spousePensionBridgeEndAge||65)-1))){
+    if(sampleAges.indexOf(r.age)<0)sampleAges.push(r.age);
+  }
+ });
+ sampleAges.sort(function(a,b){return a-b;});
+ var selected=sampleAges.map(function(a){return rows.find(function(r){return Number(r.age)===Number(a);});}).filter(Boolean);
+ var peak=rows.reduce(function(best,r){return Number(r.withdrawal||0)>Number(best.withdrawal||0)?r:best;},rows[0]||{withdrawal:0,age:0});
+ var lowestCoverage=rows.reduce(function(best,r){
+  var guaranteed=Number(r.pension||0)+Number(r.cpp||0)+Number(r.wcpp||0)+Number(r.oas||0)+Number(r.woas||0)+Number(r.wcb||0);
+  var pct=Number(r.spend||0)>0?guaranteed/Number(r.spend||0)*100:100;
+  return pct<best.pct?{pct:pct,row:r}:best;
+ },{pct:Infinity,row:null});
+ var legacyReferences=(String(renderRetirementCore).match(/wifePension/g)||[]).length+(String(renderRetirement).match(/wifePension/g)||[]).length;
+ return{rows:selected,peak:peak,lowestCoverage:lowestCoverage,legacyReferences:legacyReferences};
+}
+function pensionSummaryCard(p){
+ if(!p.enabled)return'<div class="pension-summary-card"><h4>'+esc(p.label)+'</h4><div class="notice">No workplace pension included.</div></div>';
+ if(p.type===2)return'<div class="pension-summary-card"><h4>'+esc(p.label)+'</h4><div class="notice warn">Defined contribution pension: excluded from guaranteed income. Enter its account value under investments.</div></div>';
+ return'<div class="pension-summary-card"><h4>'+esc(p.label)+'</h4><div class="pension-facts">'+
+  '<div class="pension-fact"><div class="label">Type</div><div class="value">'+esc(p.typeLabel)+'</div></div>'+
+  '<div class="pension-fact"><div class="label">Monthly amount</div><div class="value">'+money(p.monthly)+'</div></div>'+
+  '<div class="pension-fact"><div class="label">Starts at age</div><div class="value">'+p.start.toFixed(1)+'</div></div>'+
+  '<div class="pension-fact"><div class="label">Indexing</div><div class="value">'+esc(p.indexLabel)+(p.indexRate>0?' · '+p.indexRate.toFixed(1)+'%':'')+'</div></div>'+
+  '<div class="pension-fact"><div class="label">Bridge benefit</div><div class="value">'+(p.bridge>0?money(p.bridge)+'/mo':'None')+'</div></div>'+
+  '<div class="pension-fact"><div class="label">Bridge ends</div><div class="value">'+(p.bridge>0?'Age '+p.bridgeEnd.toFixed(1):'—')+'</div></div>'+
+ '</div></div>';
+}
 function renderRetirement(){
  renderRetirementCore();
  var s=data.settings,rows=retirementPlan(s.returnRate);
@@ -2684,13 +2753,21 @@ function renderRetirement(){
  var confidence=firstShortfall?"Needs attention":passes===5?"High":passes>=3?"Moderate":"Low";
  var status=!firstShortfall;
  var spousePensionAge=Number(s.spousePensionStartAge||55)+Number(s.wifeAgeDiff||0);
- var timeline=[
-  {age:Number(s.retireAge||0).toFixed(1),event:"Retirement begins",detail:"Portfolio withdrawals and WCB support cash flow."},
-  {age:Number(spousePensionAge||0).toFixed(0),event:"Spouse pension",detail:"Employment ends and pension income begins."},
-  {age:Number(s.userOasStart||65).toFixed(0),event:"OAS begins",detail:"Government retirement income is added."},
+ var userPension=pensionDisplaySummary("user","Your workplace pension"),spousePension=pensionDisplaySummary("spouse","Spouse workplace pension");
+ var pensionAudit=pensionIncomeAudit(rows);
+ var timeline=[{age:Number(s.retireAge||0).toFixed(1),event:"Retirement begins",detail:"Portfolio withdrawals and available external income begin supporting spending."}];
+ if(userPension.guaranteed)timeline.push({age:userPension.start.toFixed(1),event:"Your pension begins",detail:money(userPension.monthly)+" per month · "+userPension.indexLabel+"."});
+ if(userPension.guaranteed&&userPension.bridge>0)timeline.push({age:userPension.bridgeEnd.toFixed(1),event:"Your bridge benefit ends",detail:money(userPension.bridge)+" per month bridge income ends."});
+ if(spousePension.guaranteed)timeline.push({age:spousePensionAge.toFixed(1),event:"Spouse pension begins",detail:"Spouse age "+spousePension.start.toFixed(1)+" · "+money(spousePension.monthly)+" per month · "+spousePension.indexLabel+"."});
+ if(spousePension.guaranteed&&spousePension.bridge>0)timeline.push({age:(spousePension.bridgeEnd+Number(s.wifeAgeDiff||0)).toFixed(1),event:"Spouse bridge benefit ends",detail:"Spouse age "+spousePension.bridgeEnd.toFixed(1)+" · "+money(spousePension.bridge)+" per month bridge income ends."});
+ timeline.push(
+  {age:Number(s.userOasStart||65).toFixed(0),event:"Your OAS begins",detail:"Your government retirement income increases."},
+  {age:(Number(s.wifeOasStart||65)+Number(s.wifeAgeDiff||0)).toFixed(0),event:"Spouse OAS begins",detail:"Spouse reaches OAS start age."},
   {age:Number(s.userCppStart||70).toFixed(0),event:"Your CPP begins",detail:"CPP reduces portfolio withdrawal needs."},
+  {age:(Number(s.wifeCppStart||65)+Number(s.wifeAgeDiff||0)).toFixed(0),event:"Spouse CPP begins",detail:"Spouse reaches CPP start age."},
   {age:Number(s.retirementEndAge||95).toFixed(0),event:"Plan horizon",detail:"RyanOS tests funding through this age."}
- ];
+ );
+ timeline.sort(function(a,b){return Number(a.age)-Number(b.age);});
  var summary=
   '<div class="page-intro"><div><h2>Retirement</h2><p>See whether your plan works, why it works and where the risks are.</p></div><span class="status-pill '+(status?'good':'bad')+'">'+(status?'On track':'Needs attention')+'</span></div>'+
   '<div class="ret-readiness '+(status?'':'attention')+'"><div class="ret-status-row"><div><div class="ret-status-title">'+(status?'Your retirement plan is funded':'Your plan develops a shortfall')+'</div><div class="ret-status-copy">'+(status?'The expected plan remains funded through age '+Number(s.retirementEndAge||95)+'.':'The first projected shortfall occurs at age '+firstShortfall+'.')+'</div></div><div class="status-pill '+(confidence==="High"?'good':confidence==="Moderate"?'warn':'bad')+'">Confidence: '+confidence+'</div></div>'+
@@ -2704,7 +2781,11 @@ function renderRetirement(){
   (function(){var c=retirementConfidenceScore();return'<div class="section-card"><div class="page-intro"><div><h3>Retirement confidence score</h3><p>A transparent score based on plan funding, stress tests, reserve strength, ending balance and data quality.</p></div><span class="status-pill '+(c.score>=70?'good':c.score>=55?'warn':'bad')+'">'+esc(c.label)+'</span></div><div class="confidence-panel"><div class="confidence-score"><div><div class="number">'+c.score+'</div><div class="label">out of 100</div></div></div><div class="confidence-bars">'+c.parts.map(function(p){return'<div class="confidence-row"><div class="confidence-name">'+esc(p.name)+'</div><div class="confidence-track"><div class="confidence-fill" style="width:'+Math.round(p.points/p.max*100)+'%"></div></div><div class="confidence-points">'+p.points+'/'+p.max+'</div></div>';}).join("")+'</div></div><div class="notice '+(c.score>=70?'good':c.score>=55?'warn':'bad')+'">'+c.stressPasses+' of 5 stress tests pass. Starting portfolio equals about '+c.reserveYears.toFixed(1)+' years of current retirement spending.</div></div>';})()+
   (function(){var r=sustainableSpendingRange();var cls=r.status==='comfortable'?'good':r.status==='cautious'?'warn':'bad';return'<div class="section-card"><div class="page-intro"><div><h3>Sustainable spending range</h3><p>Estimated annual retirement spending limits using your current plan and stress tests.</p></div><span class="status-pill '+cls+'">'+esc(r.status.charAt(0).toUpperCase()+r.status.slice(1))+'</span></div><div class="spending-range-grid"><div class="spending-range-card '+cls+'"><div class="label">Current spending target</div><div class="value">'+money(r.current)+'</div><div class="copy">Your saved annual retirement spending assumption.</div></div><div class="spending-range-card good"><div class="label">Conservative target</div><div class="value">'+money(r.conservative)+'</div><div class="copy">About 10% below the lowest spending level supported by all five stress tests.</div></div><div class="spending-range-card warn"><div class="label">Maximum in base plan</div><div class="value">'+money(r.baseMax)+'</div><div class="copy">Highest tested annual amount that remains funded under the base assumptions.</div></div></div><div class="notice '+cls+'">Stress-tested ceiling: '+money(r.stressedMax)+' per year. This is a planning estimate, not a guarantee.</div></div>';})()+
   (function(){var m=retirementMarginAnalysis();var cls=m.percentMargin>=20?'good':m.percentMargin>=5?'warn':'bad';return'<div class="section-card"><div class="page-intro"><div><h3>Retirement margin</h3><p>How much room your current plan has before it becomes tight.</p></div><span class="status-pill '+cls+'">'+m.percentMargin.toFixed(0)+'% spending margin</span></div><div class="margin-grid"><div class="margin-card"><div class="label">Annual spending room</div><div class="value">'+money(m.annualMargin)+'</div><div class="copy">Difference between your current target and the maximum funded base-plan spending.</div></div><div class="margin-card"><div class="label">Portfolio at retirement</div><div class="value">'+money(m.atRetirement)+'</div><div class="copy">Projected detailed investment accounts at retirement.</div></div><div class="margin-card"><div class="label">Starting reserve</div><div class="value">'+m.reserveYears.toFixed(1)+' years</div><div class="copy">Portfolio at retirement divided by current annual retirement spending.</div></div><div class="margin-card"><div class="label">Ending portfolio</div><div class="value">'+money(m.end)+'</div><div class="copy">Projected balance at the end of the base plan.</div></div></div><h3 style="margin-top:18px">Key risk drivers</h3><div class="risk-list">'+m.scenarios.map(function(x){var pct=m.atRetirement>0?Math.max(0,Math.min(100,Number(x.ending||0)/m.atRetirement*100)):0;return'<div class="risk-row"><div class="risk-label">'+esc(x.name)+'</div><div class="risk-track"><div class="risk-fill" style="width:'+pct.toFixed(0)+'%"></div></div><div class="risk-result '+(x.ok?'good':'bad')+'">'+(x.ok?money(x.ending):'Shortfall '+x.shortfall)+'</div></div>';}).join("")+'</div><div class="notice '+(m.weakest.ok?'warn':'bad')+'">Most demanding scenario: '+esc(m.weakest.name)+'. '+(m.weakest.ok?'It remains funded with '+money(m.weakest.ending)+' at the plan horizon.':'It first develops a shortfall at age '+m.weakest.shortfall+'.')+'</div></div>';})()+
+  '<div class="section-card"><div class="page-intro"><div><h3>Workplace pensions</h3><p>Guaranteed pension income is shown separately for you and your spouse.</p></div></div><div class="pension-summary-grid">'+pensionSummaryCard(userPension)+pensionSummaryCard(spousePension)+'</div></div>'+
   '<div class="section-card"><h3>Retirement income timeline</h3><div class="ret-timeline">'+timeline.map(function(x){return'<div class="ret-milestone"><div class="age">Age '+x.age+'</div><div class="event">'+esc(x.event)+'</div><div class="detail">'+esc(x.detail)+'</div></div>';}).join("")+'</div></div>'+
+  '<div class="section-card"><div class="page-intro"><div><h3>Guaranteed income and portfolio withdrawals</h3><p>Selected milestone years showing how much spending is covered without portfolio withdrawals.</p></div><span class="status-pill '+(pensionAudit.legacyReferences===0?'good':'warn')+'">'+(pensionAudit.legacyReferences===0?'Pension model clean':pensionAudit.legacyReferences+' legacy reference'+(pensionAudit.legacyReferences===1?'':'s'))+'</span></div><div class="mobile-scroll-hint">Swipe sideways to see all columns.</div><div style="overflow-x:auto"><table class="income-audit-table"><thead><tr><th>Your age</th><th>Spouse age</th><th>Spending</th><th>Your pension</th><th>Spouse pension</th><th>CPP/OAS</th><th>Employment/WCB</th><th>Guaranteed coverage</th><th>Portfolio withdrawal</th></tr></thead><tbody>'+
+   pensionAudit.rows.map(function(r){var government=Number(r.cpp||0)+Number(r.wcpp||0)+Number(r.oas||0)+Number(r.woas||0),support=Number(r.wifeEmployment||0)+Number(r.wcb||0),guaranteed=Number(r.pension||0)+government+support,coverage=Number(r.spend||0)>0?guaranteed/Number(r.spend||0)*100:100;return'<tr><td>'+r.age+'</td><td>'+r.wifeAge+'</td><td>'+money(r.spend)+'</td><td>'+money(r.userPension||0)+(Number(r.userPensionBridge||0)>0?' <small>incl. bridge</small>':'')+'</td><td>'+money(r.spousePension||0)+(Number(r.spousePensionBridge||0)>0?' <small>incl. bridge</small>':'')+'</td><td>'+money(government)+'</td><td>'+money(support)+'</td><td><div class="income-cover"><span style="width:'+Math.min(100,Math.max(0,coverage)).toFixed(0)+'%"></span></div>'+coverage.toFixed(0)+'%</td><td>'+money(r.withdrawal||0)+'</td></tr>';}).join("")+
+  '</tbody></table></div><div class="audit-banner"><div><strong>Peak portfolio withdrawal</strong><div>'+money(pensionAudit.peak.withdrawal||0)+' at age '+Number(pensionAudit.peak.age||0).toFixed(0)+'</div></div><div><strong>Lowest guaranteed coverage</strong><div>'+(pensionAudit.lowestCoverage.row?pensionAudit.lowestCoverage.pct.toFixed(0)+'% at age '+pensionAudit.lowestCoverage.row.age:'—')+'</div></div><div><strong>Defined contribution treatment</strong><div>Excluded from guaranteed pension income</div></div></div></div>'+
   '<div class="section-card"><h3>Plan resilience</h3><div class="ret-stress-grid">'+results.map(function(x){return'<div class="ret-stress"><div class="label">'+esc(x.name)+'</div><div class="result '+(x.age?'bad':'good')+'">'+(x.age?'Shortfall at '+x.age:'Passes')+'</div></div>';}).join("")+'</div><div class="notice '+(passes>=3?'good':'bad')+'">'+passes+' of 5 stress tests remain funded through age '+Number(s.retirementEndAge||95)+'.</div></div>'+
   '<div class="section-card"><h3>What-if scenarios</h3><p class="tx-muted">Quick comparisons using your current assumptions. These do not change saved settings.</p><div class="scenario-grid">'+retirementScenarioInsights().map(function(x){return'<div class="scenario-card '+(x.ok?'good':'bad')+'"><div class="scenario-name">'+esc(x.name)+'</div><div class="scenario-result">'+(x.ok?'Funded':'Shortfall at '+x.shortfall)+'</div><div class="scenario-copy">'+esc(x.copy)+' Ending portfolio: '+money(x.endBalance)+'.</div></div>';}).join("")+'</div></div>';
  var el=document.getElementById("retirement");
@@ -3115,7 +3196,7 @@ function exportBackupFile(){
  var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
  var a=document.createElement("a");
  a.href=URL.createObjectURL(blob);
- a.download="RyanOS-5.3.4-backup.json";
+ a.download="RyanOS-5.3.5-backup.json";
  a.click();
  setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
 }
@@ -3422,7 +3503,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.3.4-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.3.5-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
