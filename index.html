@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 5.3.10</title>
+<title>RyanOS 5.3.11</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -622,11 +622,28 @@ details.section-card[open]>summary:after{content:"−"}
 .setup-plain-note{border-left:4px solid #4c7aa8;background:#f4f8fc;padding:11px 12px;border-radius:8px;margin-top:10px}
 @media(max-width:650px){.setup-choice-grid{grid-template-columns:1fr}}
 
+
+.plain-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.plain-card{border:1px solid var(--border);border-radius:14px;padding:14px;background:#fff}
+.plain-card .question{font-size:.78rem;text-transform:uppercase;font-weight:900;color:var(--muted)}
+.plain-card .answer{font-size:1.15rem;font-weight:900;color:var(--brand);margin-top:5px}
+.plain-card .explain{font-size:.85rem;color:var(--muted);margin-top:5px}
+.retirement-section-toggle{border:1px solid var(--border);border-radius:14px;background:#fff;margin-top:12px;overflow:hidden}
+.retirement-section-toggle summary{cursor:pointer;padding:14px 16px;font-weight:900;color:var(--brand);list-style:none}
+.retirement-section-toggle summary::-webkit-details-marker{display:none}
+.retirement-section-toggle summary:after{content:"Show";float:right;color:var(--muted);font-size:.82rem}
+.retirement-section-toggle[open] summary:after{content:"Hide"}
+.retirement-section-toggle .toggle-body{padding:0 14px 14px}
+.term-help{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;border:1px solid #9fb0c2;color:#17365d;font-size:.72rem;font-weight:900;cursor:help;margin-left:4px}
+.action-priority{border-left:5px solid #17365d;background:#f4f8fc;border-radius:12px;padding:13px;margin-top:10px}
+@media(max-width:760px){.plain-summary{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:500px){.plain-summary{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>5.3.10 — Simpler Guided Setup</small></div>
+  <div><h1>RyanOS</h1><small>5.3.11 — Plain-Language Retirement</small></div>
   <div class="header-actions"><button class="mode-toggle" id="modeToggle" type="button">Simple mode</button><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -651,7 +668,7 @@ details.section-card[open]>summary:after{content:"−"}
 "use strict";
 
 var STORAGE_KEY="ryanos2-data";
-var defaults={appVersion:"5.3.10",dataSchemaVersion:10,
+var defaults={appVersion:"5.3.11",dataSchemaVersion:11,
  settings:{
   setupComplete:0,setupStep:0,interfaceMode:1,hasUserFhsa:0,hasSpouseFhsa:0,hasNonRegistered:0,
   userPensionEnabled:0,userPensionType:1,userPensionMonthly:0,userPensionStartAge:65,userPensionIndexed:0,userPensionIndexRate:0,userPensionBridgeMonthly:0,userPensionBridgeEndAge:65,
@@ -758,8 +775,8 @@ function migrate(raw){
  if(raw.vehiclePlanner&&typeof raw.vehiclePlanner==="object")out.vehiclePlanner=clone(raw.vehiclePlanner);
  if(raw.travelPlanner&&typeof raw.travelPlanner==="object")out.travelPlanner=clone(raw.travelPlanner);
  if(raw.healthcarePlanner&&typeof raw.healthcarePlanner==="object")out.healthcarePlanner=clone(raw.healthcarePlanner);
- out.appVersion="5.3.10";
- out.dataSchemaVersion=10;
+ out.appVersion="5.3.11";
+ out.dataSchemaVersion=11;
  if(raw&&raw.settings&&Number(raw.settings.age)===52&&!raw.settings.currentAgePrecisionCorrected){
  out.settings.age=52.96;
  out.settings.currentAgePrecisionCorrected=1;
@@ -2806,24 +2823,45 @@ function pensionSummaryCard(p){
  '</div></div>';
 }
 
+
+function termHelp(text){
+ return'<span class="term-help" title="'+esc(text)+'">?</span>';
+}
+function retirementConsumerSummary(rows){
+ var s=data.settings,firstShortfall=0,last=rows[rows.length-1]||{},peak={withdrawal:0,age:0},lowest={pct:Infinity,age:0};
+ rows.forEach(function(r){
+  if(!firstShortfall&&Number(r.unfunded||0)>1)firstShortfall=r.age;
+  if(Number(r.withdrawal||0)>Number(peak.withdrawal||0))peak={withdrawal:Number(r.withdrawal||0),age:r.age};
+  var guaranteed=Number(r.pension||0)+Number(r.cpp||0)+Number(r.wcpp||0)+Number(r.oas||0)+Number(r.woas||0)+Number(r.wcb||0)+Number(r.wifeEmployment||0);
+  var pct=Number(r.spend||0)>0?guaranteed/Number(r.spend||0)*100:100;
+  if(pct<lowest.pct)lowest={pct:pct,age:r.age};
+ });
+ var at=accountBalancesAtRetirement(s.returnRate);
+ var status=!firstShortfall;
+ var action;
+ if(Number(s.retireAge||0)<=Number(s.age||0))action="Choose a retirement age later than your current age.";
+ else if(Math.abs(Number(s.investments||0)-detailedInvestmentTotal())>1)action="Review investment balances so the account total matches.";
+ else if(Number(s.retireSpend||0)<=0)action="Enter how much you expect to spend each year in retirement.";
+ else if(!status)action="Test a later retirement date or a lower spending target.";
+ else if(lowest.pct<50)action="Review the years before CPP, OAS and pensions begin; they require the most investment withdrawals.";
+ else action="Keep your account balances and spending target up to date.";
+ return{status:status,firstShortfall:firstShortfall,last:last,peak:peak,lowest:lowest,at:at,action:action};
+}
 function renderSimpleRetirement(){
- var s=data.settings,rows=retirementPlan(s.returnRate),firstShortfall=0;
- for(var i=0;i<rows.length;i++){if(Number(rows[i].unfunded||0)>1){firstShortfall=rows[i].age;break;}}
- var last=rows[rows.length-1]||{},at=accountBalancesAtRetirement(s.returnRate);
- var spending=Number(s.retireSpend||0),peak=rows.reduce(function(best,r){return Number(r.withdrawal||0)>Number(best.withdrawal||0)?r:best;},rows[0]||{});
- var status=!firstShortfall,next=[];
- if(Number(s.retireAge||0)<=Number(s.age||0))next.push("Choose a retirement age later than your current age.");
- if(Math.abs(Number(s.investments||0)-detailedInvestmentTotal())>1)next.push("Review investment balances so the account total matches.");
- if(Number(s.retireSpend||0)<=0)next.push("Enter an annual retirement spending target.");
- if(!next.length)next.push(status?"Keep contributions and spending assumptions updated.":"Review spending, retirement timing or contributions.");
+ var s=data.settings,rows=retirementPlan(s.returnRate),x=retirementConsumerSummary(rows);
  document.getElementById("retirement").innerHTML=
-  '<div class="page-intro"><div><h2>Retirement</h2><p>The essential answer first, with details available when needed.</p></div><span class="status-pill '+(status?'good':'bad')+'">'+(status?'Funded under assumptions':'Needs attention')+'</span></div>'+
-  '<div class="trust-banner"><strong>Planning estimate</strong>This is based on your assumptions and a simplified tax model. It is not a guarantee or professional advice.</div>'+
-  '<div class="ret-readiness '+(status?'':'attention')+'"><div class="ret-status-title">'+(status?'Your current plan remains funded through age '+Number(s.retirementEndAge||95)+'.':'The first projected shortfall occurs at age '+firstShortfall+'.')+'</div><div class="ret-status-copy">Retirement is planned for age '+Number(s.retireAge||0).toFixed(1)+'.</div></div>'+
-  '<div class="simple-next-grid"><div class="simple-next-card"><div class="label">Projected at retirement</div><div class="value">'+money(at.total)+'</div></div><div class="simple-next-card"><div class="label">Annual spending</div><div class="value">'+money(spending)+'</div></div><div class="simple-next-card"><div class="label">Ending portfolio</div><div class="value">'+money(last.endBalance||0)+'</div></div></div>'+
-  '<div class="section-card"><h3>What matters most</h3><div class="simple-next-grid"><div class="simple-next-card"><div class="label">Largest portfolio withdrawal</div><div class="value">'+money(peak.withdrawal||0)+'</div><div class="tx-muted">At age '+Number(peak.age||0).toFixed(0)+'</div></div><div class="simple-next-card"><div class="label">Workplace pensions</div><div class="value">'+money(Number(s.userPensionMonthly||0)+Number(s.spousePensionMonthly||0))+'/mo</div><div class="tx-muted">Before tax when both are active</div></div><div class="simple-next-card"><div class="label">Years to retirement</div><div class="value">'+Math.max(0,Number(s.retireAge||0)-Number(s.age||0)).toFixed(1)+'</div></div></div></div>'+
-  '<div class="section-card"><h3>Recommended next step</h3><p>'+esc(next[0])+'</p><div class="simple-actions"><button id="simpleOpenSetup" type="button">Review my information</button><button id="simpleAdvancedRetirement" class="secondary" type="button">Show advanced analysis</button></div></div>'+
-  '<details class="section-card simple-detail"><summary>What is not included yet?</summary><p>Full federal and provincial tax calculations, RRIF minimum withdrawals, survivor planning and estate calculations.</p></details>';
+  '<div class="page-intro"><div><h2>Retirement</h2><p>Four answers to help you understand your plan.</p></div><span class="status-pill '+(x.status?'good':'bad')+'">'+(x.status?'Funded under assumptions':'Needs attention')+'</span></div>'+
+  '<div class="trust-banner"><strong>Planning estimate</strong>This result depends on the information and assumptions entered. It is not a guarantee.</div>'+
+  '<div class="plain-summary">'+
+   '<div class="plain-card"><div class="question">Can I retire when planned?</div><div class="answer">'+(x.status?'Yes, under these assumptions':'Not yet')+'</div><div class="explain">'+(x.status?'The model remains positive through age '+Number(s.retirementEndAge||95)+'.':'The first projected shortfall is at age '+x.firstShortfall+'.')+'</div></div>'+
+   '<div class="plain-card"><div class="question">How much can I spend?</div><div class="answer">'+money(Number(s.retireSpend||0))+'/year</div><div class="explain">This is the spending target currently used.</div></div>'+
+   '<div class="plain-card"><div class="question">What is the biggest pressure point?</div><div class="answer">Age '+Number(x.peak.age||0).toFixed(0)+'</div><div class="explain">About '+money(x.peak.withdrawal||0)+' would come from investments that year.</div></div>'+
+   '<div class="plain-card"><div class="question">What may remain later?</div><div class="answer">'+money(Number(x.last.endBalance||0))+'</div><div class="explain">Estimated portfolio at the end of the plan.</div></div>'+
+  '</div>'+
+  '<div class="section-card"><h3>What should I do next?</h3><div class="action-priority">'+esc(x.action)+'</div><div class="simple-actions"><button id="simpleOpenSetup" type="button">Review my information</button><button id="simpleAdvancedRetirement" class="secondary" type="button">Show advanced analysis</button></div></div>'+
+  '<details class="retirement-section-toggle"><summary>Where does retirement income come from?</summary><div class="toggle-body"><p>RyanOS combines workplace pensions, CPP, OAS, employment income, WCB or other support, and withdrawals from investments.</p><div class="simple-next-grid"><div class="simple-next-card"><div class="label">Workplace pensions</div><div class="value">'+money(Number(s.userPensionMonthly||0)+Number(s.spousePensionMonthly||0))+'/mo</div></div><div class="simple-next-card"><div class="label">Your CPP start</div><div class="value">Age '+Number(s.userCppStart||0).toFixed(0)+'</div></div><div class="simple-next-card"><div class="label">Spouse CPP start</div><div class="value">Age '+Number(s.wifeCppStart||0).toFixed(0)+'</div></div></div></div></details>'+
+  '<details class="retirement-section-toggle"><summary>What do these terms mean?</summary><div class="toggle-body"><p><strong>Funded under assumptions:</strong> the projected portfolio does not run out using the entered values.</p><p><strong>Portfolio withdrawal:</strong> money taken from RRSPs, TFSAs, FHSAs or non-registered investments.</p><p><strong>Ending portfolio:</strong> the estimated amount remaining at the end of the plan. It is not an estate calculation.</p></div></details>'+
+  '<details class="retirement-section-toggle"><summary>What is not included yet?</summary><div class="toggle-body"><p>Full federal and provincial tax calculations, mandatory RRIF withdrawals, survivor planning and estate calculations.</p></div></details>';
  var a=document.getElementById("simpleOpenSetup");if(a)a.onclick=function(){data.settings.setupStep=0;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));showPage("setup");};
  var b=document.getElementById("simpleAdvancedRetirement");if(b)b.onclick=function(){data.settings.interfaceMode=2;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));nav();render();showPage("retirement");};
 }
@@ -2876,12 +2914,12 @@ function renderRetirement(){
    '<div class="ret-kpi"><div class="label">Annual spending used</div><div class="value">'+money(spending)+'</div></div>'+
    '<div class="ret-kpi"><div class="label">Ending portfolio</div><div class="value">'+money(last?last.endBalance:0)+'</div></div>'+
   '</div></div>'+
-  (function(){var c=retirementConfidenceScore();return'<div class="section-card"><div class="page-intro"><div><h3>Plan resilience score</h3><p>A transparent score based on plan funding, stress tests, reserve strength, ending balance and data quality.</p></div><span class="status-pill '+(c.score>=70?'good':c.score>=55?'warn':'bad')+'">'+esc(c.label)+'</span></div><div class="confidence-panel"><div class="confidence-score"><div><div class="number">'+c.score+'</div><div class="label">out of 100</div></div></div><div class="confidence-bars">'+c.parts.map(function(p){return'<div class="confidence-row"><div class="confidence-name">'+esc(p.name)+'</div><div class="confidence-track"><div class="confidence-fill" style="width:'+Math.round(p.points/p.max*100)+'%"></div></div><div class="confidence-points">'+p.points+'/'+p.max+'</div></div>';}).join("")+'</div></div><div class="notice '+(c.score>=70?'good':c.score>=55?'warn':'bad')+'">'+c.stressPasses+' of 5 stress tests pass. Starting portfolio equals about '+c.reserveYears.toFixed(1)+' years of current retirement spending.</div></div>';})()+
-  (function(){var r=sustainableSpendingRange();var cls=r.status==='comfortable'?'good':r.status==='cautious'?'warn':'bad';return'<div class="section-card"><div class="page-intro"><div><h3>Sustainable spending range</h3><p>Estimated annual retirement spending limits using your current plan and stress tests.</p></div><span class="status-pill '+cls+'">'+esc(r.status.charAt(0).toUpperCase()+r.status.slice(1))+'</span></div><div class="spending-range-grid"><div class="spending-range-card '+cls+'"><div class="label">Current spending target</div><div class="value">'+money(r.current)+'</div><div class="copy">Your saved annual retirement spending assumption.</div></div><div class="spending-range-card good"><div class="label">Conservative target</div><div class="value">'+money(r.conservative)+'</div><div class="copy">About 10% below the lowest spending level supported by all five stress tests.</div></div><div class="spending-range-card warn"><div class="label">Maximum in base plan</div><div class="value">'+money(r.baseMax)+'</div><div class="copy">Highest tested annual amount that remains funded under the base assumptions.</div></div></div><div class="notice '+cls+'">Stress-tested ceiling: '+money(r.stressedMax)+' per year. This is a planning estimate, not a guarantee.</div></div>';})()+
-  (function(){var m=retirementMarginAnalysis();var cls=m.percentMargin>=20?'good':m.percentMargin>=5?'warn':'bad';return'<div class="section-card"><div class="page-intro"><div><h3>Retirement margin</h3><p>How much room your current plan has before it becomes tight.</p></div><span class="status-pill '+cls+'">'+m.percentMargin.toFixed(0)+'% spending margin</span></div><div class="margin-grid"><div class="margin-card"><div class="label">Annual spending room</div><div class="value">'+money(m.annualMargin)+'</div><div class="copy">Difference between your current target and the maximum funded base-plan spending.</div></div><div class="margin-card"><div class="label">Portfolio at retirement</div><div class="value">'+money(m.atRetirement)+'</div><div class="copy">Projected detailed investment accounts at retirement.</div></div><div class="margin-card"><div class="label">Starting reserve</div><div class="value">'+m.reserveYears.toFixed(1)+' years</div><div class="copy">Portfolio at retirement divided by current annual retirement spending.</div></div><div class="margin-card"><div class="label">Ending portfolio</div><div class="value">'+money(m.end)+'</div><div class="copy">Projected balance at the end of the base plan.</div></div></div><h3 style="margin-top:18px">Key risk drivers</h3><div class="risk-list">'+m.scenarios.map(function(x){var pct=m.atRetirement>0?Math.max(0,Math.min(100,Number(x.ending||0)/m.atRetirement*100)):0;return'<div class="risk-row"><div class="risk-label">'+esc(x.name)+'</div><div class="risk-track"><div class="risk-fill" style="width:'+pct.toFixed(0)+'%"></div></div><div class="risk-result '+(x.ok?'good':'bad')+'">'+(x.ok?money(x.ending):'Shortfall '+x.shortfall)+'</div></div>';}).join("")+'</div><div class="notice '+(m.weakest.ok?'warn':'bad')+'">Most demanding scenario: '+esc(m.weakest.name)+'. '+(m.weakest.ok?'It remains funded with '+money(m.weakest.ending)+' at the plan horizon.':'It first develops a shortfall at age '+m.weakest.shortfall+'.')+'</div></div>';})()+
+  (function(){var c=retirementConfidenceScore();return'<div class="section-card"><div class="page-intro"><div><h3>Plan resilience score'+termHelp('A score based on stress scenarios, reserves, ending balance and data quality. It is not a probability.')+'</h3><p>A transparent score based on plan funding, stress tests, reserve strength, ending balance and data quality.</p></div><span class="status-pill '+(c.score>=70?'good':c.score>=55?'warn':'bad')+'">'+esc(c.label)+'</span></div><div class="confidence-panel"><div class="confidence-score"><div><div class="number">'+c.score+'</div><div class="label">out of 100</div></div></div><div class="confidence-bars">'+c.parts.map(function(p){return'<div class="confidence-row"><div class="confidence-name">'+esc(p.name)+'</div><div class="confidence-track"><div class="confidence-fill" style="width:'+Math.round(p.points/p.max*100)+'%"></div></div><div class="confidence-points">'+p.points+'/'+p.max+'</div></div>';}).join("")+'</div></div><div class="notice '+(c.score>=70?'good':c.score>=55?'warn':'bad')+'">'+c.stressPasses+' of 5 stress tests pass. Starting portfolio equals about '+c.reserveYears.toFixed(1)+' years of current retirement spending.</div></div>';})()+
+  (function(){var r=sustainableSpendingRange();var cls=r.status==='comfortable'?'good':r.status==='cautious'?'warn':'bad';return'<div class="section-card"><div class="page-intro"><div><h3>Sustainable spending range'+termHelp('Estimated spending levels tested by the current model. These are planning estimates, not guarantees.')+'</h3><p>Estimated annual retirement spending limits using your current plan and stress tests.</p></div><span class="status-pill '+cls+'">'+esc(r.status.charAt(0).toUpperCase()+r.status.slice(1))+'</span></div><div class="spending-range-grid"><div class="spending-range-card '+cls+'"><div class="label">Current spending target</div><div class="value">'+money(r.current)+'</div><div class="copy">Your saved annual retirement spending assumption.</div></div><div class="spending-range-card good"><div class="label">Conservative target</div><div class="value">'+money(r.conservative)+'</div><div class="copy">About 10% below the lowest spending level supported by all five stress tests.</div></div><div class="spending-range-card warn"><div class="label">Maximum in base plan</div><div class="value">'+money(r.baseMax)+'</div><div class="copy">Highest tested annual amount that remains funded under the base assumptions.</div></div></div><div class="notice '+cls+'">Stress-tested ceiling: '+money(r.stressedMax)+' per year. This is a planning estimate, not a guarantee.</div></div>';})()+
+  (function(){var m=retirementMarginAnalysis();var cls=m.percentMargin>=20?'good':m.percentMargin>=5?'warn':'bad';return'<div class="section-card"><div class="page-intro"><div><h3>Retirement margin'+termHelp('The difference between your spending target and the highest amount supported by the base assumptions.')+'</h3><p>How much room your current plan has before it becomes tight.</p></div><span class="status-pill '+cls+'">'+m.percentMargin.toFixed(0)+'% spending margin</span></div><div class="margin-grid"><div class="margin-card"><div class="label">Annual spending room</div><div class="value">'+money(m.annualMargin)+'</div><div class="copy">Difference between your current target and the maximum funded base-plan spending.</div></div><div class="margin-card"><div class="label">Portfolio at retirement</div><div class="value">'+money(m.atRetirement)+'</div><div class="copy">Projected detailed investment accounts at retirement.</div></div><div class="margin-card"><div class="label">Starting reserve</div><div class="value">'+m.reserveYears.toFixed(1)+' years</div><div class="copy">Portfolio at retirement divided by current annual retirement spending.</div></div><div class="margin-card"><div class="label">Ending portfolio</div><div class="value">'+money(m.end)+'</div><div class="copy">Projected balance at the end of the base plan.</div></div></div><h3 style="margin-top:18px">Key risk drivers</h3><div class="risk-list">'+m.scenarios.map(function(x){var pct=m.atRetirement>0?Math.max(0,Math.min(100,Number(x.ending||0)/m.atRetirement*100)):0;return'<div class="risk-row"><div class="risk-label">'+esc(x.name)+'</div><div class="risk-track"><div class="risk-fill" style="width:'+pct.toFixed(0)+'%"></div></div><div class="risk-result '+(x.ok?'good':'bad')+'">'+(x.ok?money(x.ending):'Shortfall '+x.shortfall)+'</div></div>';}).join("")+'</div><div class="notice '+(m.weakest.ok?'warn':'bad')+'">Most demanding scenario: '+esc(m.weakest.name)+'. '+(m.weakest.ok?'It remains funded with '+money(m.weakest.ending)+' at the plan horizon.':'It first develops a shortfall at age '+m.weakest.shortfall+'.')+'</div></div>';})()+
   '<div class="section-card"><div class="page-intro"><div><h3>Workplace pensions</h3><p>Guaranteed pension income is shown separately for you and your spouse.</p></div></div><div class="pension-summary-grid">'+pensionSummaryCard(userPension)+pensionSummaryCard(spousePension)+'</div></div>'+
   '<div class="section-card"><h3>Retirement income timeline</h3><div class="ret-timeline">'+timeline.map(function(x){return'<div class="ret-milestone"><div class="age">Age '+x.age+'</div><div class="event">'+esc(x.event)+'</div><div class="detail">'+esc(x.detail)+'</div></div>';}).join("")+'</div></div>'+
-  '<div class="section-card"><div class="page-intro"><div><h3>Guaranteed income and portfolio withdrawals</h3><p>Selected milestone years showing how much spending is covered without portfolio withdrawals.</p></div><span class="status-pill '+(pensionAudit.legacyReferences===0?'good':'warn')+'">'+(pensionAudit.legacyReferences===0?'Pension model clean':pensionAudit.legacyReferences+' legacy reference'+(pensionAudit.legacyReferences===1?'':'s'))+'</span></div><div class="mobile-scroll-hint">Swipe sideways to see all columns.</div><div style="overflow-x:auto"><table class="income-audit-table"><thead><tr><th>Your age</th><th>Spouse age</th><th>Spending</th><th>Your pension</th><th>Spouse pension</th><th>CPP/OAS</th><th>Employment/WCB</th><th>Guaranteed coverage</th><th>Portfolio withdrawal</th></tr></thead><tbody>'+
+  '<div class="section-card"><div class="page-intro"><div><h3>Guaranteed income and portfolio withdrawals'+termHelp('Guaranteed income includes pensions and government benefits. Portfolio withdrawals come from investment accounts.')+'</h3><p>Selected milestone years showing how much spending is covered without portfolio withdrawals.</p></div><span class="status-pill '+(pensionAudit.legacyReferences===0?'good':'warn')+'">'+(pensionAudit.legacyReferences===0?'Pension model clean':pensionAudit.legacyReferences+' legacy reference'+(pensionAudit.legacyReferences===1?'':'s'))+'</span></div><div class="mobile-scroll-hint">Swipe sideways to see all columns.</div><div style="overflow-x:auto"><table class="income-audit-table"><thead><tr><th>Your age</th><th>Spouse age</th><th>Spending</th><th>Your pension</th><th>Spouse pension</th><th>CPP/OAS</th><th>Employment/WCB</th><th>Guaranteed coverage</th><th>Portfolio withdrawal</th></tr></thead><tbody>'+
    pensionAudit.rows.map(function(r){var government=Number(r.cpp||0)+Number(r.wcpp||0)+Number(r.oas||0)+Number(r.woas||0),support=Number(r.wifeEmployment||0)+Number(r.wcb||0),guaranteed=Number(r.pension||0)+government+support,coverage=Number(r.spend||0)>0?guaranteed/Number(r.spend||0)*100:100;return'<tr><td>'+r.age+'</td><td>'+r.wifeAge+'</td><td>'+money(r.spend)+'</td><td>'+money(r.userPension||0)+(Number(r.userPensionBridge||0)>0?' <small>incl. bridge</small>':'')+'</td><td>'+money(r.spousePension||0)+(Number(r.spousePensionBridge||0)>0?' <small>incl. bridge</small>':'')+'</td><td>'+money(government)+'</td><td>'+money(support)+'</td><td><div class="income-cover"><span style="width:'+Math.min(100,Math.max(0,coverage)).toFixed(0)+'%"></span></div>'+coverage.toFixed(0)+'%</td><td>'+money(r.withdrawal||0)+'</td></tr>';}).join("")+
   '</tbody></table></div><div class="audit-banner"><div><strong>Peak portfolio withdrawal</strong><div>'+money(pensionAudit.peak.withdrawal||0)+' at age '+Number(pensionAudit.peak.age||0).toFixed(0)+'</div></div><div><strong>Lowest guaranteed coverage</strong><div>'+(pensionAudit.lowestCoverage.row?pensionAudit.lowestCoverage.pct.toFixed(0)+'% at age '+pensionAudit.lowestCoverage.row.age:'—')+'</div></div><div><strong>Defined contribution treatment</strong><div>Excluded from guaranteed pension income</div></div></div></div>'+
   '<div class="section-card"><h3>Plan resilience</h3><div class="ret-stress-grid">'+results.map(function(x){return'<div class="ret-stress"><div class="label">'+esc(x.name)+'</div><div class="result '+(x.age?'bad':'good')+'">'+(x.age?'Shortfall at '+x.age:'Passes')+'</div></div>';}).join("")+'</div><div class="notice '+(passes>=3?'good':'bad')+'">'+passes+' of 5 stress tests remain funded through age '+Number(s.retirementEndAge||95)+'.</div></div>'+
@@ -3294,7 +3332,7 @@ function exportBackupFile(){
  var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
  var a=document.createElement("a");
  a.href=URL.createObjectURL(blob);
- a.download="RyanOS-5.3.10-backup.json";
+ a.download="RyanOS-5.3.11-backup.json";
  a.click();
  setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
 }
@@ -3524,7 +3562,7 @@ function backupCompatibilityAudit(){
  add(Number(migratedOld.settings.userFhsaBalance||0)===0&&Number(migratedOld.settings.spouseFhsaBalance||0)===0,"Missing FHSA fields default safely","Older backups without FHSA data open with zero balances.");
  add(Number(migratedOld.settings.userPensionEnabled||0)===0,"Missing user pension defaults safely","Older backups do not invent a user pension.");
  var current=migrate(data);
- add(Number(current.dataSchemaVersion||0)===10,"Current schema version","Migrated data is tagged with schema version 6.");
+ add(Number(current.dataSchemaVersion||0)===11,"Current schema version","Migrated data is tagged with schema version 6.");
  add(Array.isArray(current.netWorthHistory),"Net worth history preserved","Existing net worth snapshots remain available.");
  add(Array.isArray(current.backupHistory),"Recovery history preserved","Recovery points remain attached to the profile.");
  add(!!current.purchasePlanner&&!!current.vehiclePlanner&&!!current.travelPlanner&&!!current.healthcarePlanner,"Planner data preserved","All four planning tools survive migration.");
@@ -3564,7 +3602,7 @@ function fullRegressionAudit(){
   add(Number(data.settings.userFhsaBalance||0)>=0&&Number(data.settings.spouseFhsaBalance||0)>=0,"FHSA accounts valid","User and spouse FHSA balances are present and non-negative.");
   add(typeof pensionIncomeAudit==="function"&&pensionIncomeAudit(rows).rows.length>0,"Pension timeline audit available","Milestone income rows are generated.");
   add(typeof validateBackupObject==="function"&&validateBackupObject(data).length===0,"Current backup validates","Current saved data passes backup validation.");
-  add(Number(data.dataSchemaVersion||0)===10,"Current schema version","Data is tagged with schema version 7.");
+  add(Number(data.dataSchemaVersion||0)===11,"Current schema version","Data is tagged with schema version 7.");
  }catch(err){
   add(false,"Regression audit execution","Audit stopped because: "+(err.message||String(err)));
  }
@@ -3579,7 +3617,7 @@ function renderSimpleSettings(){
   '<div class="mode-note"><strong>Simple mode hides technical controls.</strong><div>All calculations and saved information remain available. Switch to Advanced mode for detailed assumptions, withdrawal strategies and diagnostic tables.</div></div>'+
   '<div class="section-card"><h3>Guided setup</h3><p>Review household income, accounts, pensions and retirement assumptions.</p><button id="simpleRunSetup" type="button">Run Setup Wizard</button></div>'+
   '<div class="section-card"><h3>Backup and recovery</h3><p>Export a backup before making major changes or moving to another device.</p><div class="simple-actions"><button id="simpleExport" type="button">Export backup</button><button id="simpleAdvancedSettings" class="secondary" type="button">Open advanced settings</button></div></div>'+
-  '<div class="section-card"><h3>Data health</h3><div class="simple-next-grid"><div class="simple-next-card"><div class="label">Compatibility checks</div><div class="value">'+c.pass+'/'+c.total+'</div></div><div class="simple-next-card"><div class="label">Schema</div><div class="value">10</div></div><div class="simple-next-card"><div class="label">Storage</div><div class="value">This device</div></div></div></div>'+
+  '<div class="section-card"><h3>Data health</h3><div class="simple-next-grid"><div class="simple-next-card"><div class="label">Compatibility checks</div><div class="value">'+c.pass+'/'+c.total+'</div></div><div class="simple-next-card"><div class="label">Schema</div><div class="value">11</div></div><div class="simple-next-card"><div class="label">Storage</div><div class="value">This device</div></div></div></div>'+
   '<div class="trust-banner"><strong>Privacy reminder</strong>RyanOS stores data in this browser. Keep exported backups in a secure location.</div>';
  document.getElementById("simpleRunSetup").onclick=function(){data.settings.setupStep=0;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));showPage("setup");};
  document.getElementById("simpleExport").onclick=exportBackupFile;
@@ -3634,7 +3672,7 @@ function renderSettings(){
  '<div class="section-card"><h3>Data health</h3><div class="notice '+(health.length?'bad':'good')+'">'+(health.length?health.map(function(x){return'• '+x;}).join('<br>'):'No major data problems detected.')+'</div></div>'+
  (function(){var audit=foundationAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Foundation audit</h3><p>Automated checks for the calculations and data connections RyanOS depends on.</p></div><span class="status-pill '+(audit.passed===audit.total?'good':audit.passed>=audit.total-2?'warn':'bad')+'">'+audit.passed+' of '+audit.total+' passed</span></div><div class="audit-grid">'+audit.checks.map(function(x){return'<div class="audit-card '+(x.ok?'pass':'fail')+'"><div class="audit-title">'+(x.ok?'✓ ':'⚠ ')+esc(x.name)+'</div><div class="audit-copy">'+esc(x.copy)+'</div></div>';}).join("")+'</div><div class="quick-actions" style="margin-top:12px"><button id="runFoundationAudit" type="button">Run audit again</button></div></div>';})()+
  '<div class="section-card"><div class="page-intro"><div><h3>Calculation scope</h3><p>What RyanOS currently calculates and what still requires professional confirmation.</p></div><span class="estimate-tag">Planning estimate</span></div><div class="method-grid"><div class="method-card"><div class="label">Included</div><div class="value">Cash flow, account growth, pensions, CPP/OAS, stress scenarios and year-by-year balances</div></div><div class="method-card"><div class="label">Simplified</div><div class="value">Income tax, non-registered taxation and withdrawal sequencing</div></div><div class="method-card"><div class="label">Not included yet</div><div class="value">Full federal/provincial tax, RRIF minimums, survivor and estate calculations</div></div></div></div>'+
- (function(){var r=fullRegressionAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Full regression test</h3><p>Checks the primary pages, financial engines, planners, backup system and retirement calculations together.</p></div><span class="status-pill '+(r.failed===0?'good':'bad')+'">'+r.pass+' of '+r.total+' passed</span></div><div class="regression-grid"><div class="regression-card"><div class="label">Schema version</div><div class="value">10</div></div><div class="regression-card"><div class="label">Tests</div><div class="value">'+r.total+'</div></div><div class="regression-card"><div class="label">Passed</div><div class="value">'+r.pass+'</div></div><div class="regression-card"><div class="label">Failed</div><div class="value">'+r.failed+'</div></div></div><div class="regression-list">'+r.tests.map(function(x){return'<div class="regression-item '+(x.ok?'pass':'fail')+'"><div>'+(x.ok?'✓':'!')+'</div><div><strong>'+esc(x.name)+'</strong><div class="tx-muted">'+esc(x.copy)+'</div></div></div>';}).join("")+'</div><div class="quick-actions" style="margin-top:12px"><button id="runRegressionAudit" type="button">Run regression test again</button></div></div>';})()+
+ (function(){var r=fullRegressionAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Full regression test</h3><p>Checks the primary pages, financial engines, planners, backup system and retirement calculations together.</p></div><span class="status-pill '+(r.failed===0?'good':'bad')+'">'+r.pass+' of '+r.total+' passed</span></div><div class="regression-grid"><div class="regression-card"><div class="label">Schema version</div><div class="value">11</div></div><div class="regression-card"><div class="label">Tests</div><div class="value">'+r.total+'</div></div><div class="regression-card"><div class="label">Passed</div><div class="value">'+r.pass+'</div></div><div class="regression-card"><div class="label">Failed</div><div class="value">'+r.failed+'</div></div></div><div class="regression-list">'+r.tests.map(function(x){return'<div class="regression-item '+(x.ok?'pass':'fail')+'"><div>'+(x.ok?'✓':'!')+'</div><div><strong>'+esc(x.name)+'</strong><div class="tx-muted">'+esc(x.copy)+'</div></div></div>';}).join("")+'</div><div class="quick-actions" style="margin-top:12px"><button id="runRegressionAudit" type="button">Run regression test again</button></div></div>';})()+
  (function(){var c=backupCompatibilityAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Backup migration compatibility</h3><p>Checks whether older RyanOS data can be upgraded without losing important information.</p></div><span class="status-pill '+(c.pass===c.total?'good':'warn')+'">'+c.pass+' of '+c.total+' passed</span></div><div class="compat-grid"><div class="compat-card"><div class="label">Schema version</div><div class="value">9</div></div><div class="compat-card"><div class="label">Compatibility tests</div><div class="value">'+c.total+'</div></div><div class="compat-card"><div class="label">Passed</div><div class="value">'+c.pass+'</div></div><div class="compat-card"><div class="label">Warnings</div><div class="value">'+(c.total-c.pass)+'</div></div></div><div class="compat-list">'+c.tests.map(function(x){return'<div class="compat-item '+(x.ok?'pass':'warn')+'"><div>'+(x.ok?'✓':'!')+'</div><div><strong>'+esc(x.name)+'</strong><div class="tx-muted">'+esc(x.copy)+'</div></div></div>';}).join("")+'</div></div>';})()+
  '<div class="section-card"><div class="page-intro"><div><h3>Guided setup</h3><p>Run the question-and-answer setup again without deleting transactions, net worth history or backups.</p></div><button id="rerunSetup" type="button">Run Setup Wizard</button></div></div>'+
  '<div class="pension-grid">'+pensionEditor("user","Your workplace pension")+pensionEditor("spouse","Spouse workplace pension")+'</div>'+
@@ -3710,7 +3748,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.3.10-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.3.11-backup.json";a.click();};
 var modeToggle=document.getElementById("modeToggle");
 if(modeToggle)modeToggle.onclick=function(){
  data.settings.interfaceMode=isSimpleMode()?2:1;

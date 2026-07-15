@@ -1,9 +1,9 @@
 {
-  "name": "RyanOS 5.3.10",
+  "name": "RyanOS 5.3.11",
   "short_name": "RyanOS",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f4f7fb",
   "theme_color": "#17365d",
-  "description": "RyanOS with a simpler, progressive guided setup."
+  "description": "RyanOS with a plain-language retirement summary and collapsible details."
 }
