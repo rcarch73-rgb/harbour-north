@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 5.1.3</title>
+<title>RyanOS 5.1.4</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -400,11 +400,24 @@ details.section-card[open]>summary:after{content:"−"}
 .opportunity-card.bad{border-color:#e7b8b8;background:#fff8f8}
 @media(max-width:820px){.opportunity-grid{grid-template-columns:1fr}}
 
+
+.confidence-panel{display:grid;grid-template-columns:220px 1fr;gap:18px;align-items:center}
+.confidence-score{width:170px;height:170px;border-radius:999px;border:14px solid #dbe3ee;display:grid;place-items:center;margin:auto;background:#fff}
+.confidence-score .number{font-size:2.4rem;font-weight:900;color:var(--brand);line-height:1}
+.confidence-score .label{font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;font-weight:900;color:var(--muted);margin-top:4px}
+.confidence-bars{display:grid;gap:10px}
+.confidence-row{display:grid;grid-template-columns:150px 1fr 48px;gap:10px;align-items:center}
+.confidence-track{height:10px;border-radius:999px;background:#e9eef5;overflow:hidden}
+.confidence-fill{height:100%;border-radius:999px;background:#17365d}
+.confidence-name{font-weight:800;color:#344054}
+.confidence-points{text-align:right;font-weight:900;color:var(--brand)}
+@media(max-width:700px){.confidence-panel{grid-template-columns:1fr}.confidence-row{grid-template-columns:120px 1fr 42px}}
+
 </style>
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>5.1.3 — Opportunity Alerts</small></div>
+  <div><h1>RyanOS</h1><small>5.1.4 — Retirement Confidence Score</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -1904,6 +1917,51 @@ function renderRetirementCore(){
 
 
 
+
+function retirementConfidenceScore(){
+ var s=data.settings;
+ var rows=retirementPlan(s.returnRate);
+ var firstShortfall=0,endBalance=rows.length?Number(rows[rows.length-1].endBalance||0):0;
+ for(var i=0;i<rows.length;i++){if(Number(rows[i].unfunded||0)>1){firstShortfall=rows[i].age;break;}}
+ var tests=[
+  retirementPlan(s.returnRate,null,"crash"),
+  retirementPlan(s.returnRate,null,"badStart"),
+  retirementPlan(s.returnRate,null,"lowReturn"),
+  retirementPlan(s.returnRate,null,"highInflation"),
+  retirementPlan(s.returnRate,null,"spendingShock")
+ ];
+ function passes(testRows){
+  for(var j=0;j<testRows.length;j++){if(Number(testRows[j].unfunded||0)>1||testRows[j].depleted)return false;}
+  return true;
+ }
+ var stressPasses=tests.filter(passes).length;
+ var at=accountBalancesAtRetirement(s.returnRate);
+ var annualSpend=Number(s.retireSpend||0);
+ var reserveYears=annualSpend>0?at.total/annualSpend:0;
+ var audit=foundationAudit();
+
+ var fundingPoints=firstShortfall?0:30;
+ var stressPoints=Math.round(stressPasses/5*30);
+ var reservePoints=Math.max(0,Math.min(20,Math.round(reserveYears/20*20)));
+ var endingPoints=endBalance>0?10:0;
+ var dataPoints=Math.round(audit.passed/audit.total*10);
+ var score=Math.max(0,Math.min(100,fundingPoints+stressPoints+reservePoints+endingPoints+dataPoints));
+ var label=score>=85?"Very strong":score>=70?"Strong":score>=55?"Moderate":score>=40?"Weak":"At risk";
+
+ return{
+  score:score,label:label,
+  parts:[
+   {name:"Plan funding",points:fundingPoints,max:30},
+   {name:"Stress tests",points:stressPoints,max:30},
+   {name:"Starting reserve",points:reservePoints,max:20},
+   {name:"Ending balance",points:endingPoints,max:10},
+   {name:"Data quality",points:dataPoints,max:10}
+  ],
+  stressPasses:stressPasses,
+  firstShortfall:firstShortfall,
+  reserveYears:reserveYears
+ };
+}
 function runRetirementScenario(changes){
  var s=data.settings;
  var original={};
@@ -1973,6 +2031,7 @@ function renderRetirement(){
    '<div class="ret-kpi"><div class="label">Annual spending used</div><div class="value">'+money(spending)+'</div></div>'+
    '<div class="ret-kpi"><div class="label">Ending portfolio</div><div class="value">'+money(last?last.endBalance:0)+'</div></div>'+
   '</div></div>'+
+  (function(){var c=retirementConfidenceScore();return'<div class="section-card"><div class="page-intro"><div><h3>Retirement confidence score</h3><p>A transparent score based on plan funding, stress tests, reserve strength, ending balance and data quality.</p></div><span class="status-pill '+(c.score>=70?'good':c.score>=55?'warn':'bad')+'">'+esc(c.label)+'</span></div><div class="confidence-panel"><div class="confidence-score"><div><div class="number">'+c.score+'</div><div class="label">out of 100</div></div></div><div class="confidence-bars">'+c.parts.map(function(p){return'<div class="confidence-row"><div class="confidence-name">'+esc(p.name)+'</div><div class="confidence-track"><div class="confidence-fill" style="width:'+Math.round(p.points/p.max*100)+'%"></div></div><div class="confidence-points">'+p.points+'/'+p.max+'</div></div>';}).join("")+'</div></div><div class="notice '+(c.score>=70?'good':c.score>=55?'warn':'bad')+'">'+c.stressPasses+' of 5 stress tests pass. Starting portfolio equals about '+c.reserveYears.toFixed(1)+' years of current retirement spending.</div></div>';})()+
   '<div class="section-card"><h3>Retirement income timeline</h3><div class="ret-timeline">'+timeline.map(function(x){return'<div class="ret-milestone"><div class="age">Age '+x.age+'</div><div class="event">'+esc(x.event)+'</div><div class="detail">'+esc(x.detail)+'</div></div>';}).join("")+'</div></div>'+
   '<div class="section-card"><h3>Plan resilience</h3><div class="ret-stress-grid">'+results.map(function(x){return'<div class="ret-stress"><div class="label">'+esc(x.name)+'</div><div class="result '+(x.age?'bad':'good')+'">'+(x.age?'Shortfall at '+x.age:'Passes')+'</div></div>';}).join("")+'</div><div class="notice '+(passes>=3?'good':'bad')+'">'+passes+' of 5 stress tests remain funded through age '+Number(s.retirementEndAge||95)+'.</div></div>'+
   '<div class="section-card"><h3>What-if scenarios</h3><p class="tx-muted">Quick comparisons using your current assumptions. These do not change saved settings.</p><div class="scenario-grid">'+retirementScenarioInsights().map(function(x){return'<div class="scenario-card '+(x.ok?'good':'bad')+'"><div class="scenario-name">'+esc(x.name)+'</div><div class="scenario-result">'+(x.ok?'Funded':'Shortfall at '+x.shortfall)+'</div><div class="scenario-copy">'+esc(x.copy)+' Ending portfolio: '+money(x.endBalance)+'.</div></div>';}).join("")+'</div></div>';
@@ -2384,7 +2443,7 @@ function exportBackupFile(){
  var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
  var a=document.createElement("a");
  a.href=URL.createObjectURL(blob);
- a.download="RyanOS-5.1.3-backup.json";
+ a.download="RyanOS-5.1.4-backup.json";
  a.click();
  setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
 }
@@ -2510,7 +2569,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.1.3-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.1.4-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
