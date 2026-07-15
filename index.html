@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 4.4.0</title>
+<title>RyanOS 4.5.0</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -225,11 +225,17 @@ main{
 .backup-item{display:flex;justify-content:space-between;gap:12px;align-items:center;border:1px solid #dbe3ee;border-radius:12px;padding:10px 12px}
 @media(max-width:720px){.backup-grid{grid-template-columns:1fr}}
 
+
+.nw-chart-wrap{overflow-x:auto}
+.nw-chart{width:100%;min-width:720px;height:360px}
+.nw-change{font-weight:800}
+.nw-history-note{min-width:180px}
+
 </style>
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>4.4.0 — Backup & Recovery</small></div>
+  <div><h1>RyanOS</h1><small>4.5.0 — Net Worth History</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -345,6 +351,14 @@ function migrate(raw){
 var data=migrate(JSON.parse(localStorage.getItem(STORAGE_KEY)||localStorage.getItem("ryanos-data")||"null"));
 if(!data.review)data.review={month:new Date().toISOString().slice(0,7),notes:"",lastBackup:""};
 if(!Array.isArray(data.netWorthHistory))data.netWorthHistory=[];
+data.netWorthHistory=data.netWorthHistory.map(function(x){return{
+ date:String(x.date||new Date().toISOString().slice(0,10)),
+ assets:Number(x.assets||0),
+ debts:Number(x.debts||0),
+ networth:Number(x.networth!=null?x.networth:Number(x.assets||0)-Number(x.debts||0)),
+ investments:Number(x.investments||0),
+ note:String(x.note||"")
+};});
 if(!Array.isArray(data.futureExpenses))data.futureExpenses=clone(defaults.futureExpenses);
 if(!Array.isArray(data.debts))data.debts=[];
 if(!Array.isArray(data.backupHistory))data.backupHistory=[];
@@ -1545,10 +1559,118 @@ function renderRetirement(){
   localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderRetirement();
  };});
 }
-function renderNetWorth(){
- var t=totals(),s=data.settings,assets=[["Primary home",s.home],["NS property 1",s.ns1],["NS property 2",s.ns2],["Investments",s.investments],["Cash",s.cash],["Vehicles",s.vehicles],["Boat",s.boat],["Camper",s.camper]];
- document.getElementById("networth").innerHTML='<div class="page-intro"><div><h2>Net Worth</h2><p>Track assets, debts and your progress over time.</p></div></div><div class="grid"><div class="card"><h3>Assets</h3><div class="metric">'+money(t.assets)+'</div></div><div class="card"><h3>Debt</h3><div class="metric">'+money(t.debt)+'</div></div><div class="card"><h3>Net worth</h3><div class="metric">'+money(t.networth)+'</div></div></div><div class="card" style="margin-top:12px"><table><thead><tr><th>Asset</th><th>Value</th></tr></thead><tbody>'+assets.map(function(x){return"<tr><td>"+x[0]+"</td><td>"+money(x[1])+"</td></tr>";}).join("")+"</tbody></table></div>";
+
+function saveDetailedNetWorthSnapshot(note,automatic){
+ var t=totals(),today=new Date().toISOString().slice(0,10);
+ var item={
+  date:today,
+  assets:Number(t.assets||0),
+  debts:Number(t.debt||0),
+  networth:Number(t.networth||0),
+  investments:Number(data.settings.investments||0),
+  note:String(note||"")
+ };
+ var existing=(data.netWorthHistory||[]).findIndex(function(x){return x.date===today;});
+ if(existing>=0)data.netWorthHistory[existing]=item;else data.netWorthHistory.push(item);
+ data.netWorthHistory.sort(function(a,b){return String(a.date).localeCompare(String(b.date));});
+ localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+ return item;
 }
+function ensureMonthlyNetWorthSnapshot(){
+ var month=new Date().toISOString().slice(0,7);
+ var has=(data.netWorthHistory||[]).some(function(x){return String(x.date||"").slice(0,7)===month;});
+ if(!has)saveDetailedNetWorthSnapshot("Automatic monthly snapshot",true);
+}
+function drawNetWorthHistoryChart(){
+ var canvas=document.getElementById("netWorthHistoryChart");
+ var rows=(data.netWorthHistory||[]).slice().sort(function(a,b){return String(a.date).localeCompare(String(b.date));});
+ if(!canvas||!canvas.getContext||!rows.length)return;
+ var rect=canvas.getBoundingClientRect?canvas.getBoundingClientRect():{width:900,height:360};
+ var width=Math.max(720,Math.floor(rect.width||900)),height=360,dpr=window.devicePixelRatio||1;
+ canvas.width=width*dpr;canvas.height=height*dpr;canvas.style.width=width+"px";canvas.style.height=height+"px";
+ var ctx=canvas.getContext("2d");ctx.scale(dpr,dpr);ctx.clearRect(0,0,width,height);
+ var pad={l:76,r:24,t:32,b:54},plotW=width-pad.l-pad.r,plotH=height-pad.t-pad.b;
+ var series=[
+  {key:"assets",label:"Assets"},
+  {key:"debts",label:"Debt"},
+  {key:"networth",label:"Net worth"},
+  {key:"investments",label:"Investments"}
+ ];
+ var values=[];
+ rows.forEach(function(r){series.forEach(function(s){values.push(Number(r[s.key]||0));});});
+ var max=Math.max.apply(null,values.concat([1])),min=Math.min.apply(null,values.concat([0]));
+ if(min>0)min=0;
+ var span=Math.max(1,max-min);
+ max=Math.ceil(max/100000)*100000;
+ min=Math.floor(min/100000)*100000;
+ span=Math.max(1,max-min);
+ function x(i){return pad.l+(rows.length===1?plotW/2:i/(rows.length-1)*plotW);}
+ function y(v){return pad.t+plotH-(Number(v||0)-min)/span*plotH;}
+ ctx.font="12px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif";
+ ctx.strokeStyle="#d8dee8";ctx.fillStyle="#586174";ctx.lineWidth=1;
+ for(var g=0;g<=5;g++){
+  var val=min+span*g/5,yy=y(val);
+  ctx.beginPath();ctx.moveTo(pad.l,yy);ctx.lineTo(width-pad.r,yy);ctx.stroke();
+  ctx.fillText("$"+Math.round(val/1000)+"k",8,yy+4);
+ }
+ var step=Math.max(1,Math.ceil(rows.length/7));
+ rows.forEach(function(r,i){
+  if(i%step===0||i===rows.length-1){
+   var xx=x(i);ctx.beginPath();ctx.moveTo(xx,pad.t);ctx.lineTo(xx,pad.t+plotH);ctx.stroke();
+   ctx.fillText(String(r.date).slice(0,7),xx-24,height-18);
+  }
+ });
+ var palette=["#1f5f99","#a61b1b","#111827","#2b8a5a"];
+ series.forEach(function(s,si){
+  ctx.strokeStyle=palette[si];ctx.lineWidth=s.key==="networth"?3:2;ctx.beginPath();
+  rows.forEach(function(r,i){var yy=y(r[s.key]);if(i===0)ctx.moveTo(x(i),yy);else ctx.lineTo(x(i),yy);});
+  ctx.stroke();
+ });
+ var lx=pad.l,ly=16;
+ series.forEach(function(s,si){ctx.fillStyle=palette[si];ctx.fillRect(lx,ly-8,14,3);ctx.fillStyle="#263244";ctx.fillText(s.label,lx+20,ly-3);lx+=s.label.length*7+54;});
+}
+function renderNetWorth(){
+ ensureMonthlyNetWorthSnapshot();
+ var t=totals(),history=(data.netWorthHistory||[]).slice().sort(function(a,b){return String(a.date).localeCompare(String(b.date));});
+ var latest=history.length?history[history.length-1]:null;
+ var previous=history.length>1?history[history.length-2]:null;
+ var twelveMonthsAgo=null;
+ if(latest){
+  var cutoff=new Date(latest.date+"T00:00:00");cutoff.setMonth(cutoff.getMonth()-12);
+  for(var i=history.length-1;i>=0;i--){if(new Date(history[i].date+"T00:00:00")<=cutoff){twelveMonthsAgo=history[i];break;}}
+ }
+ var monthlyChange=latest&&previous?latest.networth-previous.networth:0;
+ var annualChange=latest&&twelveMonthsAgo?latest.networth-twelveMonthsAgo.networth:0;
+ var high=history.length?Math.max.apply(null,history.map(function(x){return Number(x.networth||0);})):Number(t.networth||0);
+
+ document.getElementById("networth").innerHTML=
+ '<div class="page-intro"><div><h2>Net Worth</h2><p>Track assets, debts and progress over time.</p></div><span class="status-pill '+(Number(t.networth)>=0?'good':'bad')+'">'+money(t.networth)+'</span></div>'+
+ '<div class="hero-grid">'+
+  '<div class="hero-card"><div class="label">Current net worth</div><div class="value">'+money(t.networth)+'</div><div class="sub">Assets less debts</div></div>'+
+  '<div class="hero-card"><div class="label">Since last snapshot</div><div class="value nw-change '+(monthlyChange>=0?'good':'bad')+'">'+money(monthlyChange)+'</div><div class="sub">'+(previous?previous.date:'No prior snapshot')+'</div></div>'+
+  '<div class="hero-card"><div class="label">12-month change</div><div class="value nw-change '+(annualChange>=0?'good':'bad')+'">'+(twelveMonthsAgo?money(annualChange):'—')+'</div><div class="sub">'+(twelveMonthsAgo?'Since '+twelveMonthsAgo.date:'Not enough history')+'</div></div>'+
+  '<div class="hero-card"><div class="label">Highest recorded</div><div class="value">'+money(high)+'</div><div class="sub">'+history.length+' snapshot'+(history.length===1?'':'s')+'</div></div>'+
+ '</div>'+
+ '<div class="section-card"><h3>Save a snapshot</h3><div class="money-toolbar"><label>Note<input id="netWorthSnapshotNote" placeholder="Market update, vehicle purchase…"></label><button id="saveNetWorthSnapshot" type="button">Save today’s snapshot</button></div><div class="notice">One automatic snapshot is saved each month. Saving again on the same day updates today’s entry.</div></div>'+
+ '<div class="section-card"><h3>Net worth trend</h3><div class="nw-chart-wrap"><canvas id="netWorthHistoryChart" class="nw-chart"></canvas></div></div>'+
+ '<div class="section-card"><h3>Current values</h3><table><tbody>'+
+  '<tr><td>Total assets</td><td><strong>'+money(t.assets)+'</strong></td><td>Total debt</td><td><strong>'+money(t.debt)+'</strong></td></tr>'+
+  '<tr><td>Investments</td><td>'+money(Number(data.settings.investments||0))+'</td><td>Net worth</td><td><strong>'+money(t.networth)+'</strong></td></tr>'+
+ '</tbody></table></div>'+
+ '<div class="section-card"><h3>History</h3><div style="overflow-x:auto"><table><thead><tr><th>Date</th><th>Assets</th><th>Debt</th><th>Investments</th><th>Net worth</th><th>Change</th><th>Note</th><th></th></tr></thead><tbody>'+
+ (history.length?history.map(function(x,i){
+   var prev=i>0?history[i-1]:null,chg=prev?Number(x.networth||0)-Number(prev.networth||0):0;
+   var originalIndex=data.netWorthHistory.indexOf(x);
+   return'<tr><td><input class="nw-field" data-i="'+originalIndex+'" data-k="date" type="date" value="'+esc(x.date)+'"></td><td>'+money(x.assets)+'</td><td>'+money(x.debts)+'</td><td>'+money(x.investments)+'</td><td><strong>'+money(x.networth)+'</strong></td><td class="'+(chg>=0?'good':'bad')+'">'+(prev?money(chg):'—')+'</td><td><input class="nw-field nw-history-note" data-i="'+originalIndex+'" data-k="note" value="'+esc(x.note||"")+'"></td><td><button class="danger nw-delete" data-i="'+originalIndex+'" type="button">Delete</button></td></tr>';
+  }).join(""):'<tr><td colspan="8">No history yet.</td></tr>')+
+ '</tbody></table></div></div>';
+
+ document.getElementById("saveNetWorthSnapshot").onclick=function(){saveDetailedNetWorthSnapshot(document.getElementById("netWorthSnapshotNote").value.trim(),false);renderNetWorth();};
+ document.querySelectorAll(".nw-field").forEach(function(el){el.onchange=function(){var x=data.netWorthHistory[Number(el.dataset.i)],k=el.dataset.k;x[k]=el.value;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderNetWorth();};});
+ document.querySelectorAll(".nw-delete").forEach(function(el){el.onclick=function(){if(confirm("Delete this net worth snapshot?")){data.netWorthHistory.splice(Number(el.dataset.i),1);localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderNetWorth();}};});
+ drawNetWorthHistoryChart();
+}
+
 function renderLife(){
  document.getElementById("life").innerHTML='<h2>Life Goals</h2><div class="toolbar"><button id="addLife">Add life goal</button></div><div class="card"><table><thead><tr><th>Goal</th><th>Target</th><th>Saved</th><th>Year</th><th>Progress</th><th>Notes</th><th></th></tr></thead><tbody>'+
  data.life.map(function(p,i){var pr=p.target?Math.min(100,p.saved/p.target*100):0;return'<tr><td><input class="l-name" data-i="'+i+'" value="'+esc(p.name)+'"></td><td><input class="l-target" data-i="'+i+'" type="number" value="'+p.target+'"></td><td><input class="l-saved" data-i="'+i+'" type="number" value="'+p.saved+'"></td><td><input class="l-year" data-i="'+i+'" type="number" value="'+p.year+'"></td><td>'+pr.toFixed(1)+'%</td><td><input class="l-notes" data-i="'+i+'" value="'+esc(p.notes)+'"></td><td><button class="danger l-del" data-i="'+i+'">Delete</button></td></tr>';}).join("")+
@@ -1804,7 +1926,7 @@ function exportBackupFile(){
  var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
  var a=document.createElement("a");
  a.href=URL.createObjectURL(blob);
- a.download="RyanOS-4.4.0-backup.json";
+ a.download="RyanOS-4.5.0-backup.json";
  a.click();
  setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
 }
@@ -1905,7 +2027,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-4.4.0-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-4.5.0-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){

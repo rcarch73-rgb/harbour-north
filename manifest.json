@@ -1,9 +1,9 @@
 {
-  "name": "RyanOS 4.4.0",
+  "name": "RyanOS 4.5.0",
   "short_name": "RyanOS",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f4f7fb",
   "theme_color": "#17365d",
-  "description": "RyanOS with backup validation, recovery points and safer imports."
+  "description": "RyanOS with net worth snapshots, history and trend charts."
 }
