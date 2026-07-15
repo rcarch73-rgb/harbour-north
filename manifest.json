@@ -1,9 +1,9 @@
 {
-  "name": "RyanOS 5.1.2",
+  "name": "RyanOS 5.1.3",
   "short_name": "RyanOS",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f4f7fb",
   "theme_color": "#17365d",
-  "description": "RyanOS with quick retirement what-if scenario insights."
+  "description": "RyanOS with opportunity alerts derived from current cash flow, debts, goals and future expenses."
 }
