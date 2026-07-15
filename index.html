@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 5.2.0</title>
+<title>RyanOS 5.2.1</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -456,11 +456,25 @@ details.section-card[open]>summary:after{content:"−"}
 @media(max-width:900px){.purchase-form{grid-template-columns:repeat(2,1fr)}.purchase-results{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.purchase-form,.purchase-results{grid-template-columns:1fr}}
 
+
+.vehicle-form{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;align-items:end}
+.vehicle-results{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}
+.vehicle-card{border:1px solid var(--border);border-radius:14px;padding:14px;background:#fff}
+.vehicle-card .label{font-size:.76rem;text-transform:uppercase;letter-spacing:.03em;font-weight:900;color:var(--muted)}
+.vehicle-card .value{font-size:1.3rem;font-weight:900;color:var(--brand);margin-top:5px}
+.vehicle-card .copy{font-size:.88rem;color:var(--muted);margin-top:5px}
+.vehicle-card.good{border-color:#b7d8c0;background:#f7fcf8}
+.vehicle-card.warn{border-color:#ead9a4;background:#fffdf5}
+.vehicle-card.bad{border-color:#e7b8b8;background:#fff8f8}
+.vehicle-comparison{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
+@media(max-width:900px){.vehicle-form,.vehicle-results,.vehicle-comparison{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.vehicle-form,.vehicle-results,.vehicle-comparison{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>5.2.0 — Major Purchase Planner</small></div>
+  <div><h1>RyanOS</h1><small>5.2.1 — Vehicle Replacement Planner</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -1025,6 +1039,52 @@ function renderHome(){
  '<div class="card"><h3>Next actions</h3><div class="notice">Import this month’s transactions.</div><p>Update LOC and goal balances.</p><p>Export a backup after your monthly review.</p></div></div>';
 }
 
+
+function ensureVehiclePlanner(){
+ if(!data.vehiclePlanner||typeof data.vehiclePlanner!=="object"){
+  data.vehiclePlanner={
+   currentValue:18000,
+   replacementCost:45000,
+   tradeInValue:12000,
+   yearsUntil:3,
+   annualRepairCost:1500,
+   financeRate:6,
+   financeYears:5,
+   downPayment:10000
+  };
+ }
+ return data.vehiclePlanner;
+}
+function vehiclePlanAnalysis(){
+ var v=ensureVehiclePlanner();
+ var years=Math.max(.1,Number(v.yearsUntil||0));
+ var months=Math.max(1,Math.round(years*12));
+ var netCost=Math.max(0,Number(v.replacementCost||0)-Number(v.tradeInValue||0));
+ var savingsNeed=Math.max(0,netCost-Number(v.downPayment||0));
+ var monthlySave=savingsNeed/months;
+ var financePrincipal=Math.max(0,netCost-Number(v.downPayment||0));
+ var monthlyRate=Number(v.financeRate||0)/100/12;
+ var n=Math.max(1,Math.round(Number(v.financeYears||0)*12));
+ var financePayment=monthlyRate>0?financePrincipal*monthlyRate*Math.pow(1+monthlyRate,n)/(Math.pow(1+monthlyRate,n)-1):financePrincipal/n;
+ var repairTotal=Math.max(0,Number(v.annualRepairCost||0))*years;
+ var keepCost=repairTotal+Math.max(0,Number(v.currentValue||0)-Number(v.tradeInValue||0));
+ var buyNowCost=netCost;
+ var cashFlow=totals().surplus;
+ var affordableSave=cashFlow>=monthlySave;
+ var affordableFinance=cashFlow>=financePayment;
+ return{
+  months:months,
+  netCost:netCost,
+  monthlySave:monthlySave,
+  financePayment:financePayment,
+  repairTotal:repairTotal,
+  keepCost:keepCost,
+  buyNowCost:buyNowCost,
+  affordableSave:affordableSave,
+  affordableFinance:affordableFinance,
+  cashFlow:cashFlow
+ };
+}
 function ensurePurchasePlanner(){
  if(!data.purchasePlanner||typeof data.purchasePlanner!=="object"){
   var target=new Date();
@@ -1060,7 +1120,7 @@ function purchasePlanAnalysis(){
  };
 }
 function renderMoney(){
- var s=data.settings,purchase=ensurePurchasePlanner(),purchaseResult=purchasePlanAnalysis();
+ var s=data.settings,purchase=ensurePurchasePlanner(),purchaseResult=purchasePlanAnalysis(),vehicle=ensureVehiclePlanner(),vehicleResult=vehiclePlanAnalysis();
  var month=data.reportMonth||data.review.month||new Date().toISOString().slice(0,7);
  var cat=byCategoryForMonth(month),estimate=spendingEstimate();
  var monthTx=monthTransactions(month);
@@ -1142,6 +1202,34 @@ function renderMoney(){
     purchaseResult.capacity>0?"At your current surplus, this purchase would take about "+purchaseResult.completion+" months. Either extend the date, reduce the cost or redirect other monthly commitments.":
     "RyanOS does not currently see available monthly cash for this purchase.")+
   '</div></div>'+
+ '<div class="section-card"><div class="page-intro"><div><h3>Vehicle replacement planner</h3><p>Compare keeping the current vehicle, saving for a replacement or financing the difference.</p></div><span class="status-pill '+(vehicleResult.affordableSave?'good':vehicleResult.affordableFinance?'warn':'bad')+'">'+(vehicleResult.affordableSave?'Savings plan fits':vehicleResult.affordableFinance?'Financing fits':'Funding gap')+'</span></div>'+
+  '<div class="vehicle-form">'+
+   '<label>Current vehicle value<input id="vehicleCurrentValue" type="number" min="0" step="500" value="'+Number(vehicle.currentValue||0)+'"></label>'+
+   '<label>Replacement cost<input id="vehicleReplacementCost" type="number" min="0" step="500" value="'+Number(vehicle.replacementCost||0)+'"></label>'+
+   '<label>Expected trade-in<input id="vehicleTradeIn" type="number" min="0" step="500" value="'+Number(vehicle.tradeInValue||0)+'"></label>'+
+   '<label>Replace in years<input id="vehicleYearsUntil" type="number" min=".1" step=".5" value="'+Number(vehicle.yearsUntil||0)+'"></label>'+
+   '<label>Annual repairs<input id="vehicleRepairs" type="number" min="0" step="100" value="'+Number(vehicle.annualRepairCost||0)+'"></label>'+
+   '<label>Down payment<input id="vehicleDownPayment" type="number" min="0" step="500" value="'+Number(vehicle.downPayment||0)+'"></label>'+
+   '<label>Finance rate %<input id="vehicleFinanceRate" type="number" min="0" step=".1" value="'+Number(vehicle.financeRate||0)+'"></label>'+
+   '<label>Finance term years<input id="vehicleFinanceYears" type="number" min="1" step="1" value="'+Number(vehicle.financeYears||0)+'"></label>'+
+  '</div>'+
+  '<div class="vehicle-results">'+
+   '<div class="vehicle-card"><div class="label">Net replacement cost</div><div class="value">'+money(vehicleResult.netCost)+'</div><div class="copy">Replacement price less expected trade-in.</div></div>'+
+   '<div class="vehicle-card '+(vehicleResult.affordableSave?'good':'warn')+'"><div class="label">Monthly saving required</div><div class="value">'+money(vehicleResult.monthlySave)+'</div><div class="copy">Amount needed to build the planned down payment and replacement fund.</div></div>'+
+   '<div class="vehicle-card '+(vehicleResult.affordableFinance?'good':'warn')+'"><div class="label">Estimated finance payment</div><div class="value">'+money(vehicleResult.financePayment)+'</div><div class="copy">Approximate monthly payment after trade-in and down payment.</div></div>'+
+   '<div class="vehicle-card"><div class="label">Repairs before replacement</div><div class="value">'+money(vehicleResult.repairTotal)+'</div><div class="copy">Estimated repair cost over the planned holding period.</div></div>'+
+  '</div>'+
+  '<div class="vehicle-comparison">'+
+   '<div class="vehicle-card"><div class="label">Keep for now</div><div class="value">'+money(vehicleResult.keepCost)+'</div><div class="copy">Estimated value loss plus repairs over the holding period.</div></div>'+
+   '<div class="vehicle-card"><div class="label">Buy replacement</div><div class="value">'+money(vehicleResult.buyNowCost)+'</div><div class="copy">Net purchase cost after trade-in.</div></div>'+
+   '<div class="vehicle-card '+(vehicleResult.affordableSave||vehicleResult.affordableFinance?'good':'bad')+'"><div class="label">Current monthly capacity</div><div class="value">'+money(vehicleResult.cashFlow)+'</div><div class="copy">Available cash after all current planned commitments.</div></div>'+
+  '</div>'+
+  '<div class="quick-actions" style="margin-top:12px"><button id="saveVehiclePlan" type="button">Save vehicle plan</button><button id="vehicleToPurchase" type="button" class="secondary">Use in purchase planner</button></div>'+
+  '<div class="notice '+(vehicleResult.affordableSave?'good':vehicleResult.affordableFinance?'warn':'bad')+'">'+
+   (vehicleResult.affordableSave?"Your current surplus can support saving for the replacement on schedule.":
+    vehicleResult.affordableFinance?"The savings target does not fully fit, but the estimated finance payment fits current cash flow.":
+    "Neither the savings target nor the estimated finance payment fits current planned cash flow.")+
+  '</div></div>'+
  '<details class="section-card"><summary>Retirement spending estimate</summary><div class="details-body">'+
   '<div class="hero-grid">'+
    '<div class="hero-card"><div class="label">Core annual spending</div><div class="value">'+money(estimate.annualizedCore)+'</div></div>'+
@@ -1181,6 +1269,30 @@ function renderMoney(){
   }
   localStorage.setItem(STORAGE_KEY,JSON.stringify(data));render();
   showPage("goals");
+ };
+ document.getElementById("saveVehiclePlan").onclick=function(){
+  data.vehiclePlanner={
+   currentValue:Number(document.getElementById("vehicleCurrentValue").value||0),
+   replacementCost:Number(document.getElementById("vehicleReplacementCost").value||0),
+   tradeInValue:Number(document.getElementById("vehicleTradeIn").value||0),
+   yearsUntil:Number(document.getElementById("vehicleYearsUntil").value||0),
+   annualRepairCost:Number(document.getElementById("vehicleRepairs").value||0),
+   downPayment:Number(document.getElementById("vehicleDownPayment").value||0),
+   financeRate:Number(document.getElementById("vehicleFinanceRate").value||0),
+   financeYears:Number(document.getElementById("vehicleFinanceYears").value||0)
+  };
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderMoney();
+ };
+ document.getElementById("vehicleToPurchase").onclick=function(){
+  var v=ensureVehiclePlanner(),d=new Date();
+  d.setMonth(d.getMonth()+Math.max(1,Math.round(Number(v.yearsUntil||0)*12)));
+  data.purchasePlanner={
+   name:"Replacement vehicle",
+   amount:Math.max(0,Number(v.replacementCost||0)-Number(v.tradeInValue||0)),
+   saved:Number(v.downPayment||0),
+   targetDate:d.toISOString().slice(0,10)
+  };
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderMoney();
  };
  document.querySelectorAll(".budget-input").forEach(function(el){el.onchange=function(){
   data.budget[Number(el.dataset.i)][1]=Number(el.value||0);save();
@@ -2652,7 +2764,7 @@ function exportBackupFile(){
  var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
  var a=document.createElement("a");
  a.href=URL.createObjectURL(blob);
- a.download="RyanOS-5.2.0-backup.json";
+ a.download="RyanOS-5.2.1-backup.json";
  a.click();
  setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
 }
@@ -2778,7 +2890,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.2.0-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.2.1-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
