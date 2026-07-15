@@ -1,9 +1,9 @@
 {
-  "name": "RyanOS 5.3.20",
+  "name": "RyanOS 5.3.21",
   "short_name": "RyanOS",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f4f7fb",
   "theme_color": "#17365d",
-  "description": "RyanOS with repaired Setup asset and debt persistence."
+  "description": "RyanOS with audited exact-age retirement periods and corrected household income timing."
 }

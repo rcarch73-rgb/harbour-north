@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 5.3.20</title>
+<title>RyanOS 5.3.21</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -716,11 +716,19 @@ details.section-card[open]>summary:after{content:"−"}
 .setup-save-status{font-size:.86rem;font-weight:800;color:var(--good);margin-left:8px}
 .asset-save-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}
 
+
+.age-audit-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.age-audit-card{border:1px solid var(--border);border-radius:13px;padding:12px;background:#fff}
+.age-audit-card .label{font-size:.73rem;text-transform:uppercase;font-weight:900;color:var(--muted)}
+.age-audit-card .value{font-size:1.1rem;font-weight:900;color:var(--brand);margin-top:4px}
+@media(max-width:760px){.age-audit-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.age-audit-grid{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>5.3.20 — Setup Asset Saving Repair</small></div>
+  <div><h1>RyanOS</h1><small>5.3.21 — Retirement Age Formula Audit</small></div>
   <div class="header-actions"><button class="mode-toggle" id="modeToggle" type="button">Simple mode</button><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -745,7 +753,7 @@ details.section-card[open]>summary:after{content:"−"}
 "use strict";
 
 var STORAGE_KEY="ryanos2-data";
-var defaults={appVersion:"5.3.20",dataSchemaVersion:20,
+var defaults={appVersion:"5.3.21",dataSchemaVersion:21,
  settings:{
   setupComplete:0,setupStep:0,interfaceMode:1,demoData:0,spouseAge:40,taxFreeIncomeEndAge:65,hasUserFhsa:0,hasSpouseFhsa:0,hasNonRegistered:0,
   userPensionEnabled:0,userPensionType:1,userPensionMonthly:0,userPensionStartAge:65,userPensionIndexed:0,userPensionIndexRate:0,userPensionBridgeMonthly:0,userPensionBridgeEndAge:65,
@@ -832,8 +840,8 @@ function migrate(raw){
  if(raw.travelPlanner&&typeof raw.travelPlanner==="object")out.travelPlanner=clone(raw.travelPlanner);
  if(raw.healthcarePlanner&&typeof raw.healthcarePlanner==="object")out.healthcarePlanner=clone(raw.healthcarePlanner);
  if(!out.settings.spouseAge&&isFinite(Number(out.settings.age))&&isFinite(Number(out.settings.wifeAgeDiff)))out.settings.spouseAge=Number(out.settings.age)-Number(out.settings.wifeAgeDiff);
- out.appVersion="5.3.20";
- out.dataSchemaVersion=20;
+ out.appVersion="5.3.21";
+ out.dataSchemaVersion=21;
  if(raw&&raw.settings&&Number(raw.settings.age)===52&&!raw.settings.currentAgePrecisionCorrected){
  out.settings.age=52.96;
  out.settings.currentAgePrecisionCorrected=1;
@@ -1303,8 +1311,8 @@ function loadDemoData(){
  demo.travelPlanner=null;
  demo.healthcarePlanner=null;
  demo.optimizerExtra=0;
- demo.appVersion="5.3.20";
- demo.dataSchemaVersion=20;
+ demo.appVersion="5.3.21";
+ demo.dataSchemaVersion=21;
  data=demo;
  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
  nav();render();showPage("home");
@@ -2351,6 +2359,51 @@ function oasAnnualAtAge(prefix,age,currentPersonAge){
  if(Number(age)>=75&&start<75)indexed*=1.10;
  return indexed;
 }
+
+function spouseAgeAtUserAge(userAge){
+ var s=data.settings;
+ return Number(s.spouseAge||0)+(Number(userAge)-Number(s.age||0));
+}
+function retirementPeriodRows(){
+ var s=data.settings,start=Number(s.retireAge||0),end=Number(s.retirementEndAge||95),out=[];
+ if(!isFinite(start)||!isFinite(end)||end<=start)return out;
+ for(var a=start;a<end-0.000001;a+=1){
+  var duration=Math.min(1,end-a);
+  out.push({startAge:Number(a.toFixed(6)),endAge:Number((a+duration).toFixed(6)),duration:duration});
+ }
+ return out;
+}
+function ageFallsInPeriod(target,start,duration){
+ target=Number(target);start=Number(start);duration=Number(duration||1);
+ return isFinite(target)&&target>=start-0.000001&&target<start+duration-0.000001;
+}
+function retirementIncomeForPeriod(startAge,spouseStartAge,duration){
+ var months=Math.max(1,Math.round(Number(duration||1)*12)),sum={wifeEmploymentNet:0,pension:0,userPension:0,spousePension:0,userPensionBase:0,userPensionBridge:0,spousePensionBase:0,spousePensionBridge:0,wcb:0,cpp:0,wcpp:0,oas:0,woas:0};
+ for(var i=0;i<months;i++){
+  var fraction=(i+.5)/12;
+  var x=retirementIncomeAtAge(Number(startAge)+fraction,Number(spouseStartAge)+fraction);
+  Object.keys(sum).forEach(function(k){sum[k]+=Number(x[k]||0)/12;});
+ }
+ return sum;
+}
+function retirementSpendingForPeriod(startAge,duration,stressInflation){
+ var months=Math.max(1,Math.round(Number(duration||1)*12)),total=0;
+ for(var i=0;i<months;i++){
+  var a=Number(startAge)+(i+.5)/12;
+  if(stressInflation){
+   var s=data.settings,mode=Number(s.retirementSpendingMode||1);
+   var base=mode===2?data.budget.reduce(function(v,x){return v+Number(x[1]||0);},0)*12:
+            mode===3?spendingEstimate().retirementEstimate:Number(s.retireSpend||0);
+   var phase=1;
+   if(Number(s.retirementSpendingPhasesEnabled||0)===1){
+    if(a>=Number(s.midSpendingEndAge||80))phase=Number(s.lateSpendingPercent||80)/100;
+    else if(a>=Number(s.activeSpendingEndAge||70))phase=Number(s.midSpendingPercent||90)/100;
+   }
+   total+=base*phase*Math.pow(1.04,a-Number(s.age||a))/12;
+  }else total+=retirementSpendingForAge(a)/12;
+ }
+ return total;
+}
 function retirementIncomeAtAge(age,wifeAge){
  var s=data.settings;
  var spouseRetirementAge=Number(s.wifeRetireAge||65);
@@ -2361,8 +2414,8 @@ function retirementIncomeAtAge(age,wifeAge){
  var spousePension=pensionAnnualAmount("spouse",wifeAge);
  var pension=userPension.total+spousePension.total;
  var wcb=age<Number(s.taxFreeIncomeEndAge||65)?Number(s.wcb||0)*12:0;
- var userCppBase=Number(s.userCppStart)===70?Number(s.userCpp70||0):Number(s.userCpp65||0);
- var wifeCppBase=Number(s.wifeCppStart)===60?Number(s.wifeCpp60||0):(Number(s.wifeCppStart)===70?Number(s.wifeCpp70||0):Number(s.wifeCpp65||0));
+ var userCppBase=Number(s.userCpp65||0);
+ var wifeCppBase=Number(s.wifeCpp65||0);
  var cpp=age>=Number(s.userCppStart)?userCppBase*12*Math.pow(1+Number(s.inflation||0)/100,Math.max(0,age-Number(s.userCppStart))):0;
  var wcpp=wifeAge>=Number(s.wifeCppStart)?wifeCppBase*12*Math.pow(1+Number(s.inflation||0)/100,Math.max(0,wifeAge-Number(s.wifeCppStart))):0;
  var oas=oasAnnualAtAge("user",age,Number(s.age||age));
@@ -2445,77 +2498,75 @@ function retirementSpendingForAge(age){
  return base*phaseFactor*Math.pow(1+Number(s.inflation||0)/100,age-Number(s.age));
 }
 function retirementPlan(returnRate,wifeAgeDifferenceOverride,stressType){
- var s=data.settings,baseRate=Number(returnRate)/100;
- function annualRateForAge(age){
-  var yearsRetired=age-Math.ceil(Number(s.retireAge));
-  if(stressType==="crash"&&yearsRetired===0)return -0.20;
-  if(stressType==="badStart"&&yearsRetired>=0&&yearsRetired<5)return 0.02;
+ var s=data.settings,baseRate=Number(returnRate)/100,periods=retirementPeriodRows();
+ function annualRateForIndex(index){
+  if(stressType==="crash"&&index===0)return -0.20;
+  if(stressType==="badStart"&&index<5)return 0.02;
   if(stressType==="lowReturn")return 0.035;
-  if(stressType==="highInflation")return baseRate;
   return baseRate;
  }
  var pensionTax=Math.max(0,Math.min(.6,Number(s.retirementTaxRate||0)/100));
  var nonRegTax=Math.max(0,Math.min(.6,Number(s.nonRegisteredWithdrawalTaxRate||0)/100));
  var bracketTax=Math.max(0,Math.min(.6,Number(s.lowestBracketMarginalTaxRate||0)/100));
- var wifeDiff=(wifeAgeDifferenceOverride===undefined||wifeAgeDifferenceOverride===null)?Number(s.wifeAgeDiff):Number(wifeAgeDifferenceOverride);
- var endAge=Math.max(Math.ceil(Number(s.retireAge))+1,Number(s.retirementEndAge||95));
- var account=accountBalancesAtRetirement(returnRate); delete account.total;
- var tfsaRoom=Math.max(0,Number(s.tfsaAvailableRoom||0)),rows=[];
- var retirementStartBalance=null,previousSpend=null,previousReturn=null;
- for(var age=Math.ceil(Number(s.retireAge));age<endAge;age++){
-  var wifeAge=age-wifeDiff,start={rrsp:account.rrsp,userTfsa:account.userTfsa,wifeRrsp:account.wifeRrsp,spouseTfsa:account.spouseTfsa,userFhsa:account.userFhsa,spouseFhsa:account.spouseFhsa,nonReg:account.nonReg};
-  var startBalance=start.rrsp+start.userTfsa+start.wifeRrsp+start.spouseTfsa+start.userFhsa+start.spouseFhsa+start.nonReg;
-  if(age>Math.ceil(Number(s.retireAge)))tfsaRoom+=Math.max(0,Number(s.tfsaAnnualLimit||0));
-  var inheritance=age===Number(s.inheritanceAge)?Number(s.inheritanceAmount||0):0; account.nonReg+=inheritance;
-  var legacyExpense=age===Number(s.oneTimeExpenseAge)?Number(s.oneTimeExpenseAmount||0):0;
-  var scheduledExpenses=futureExpensesAtAge(age);
+ var explicitDiff=(wifeAgeDifferenceOverride===undefined||wifeAgeDifferenceOverride===null)?null:Number(wifeAgeDifferenceOverride);
+ var account=accountBalancesAtRetirement(returnRate);delete account.total;delete account.yearsToRetirement;delete account.fullYears;delete account.fractionalYear;
+ var tfsaRoom=Math.max(0,Number(s.tfsaAvailableRoom||0)),rows=[],retirementStartBalance=null,previousSpend=null,previousReturn=null;
+ periods.forEach(function(period,index){
+  var age=period.startAge,duration=period.duration;
+  var wifeAge=explicitDiff===null?spouseAgeAtUserAge(age):age-explicitDiff;
+  var start={rrsp:account.rrsp,userTfsa:account.userTfsa,wifeRrsp:account.wifeRrsp,spouseTfsa:account.spouseTfsa,userFhsa:account.userFhsa,spouseFhsa:account.spouseFhsa,nonReg:account.nonReg};
+  var startBalance=Object.keys(start).reduce(function(a,k){return a+Number(start[k]||0);},0);
+  if(index>0)tfsaRoom+=Math.max(0,Number(s.tfsaAnnualLimit||0))*duration;
+  var inheritance=ageFallsInPeriod(s.inheritanceAge,age,duration)?Number(s.inheritanceAmount||0):0;account.nonReg+=inheritance;
+  var legacyExpense=ageFallsInPeriod(s.oneTimeExpenseAge,age,duration)?Number(s.oneTimeExpenseAmount||0):0;
+  var scheduledExpenses=(data.futureExpenses||[]).filter(function(x){return Number(x.include)!==0&&ageFallsInPeriod(x.age,age,duration);}).map(function(x){
+   var amount=Math.max(0,Number(x.amount||0));
+   if(Number(x.inflates)!==0)amount*=Math.pow(1+Number(s.inflation||0)/100,Math.max(0,Number(x.age||age)-Number(s.age||age)));
+   return{name:x.name||"Future expense",amount:amount,account:x.account||"nonReg"};
+  });
   var extraExpense=legacyExpense+scheduledExpenses.reduce(function(a,x){return a+x.amount;},0);
-  var baselineSpend=retirementSpendingForAge(age);
+  var baselineSpend=retirementSpendingForPeriod(age,duration,stressType==="highInflation");
   var spend=baselineSpend,guardrailAction="None",guardrailRatio=100;
   if(retirementStartBalance===null)retirementStartBalance=startBalance;
   if(Number(s.spendingGuardrailsEnabled||0)===1){
-   var yearsRetired=Math.max(0,age-Math.ceil(Number(s.retireAge)));
-   var inflationAdjustedStart=retirementStartBalance*Math.pow(1+Number(s.inflation||0)/100,yearsRetired);
+   var inflationAdjustedStart=retirementStartBalance*Math.pow(1+Number(s.inflation||0)/100,index);
    guardrailRatio=inflationAdjustedStart>0?startBalance/inflationAdjustedStart*100:100;
    if(Number(s.freezeAfterNegativeReturn||0)===1&&previousReturn!==null&&previousReturn<0&&previousSpend!==null){
-    spend=Math.min(spend,previousSpend);
-    guardrailAction="Inflation increase frozen";
+    spend=Math.min(spend,previousSpend);guardrailAction="Inflation increase frozen";
    }
    if(guardrailRatio<Number(s.guardrailLowerPercent||80)){
-    spend*=1-Number(s.guardrailCutPercent||5)/100;
-    guardrailAction=(guardrailAction==="None"?"":guardrailAction+" + ")+"Spending reduced";
+    spend*=1-Number(s.guardrailCutPercent||5)/100;guardrailAction=(guardrailAction==="None"?"":guardrailAction+" + ")+"Spending reduced";
    }else if(guardrailRatio>Number(s.guardrailUpperPercent||120)){
     spend=Math.min(baselineSpend*(1+Number(s.guardrailRaisePercent||5)/100),spend*(1+Number(s.guardrailRaisePercent||5)/100));
     guardrailAction=(guardrailAction==="None"?"":guardrailAction+" + ")+"Spending increased";
    }
   }
-  if(stressType==="highInflation"){
-   var baseMode=Number(s.retirementSpendingMode||1);
-   var base=baseMode===2?data.budget.reduce(function(a,x){return a+Number(x[1]||0);},0)*12:
-            baseMode===3?spendingEstimate().retirementEstimate:Number(s.retireSpend||0);
-   var phaseFactor=1;
-   if(Number(s.retirementSpendingPhasesEnabled||0)===1){
-    if(age>=Number(s.midSpendingEndAge||80))phaseFactor=Number(s.lateSpendingPercent||80)/100;
-    else if(age>=Number(s.activeSpendingEndAge||70))phaseFactor=Number(s.midSpendingPercent||90)/100;
-   }
-   baselineSpend=base*phaseFactor*Math.pow(1.04,age-Number(s.age));
-   spend=baselineSpend;
-  }
-  if(stressType==="spendingShock"&&age>=Math.ceil(Number(s.retireAge))&&age<Math.ceil(Number(s.retireAge))+5)spend*=1.20;
-  var inc=retirementIncomeAtAge(age,wifeAge),taxable=inc.pension+inc.cpp+inc.wcpp+inc.oas+inc.woas;
-  var netExternal=inc.wifeEmploymentNet+inc.wcb+taxable*(1-pensionTax),need=Math.max(0,spend+legacyExpense-netExternal);
+  if(stressType==="spendingShock"&&index<5)spend*=1.20;
+  var inc=retirementIncomeForPeriod(age,wifeAge,duration);
+
+  // Continue spouse contributions while spouse remains employed. These are transfers,
+  // so they reduce spendable salary and increase the spouse-owned accounts.
+  var spouseWorkingMonths=0,totalMonths=Math.max(1,Math.round(duration*12));
+  for(var mi=0;mi<totalMonths;mi++){if(wifeAge+(mi+.5)/12<Number(s.wifeRetireAge||65))spouseWorkingMonths++;}
+  var spouseContributionFactor=spouseWorkingMonths/12;
+  var spouseRrspContribution=Number(s.wifeRrspMonthlyContribution||0)*12*spouseContributionFactor;
+  var spouseTfsaContribution=Number(s.spouseTfsaMonthlyContribution||0)*12*spouseContributionFactor;
+  var spouseFhsaContribution=Number(s.spouseFhsaMonthlyContribution||0)*12*spouseContributionFactor;
+  account.wifeRrsp+=spouseRrspContribution;account.spouseTfsa+=spouseTfsaContribution;account.spouseFhsa+=spouseFhsaContribution;
+  var spouseContributions=spouseRrspContribution+spouseTfsaContribution+spouseFhsaContribution;
+
+  var taxable=inc.pension+inc.cpp+inc.wcpp+inc.oas+inc.woas;
+  var netExternal=Math.max(0,inc.wifeEmploymentNet-spouseContributions)+inc.wcb+taxable*(1-pensionTax);
+  var need=Math.max(0,spend+legacyExpense-netExternal);
   var w={rrsp:0,userTfsa:0,wifeRrsp:0,spouseTfsa:0,userFhsa:0,spouseFhsa:0,nonReg:0,tax:0,net:0};
   var userFactorAge=Number(s.userRrifUseSpouseAge||0)===1?wifeAge:age;
   var spouseFactorAge=Number(s.spouseRrifUseUserAge||0)===1?age:wifeAge;
-  var userRrifMinimum=Math.min(account.rrsp,rrifMinimumForYear(start.rrsp,age,Number(s.userRrifConversionAge||71),userFactorAge));
-  var spouseRrifMinimum=Math.min(account.wifeRrsp,rrifMinimumForYear(start.wifeRrsp,wifeAge,Number(s.spouseRrifConversionAge||71),spouseFactorAge));
-  var mandatoryGross=userRrifMinimum+spouseRrifMinimum;
-  var mandatoryTax=mandatoryGross*pensionTax;
-  var mandatoryNet=mandatoryGross-mandatoryTax;
+  var userRrifMinimum=Math.min(account.rrsp,rrifMinimumForYear(start.rrsp,age,Number(s.userRrifConversionAge||71),userFactorAge))*duration;
+  var spouseRrifMinimum=Math.min(account.wifeRrsp,rrifMinimumForYear(start.wifeRrsp,wifeAge,Number(s.spouseRrifConversionAge||71),spouseFactorAge))*duration;
+  var mandatoryGross=userRrifMinimum+spouseRrifMinimum,mandatoryTax=mandatoryGross*pensionTax,mandatoryNet=mandatoryGross-mandatoryTax;
   account.rrsp-=userRrifMinimum;account.wifeRrsp-=spouseRrifMinimum;
   w.rrsp+=userRrifMinimum;w.wifeRrsp+=spouseRrifMinimum;w.tax+=mandatoryTax;w.net+=mandatoryNet;
-  var needBeforeRrif=need;
-  need=Math.max(0,need-mandatoryNet);
+  var needBeforeRrif=need;need=Math.max(0,need-mandatoryNet);
   var rrifExcessNet=Math.max(0,mandatoryNet-needBeforeRrif),rrifTfsaDeposit=0,rrifNonRegDeposit=0;
   if(rrifExcessNet>0){
    rrifTfsaDeposit=Math.min(rrifExcessNet,tfsaRoom);account.userTfsa+=rrifTfsaDeposit;tfsaRoom-=rrifTfsaDeposit;
@@ -2524,32 +2575,27 @@ function retirementPlan(returnRate,wifeAgeDifferenceOverride,stressType){
   var order=Number(s.withdrawalStrategy)===2?["userTfsa","spouseTfsa","userFhsa","spouseFhsa","nonReg","rrsp","wifeRrsp"]:Number(s.withdrawalStrategy)===3?["nonReg","rrsp","wifeRrsp","userTfsa","spouseTfsa","userFhsa","spouseFhsa"]:["rrsp","wifeRrsp","nonReg","userTfsa","spouseTfsa","userFhsa","spouseFhsa"];
   order.forEach(function(key){if(need<=.01)return;var tax=(key==="rrsp"||key==="wifeRrsp")?pensionTax:(key==="nonReg"?nonRegTax:0);var r=takeFromAccount(account,key,need,tax);w[key]+=r.gross;w.tax+=r.tax;w.net+=r.net;need=Math.max(0,need-r.net);});
   var futureExpenseGross=0,futureExpenseTax=0,futureExpenseUnfunded=0,futureExpenseDetails=[];
-  scheduledExpenses.forEach(function(exp){
-   var paid=payFutureExpense(account,exp.account,exp.amount,pensionTax);
-   futureExpenseGross+=paid.gross;futureExpenseTax+=paid.tax;futureExpenseUnfunded+=paid.unfunded;
-   futureExpenseDetails.push({name:exp.name,amount:exp.amount,account:exp.account,gross:paid.gross,tax:paid.tax,unfunded:paid.unfunded});
-  });
+  scheduledExpenses.forEach(function(exp){var paid=payFutureExpense(account,exp.account,exp.amount,pensionTax);futureExpenseGross+=paid.gross;futureExpenseTax+=paid.tax;futureExpenseUnfunded+=paid.unfunded;futureExpenseDetails.push({name:exp.name,amount:exp.amount,account:exp.account,gross:paid.gross,tax:paid.tax,unfunded:paid.unfunded});});
   need+=futureExpenseUnfunded;
   var strategicGross=0,strategicTax=0,tfsaDeposit=0,nonRegDeposit=0;
   if(Number(s.rrspDrawdownEnabled||0)===1&&age>=Number(s.rrspDrawdownStartAge||55)&&age<Number(s.rrspDrawdownEndAge||70)&&account.rrsp>0){
    var room=Math.max(0,Number(s.lowestTaxBracketCeiling||0)-(inc.cpp+inc.oas+w.rrsp));
-   strategicGross=Math.min(account.rrsp,room); account.rrsp-=strategicGross; strategicTax=strategicGross*bracketTax;
-   var net=strategicGross-strategicTax; tfsaDeposit=Math.min(net,tfsaRoom); account.userTfsa+=tfsaDeposit; tfsaRoom-=tfsaDeposit; nonRegDeposit=Math.max(0,net-tfsaDeposit); account.nonReg+=nonRegDeposit;
+   strategicGross=Math.min(account.rrsp,room)*duration;account.rrsp-=strategicGross;strategicTax=strategicGross*bracketTax;
+   var strategicNet=strategicGross-strategicTax;tfsaDeposit=Math.min(strategicNet,tfsaRoom);account.userTfsa+=tfsaDeposit;tfsaRoom-=tfsaDeposit;nonRegDeposit=Math.max(0,strategicNet-tfsaDeposit);account.nonReg+=nonRegDeposit;
   }
-  var annualRate=annualRateForAge(age);
-  var growth={rrsp:account.rrsp*annualRate,userTfsa:account.userTfsa*annualRate,wifeRrsp:account.wifeRrsp*annualRate,spouseTfsa:account.spouseTfsa*annualRate,userFhsa:account.userFhsa*annualRate,spouseFhsa:account.spouseFhsa*annualRate,nonReg:account.nonReg*annualRate};
-  account.rrsp+=growth.rrsp;account.userTfsa+=growth.userTfsa;account.wifeRrsp+=growth.wifeRrsp;account.spouseTfsa+=growth.spouseTfsa;account.userFhsa+=growth.userFhsa;account.spouseFhsa+=growth.spouseFhsa;account.nonReg+=growth.nonReg;
-  var endBalance=account.rrsp+account.userTfsa+account.wifeRrsp+account.spouseTfsa+account.userFhsa+account.spouseFhsa+account.nonReg;
-  rows.push({age:age,wifeAge:wifeAge,startBalance:startBalance,startAccounts:start,inheritance:inheritance,extraExpense:extraExpense,legacyExpense:legacyExpense,scheduledExpense:extraExpense-legacyExpense,futureExpenseDetails:futureExpenseDetails,spend:spend,wifeEmployment:inc.wifeEmploymentNet,pension:inc.pension,userPension:inc.userPension,spousePension:inc.spousePension,userPensionBase:inc.userPensionBase,userPensionBridge:inc.userPensionBridge,spousePensionBase:inc.spousePensionBase,spousePensionBridge:inc.spousePensionBridge,wcb:inc.wcb,cpp:inc.cpp,wcpp:inc.wcpp,oas:inc.oas,woas:inc.woas,netExternal:netExternal,rrspWithdrawal:w.rrsp,userTfsaWithdrawal:w.userTfsa,wifeRrspWithdrawal:w.wifeRrsp,spouseTfsaWithdrawal:w.spouseTfsa,userFhsaWithdrawal:w.userFhsa,spouseFhsaWithdrawal:w.spouseFhsa,nonRegWithdrawal:w.nonReg,futureExpenseWithdrawal:futureExpenseGross,futureExpenseTax:futureExpenseTax,withdrawalTax:w.tax+strategicTax+futureExpenseTax,withdrawal:w.rrsp+w.userTfsa+w.wifeRrsp+w.spouseTfsa+w.userFhsa+w.spouseFhsa+w.nonReg+futureExpenseGross+strategicGross,netWithdrawal:w.net,userRrifMinimum:userRrifMinimum,spouseRrifMinimum:spouseRrifMinimum,rrifMinimumGross:mandatoryGross,rrifMinimumTax:mandatoryTax,rrifExcessReinvested:rrifTfsaDeposit+rrifNonRegDeposit,rrifTfsaDeposit:rrifTfsaDeposit,rrifNonRegDeposit:rrifNonRegDeposit,strategicRrspWithdrawal:strategicGross,strategicRrspTax:strategicTax,tfsaDeposit:tfsaDeposit,nonRegDeposit:nonRegDeposit,growth:growth.rrsp+growth.userTfsa+growth.wifeRrsp+growth.spouseTfsa+growth.userFhsa+growth.spouseFhsa+growth.nonReg,endAccounts:{rrsp:account.rrsp,userTfsa:account.userTfsa,wifeRrsp:account.wifeRrsp,spouseTfsa:account.spouseTfsa,userFhsa:account.userFhsa,spouseFhsa:account.spouseFhsa,nonReg:account.nonReg},annualReturn:annualRate*100,baselineSpend:baselineSpend,guardrailSpend:spend,guardrailAction:guardrailAction,guardrailRatio:guardrailRatio,endBalance:endBalance,
-   expectedEnd:startBalance+inheritance+growth.rrsp+growth.userTfsa+growth.wifeRrsp+growth.spouseTfsa+growth.userFhsa+growth.spouseFhsa+growth.nonReg
-    -w.rrsp-w.userTfsa-w.wifeRrsp-w.spouseTfsa-w.userFhsa-w.spouseFhsa-w.nonReg-futureExpenseGross-strategicTax+rrifTfsaDeposit+rrifNonRegDeposit,
-   reconciliationDifference:endBalance-(startBalance+inheritance+growth.rrsp+growth.userTfsa+growth.wifeRrsp+growth.spouseTfsa+growth.userFhsa+growth.spouseFhsa+growth.nonReg
-    -w.rrsp-w.userTfsa-w.wifeRrsp-w.spouseTfsa-w.userFhsa-w.spouseFhsa-w.nonReg-futureExpenseGross-strategicTax+rrifTfsaDeposit+rrifNonRegDeposit),
-   depleted:need>.01,unfunded:need});
+  var annualRate=annualRateForIndex(index),periodRate=Math.pow(1+annualRate,duration)-1;
+  var growth={rrsp:account.rrsp*periodRate,userTfsa:account.userTfsa*periodRate,wifeRrsp:account.wifeRrsp*periodRate,spouseTfsa:account.spouseTfsa*periodRate,userFhsa:account.userFhsa*periodRate,spouseFhsa:account.spouseFhsa*periodRate,nonReg:account.nonReg*periodRate};
+  Object.keys(growth).forEach(function(k){account[k]+=growth[k];});
+  var endBalance=Object.keys(account).reduce(function(a,k){return a+Number(account[k]||0);},0);
+  var totalGrowth=Object.keys(growth).reduce(function(a,k){return a+Number(growth[k]||0);},0);
+  var totalContributions=spouseContributions;
+  var expectedEnd=startBalance+inheritance+totalContributions+totalGrowth-w.rrsp-w.userTfsa-w.wifeRrsp-w.spouseTfsa-w.userFhsa-w.spouseFhsa-w.nonReg-futureExpenseGross-strategicTax+rrifTfsaDeposit+rrifNonRegDeposit;
+  rows.push({age:age,endAge:period.endAge,duration:duration,wifeAge:wifeAge,startBalance:startBalance,startAccounts:start,inheritance:inheritance,extraExpense:extraExpense,legacyExpense:legacyExpense,scheduledExpense:extraExpense-legacyExpense,futureExpenseDetails:futureExpenseDetails,spend:spend,wifeEmployment:inc.wifeEmploymentNet,spouseContributions:spouseContributions,pension:inc.pension,userPension:inc.userPension,spousePension:inc.spousePension,userPensionBase:inc.userPensionBase,userPensionBridge:inc.userPensionBridge,spousePensionBase:inc.spousePensionBase,spousePensionBridge:inc.spousePensionBridge,wcb:inc.wcb,cpp:inc.cpp,wcpp:inc.wcpp,oas:inc.oas,woas:inc.woas,netExternal:netExternal,rrspWithdrawal:w.rrsp,userTfsaWithdrawal:w.userTfsa,wifeRrspWithdrawal:w.wifeRrsp,spouseTfsaWithdrawal:w.spouseTfsa,userFhsaWithdrawal:w.userFhsa,spouseFhsaWithdrawal:w.spouseFhsa,nonRegWithdrawal:w.nonReg,futureExpenseWithdrawal:futureExpenseGross,futureExpenseTax:futureExpenseTax,withdrawalTax:w.tax+strategicTax+futureExpenseTax,withdrawal:w.rrsp+w.userTfsa+w.wifeRrsp+w.spouseTfsa+w.userFhsa+w.spouseFhsa+w.nonReg+futureExpenseGross+strategicGross,netWithdrawal:w.net,userRrifMinimum:userRrifMinimum,spouseRrifMinimum:spouseRrifMinimum,rrifMinimumGross:mandatoryGross,rrifMinimumTax:mandatoryTax,rrifExcessReinvested:rrifTfsaDeposit+rrifNonRegDeposit,rrifTfsaDeposit:rrifTfsaDeposit,rrifNonRegDeposit:rrifNonRegDeposit,strategicRrspWithdrawal:strategicGross,strategicRrspTax:strategicTax,tfsaDeposit:tfsaDeposit,nonRegDeposit:nonRegDeposit,growth:totalGrowth,endAccounts:{rrsp:account.rrsp,userTfsa:account.userTfsa,wifeRrsp:account.wifeRrsp,spouseTfsa:account.spouseTfsa,userFhsa:account.userFhsa,spouseFhsa:account.spouseFhsa,nonReg:account.nonReg},annualReturn:annualRate*100,baselineSpend:baselineSpend,guardrailSpend:spend,guardrailAction:guardrailAction,guardrailRatio:guardrailRatio,endBalance:endBalance,expectedEnd:expectedEnd,reconciliationDifference:endBalance-expectedEnd,depleted:need>.01,unfunded:need});
   previousSpend=spend;previousReturn=annualRate;
- }
+ });
  return rows;
 }
+
 function realDollars(amount,age){
  var s=data.settings;
  return Number(amount||0)/Math.pow(1+s.inflation/100,Math.max(0,Number(age)-Number(s.age)));
@@ -2557,7 +2603,7 @@ function realDollars(amount,age){
 function projection(age,wifeAgeOverride){
  var s=data.settings;
  var wifeDiff=(wifeAgeOverride===undefined||wifeAgeOverride===null)?s.wifeAgeDiff:Number(age)-Number(wifeAgeOverride);
- var row=retirementPlan(s.returnRate,wifeDiff).find(function(x){return x.age===Number(age);});
+ var row=retirementPlan(s.returnRate,wifeDiff).find(function(x){return Number(age)>=x.age-0.000001&&Number(age)<x.endAge+0.000001;});
  if(!row)return{age:age,wifeAge:age-wifeDiff,inv:balanceAtRetirement(s.returnRate),spend:0,income:0,gap:0,wifeEmployment:0,pension:0,wcb:0,cpp:0,wcpp:0,oas:0,woas:0,investmentDraw:0};
  return{
   age:row.age,wifeAge:row.wifeAge,inv:row.startBalance,spend:row.spend,
@@ -3066,7 +3112,7 @@ function renderSimpleRetirement(){
   '<div class="page-intro"><div><h2>Retirement</h2><p>Four answers to help you understand your plan.</p></div><span class="status-pill '+(x.status?'good':'bad')+'">'+(x.status?'Funded under assumptions':'Needs attention')+'</span></div>'+
   '<div class="trust-banner"><strong>Planning estimate</strong>This result depends on the information and assumptions entered. It is not a guarantee.</div>'+
   '<div class="plain-summary">'+
-   '<div class="plain-card"><div class="question">Can I retire when planned?</div><div class="answer">'+(x.status?'Yes, under these assumptions':'Not yet')+'</div><div class="explain">'+(x.status?'The model remains positive through age '+Number(s.retirementEndAge||95)+'.':'The first projected shortfall is at age '+x.firstShortfall+'.')+'</div></div>'+
+   '<div class="plain-card"><div class="question">Can I retire at age '+Number(s.retireAge||0).toFixed(2)+'?</div><div class="answer">'+(x.status?'Yes, under these assumptions':'Not yet')+'</div><div class="explain">'+(x.status?'The model remains positive through age '+Number(s.retirementEndAge||95)+'.':'The first projected shortfall is at age '+x.firstShortfall+'.')+'</div></div>'+
    '<div class="plain-card"><div class="question">How much can I spend?</div><div class="answer">'+money(Number(s.retireSpend||0))+'/year</div><div class="explain">This is the spending target currently used.</div></div>'+
    '<div class="plain-card"><div class="question">What is the biggest pressure point?</div><div class="answer">Age '+Number(x.peak.age||0).toFixed(0)+'</div><div class="explain">About '+money(x.peak.withdrawal||0)+' would come from investments that year.</div></div>'+
    '<div class="plain-card"><div class="question">What may remain later?</div><div class="answer">'+money(Number(x.last.endBalance||0))+'</div><div class="explain">Estimated portfolio at the end of the plan.</div></div>'+
@@ -3118,6 +3164,10 @@ function renderRetirement(){
  timeline.sort(function(a,b){return Number(a.age)-Number(b.age);});
  var summary=
   '<div class="page-intro"><div><h2>Retirement</h2><p>See whether your plan works, why it works and where the risks are.</p></div><span class="status-pill '+(status?'good':'bad')+'">'+(status?'On track':'Needs attention')+'</span></div>'+'<div class="trust-banner"><strong>Estimated retirement projection</strong>This plan is based on assumed returns, inflation, spending and simplified annual tax rates. “Funded” means the model remains positive under the entered assumptions; it is not a guarantee.</div>'+
+  (function(){
+   var first=rows[0]||{},last=rows[rows.length-1]||{};
+   return'<div class="section-card"><div class="page-intro"><div><h3>Retirement-age calculation audit</h3><p>The projection starts at the exact retirement age and advances in one-year periods.</p></div><span class="estimate-tag">Audited</span></div><div class="age-audit-grid"><div class="age-audit-card"><div class="label">Exact retirement age</div><div class="value">'+Number(s.retireAge||0).toFixed(2)+'</div></div><div class="age-audit-card"><div class="label">Spouse age then</div><div class="value">'+Number(first.wifeAge||0).toFixed(2)+'</div></div><div class="age-audit-card"><div class="label">First period ends</div><div class="value">'+Number(first.endAge||0).toFixed(2)+'</div></div><div class="age-audit-card"><div class="label">Plan ends at</div><div class="value">'+Number(last.endAge||0).toFixed(2)+'</div></div></div><p class="tx-muted">CPP, OAS, pensions, tax-free income and spouse salary are prorated monthly when they begin or end during a projection period.</p></div>';
+  })()+
   (function(){
    var firstUser=rows.find(function(r){return Number(r.userRrifMinimum||0)>0;});
    var firstSpouse=rows.find(function(r){return Number(r.spouseRrifMinimum||0)>0;});
@@ -3625,7 +3675,7 @@ function exportBackupFile(){
  var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
  var a=document.createElement("a");
  a.href=URL.createObjectURL(blob);
- a.download="RyanOS-5.3.20-backup.json";
+ a.download="RyanOS-5.3.21-backup.json";
  a.click();
  setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
 }
@@ -3702,7 +3752,12 @@ function setupValidation(){
  else add("ready","Planning horizon is valid","The plan runs through age "+Number(s.retirementEndAge||0).toFixed(0)+".");
  if(Number(s.wifeAgeDiff||0)<0||Number(s.wifeAgeDiff||0)>30)add("attention","Spouse age difference looks unusual","Review the spouse age difference entered in Setup.");
  else add("ready","Spouse age difference recorded","RyanOS uses a "+Number(s.wifeAgeDiff||0).toFixed(1)+"-year age difference.");
- if(Number(s.spouseAge||0)<=0)add("attention","Spouse age is missing","Enter the spouse current age.");
+ if(Number(s.retireAge||0)>0&&Number(s.age||0)>0&&Number(s.spouseAge||0)>0){
+  var spouseAtRetirement=spouseAgeAtUserAge(Number(s.retireAge));
+  if(spouseAtRetirement<0)add("attention","Spouse age at retirement is invalid","Review both current ages.");
+  else add("ready","Retirement ages aligned","At your retirement age "+Number(s.retireAge).toFixed(2)+", spouse age is "+spouseAtRetirement.toFixed(2)+".");
+ }
+  if(Number(s.spouseAge||0)<=0)add("attention","Spouse age is missing","Enter the spouse current age.");
  else add("ready","Spouse age recorded","Spouse age is "+Number(s.spouseAge).toFixed(1)+".");
   if(Number(s.wifeRetireAge||0)<=0)add("attention","Spouse retirement age is missing","Enter the spouse retirement age.");
  if(Number(s.wifeWorkUntilUserAge||0)<Number(s.age||0))add("attention","Spouse work-end age is in the past","The spouse work-until age should be at least your current age.");
@@ -3909,7 +3964,7 @@ function backupCompatibilityAudit(){
  add(Number(migratedOld.settings.userFhsaBalance||0)===0&&Number(migratedOld.settings.spouseFhsaBalance||0)===0,"Missing FHSA fields default safely","Older backups without FHSA data open with zero balances.");
  add(Number(migratedOld.settings.userPensionEnabled||0)===0,"Missing user pension defaults safely","Older backups do not invent a user pension.");
  var current=migrate(data);
- add(Number(current.dataSchemaVersion||0)===20,"Current schema version","Migrated data is tagged with schema version 6.");
+ add(Number(current.dataSchemaVersion||0)===21,"Current schema version","Migrated data is tagged with schema version 21.");
  add(Array.isArray(current.netWorthHistory),"Net worth history preserved","Existing net worth snapshots remain available.");
  add(Array.isArray(current.backupHistory),"Recovery history preserved","Recovery points remain attached to the profile.");
  add(!!current.purchasePlanner&&!!current.vehiclePlanner&&!!current.travelPlanner&&!!current.healthcarePlanner,"Planner data preserved","All four planning tools survive migration.");
@@ -3940,6 +3995,9 @@ function fullRegressionAudit(){
   var at=accountBalancesAtRetirement(Number(data.settings.returnRate||0));
   add(isFinite(Number(at.total||0))&&Number(at.total||0)>=0,"Retirement balances finite","Projected account balances are valid.");
   var rows=retirementPlan(Number(data.settings.returnRate||0));
+  add(rows.length>0&&Math.abs(Number(rows[0].age)-Number(data.settings.retireAge||0))<.0001,"Exact retirement age preserved","The first projection period starts at the entered retirement age without rounding.");
+  add(rows.length>0&&Math.abs(Number(rows[rows.length-1].endAge)-Number(data.settings.retirementEndAge||95))<.0001,"Plan end age preserved","The final period ends at the selected plan-through age.");
+  add(rows.every(function(r){return Math.abs(Number(r.wifeAge)-spouseAgeAtUserAge(Number(r.age)))<.0001;}),"Spouse age progression aligned","Spouse age advances from the two current ages rather than a stale age-difference field.");
   add(Array.isArray(rows)&&rows.length>0,"Retirement plan generated","The year-by-year retirement model returns rows.");
   add(rows.every(function(r){return Math.abs(Number(r.reconciliationDifference||0))<1;}),"Retirement reconciliation","Every retirement year reconciles within one dollar.");
   add(rows.every(function(r){return isFinite(Number(r.endBalance||0))&&isFinite(Number(r.withdrawal||0));}),"Retirement rows finite","No NaN or infinite balances appear.");
@@ -3956,7 +4014,7 @@ function fullRegressionAudit(){
   add(rows.every(function(r){return isFinite(Number(r.rrifMinimumGross||0));}),"RRIF minimum rows valid","Mandatory RRIF withdrawals return finite values.");
   add(typeof pensionIncomeAudit==="function"&&pensionIncomeAudit(rows).rows.length>0,"Pension timeline audit available","Milestone income rows are generated.");
   add(typeof validateBackupObject==="function"&&validateBackupObject(data).length===0,"Current backup validates","Current saved data passes backup validation.");
-  add(Number(data.dataSchemaVersion||0)===20,"Current schema version","Data is tagged with schema version 7.");
+  add(Number(data.dataSchemaVersion||0)===21,"Current schema version","Data is tagged with schema version 21.");
  }catch(err){
   add(false,"Regression audit execution","Audit stopped because: "+(err.message||String(err)));
  }
@@ -3971,7 +4029,7 @@ function renderSimpleSettings(){
   '<div class="mode-note"><strong>Simple mode hides technical controls.</strong><div>All calculations and saved information remain available. Switch to Advanced mode for detailed assumptions, withdrawal strategies and diagnostic tables.</div></div>'+
   '<div class="section-card"><h3>Guided setup</h3><p>Review household income, accounts, pensions and retirement assumptions.</p><button id="simpleRunSetup" type="button">Run Setup Wizard</button></div>'+  '<div class="section-card"><h3>Start or explore</h3><div class="clean-start-grid"><div class="clean-start-card"><h4>Use my own information</h4><p>Start with empty balances and build your plan through Guided Setup.</p><button id="simpleCleanStart" type="button">Start clean</button></div><div class="clean-start-card"><h4>Explore with sample data</h4><p>Load a fictional Canadian household to see how RyanOS works.</p><button id="simpleLoadDemo" class="secondary" type="button">Load demo</button></div></div></div>'+
   '<div class="section-card"><h3>Backup and recovery</h3><p>Export a backup before making major changes or moving to another device.</p><div class="simple-actions"><button id="simpleExport" type="button">Export backup</button><button id="simpleAdvancedSettings" class="secondary" type="button">Open advanced settings</button></div></div>'+
-  '<div class="section-card"><h3>Data health</h3><div class="simple-next-grid"><div class="simple-next-card"><div class="label">Compatibility checks</div><div class="value">'+c.pass+'/'+c.total+'</div></div><div class="simple-next-card"><div class="label">Schema</div><div class="value">20</div></div><div class="simple-next-card"><div class="label">Storage</div><div class="value">This device</div></div></div></div>'+
+  '<div class="section-card"><h3>Data health</h3><div class="simple-next-grid"><div class="simple-next-card"><div class="label">Compatibility checks</div><div class="value">'+c.pass+'/'+c.total+'</div></div><div class="simple-next-card"><div class="label">Schema</div><div class="value">21</div></div><div class="simple-next-card"><div class="label">Storage</div><div class="value">This device</div></div></div></div>'+
   '<div class="trust-banner"><strong>Privacy reminder</strong>RyanOS stores data in this browser. Keep exported backups in a secure location.</div>';
  document.getElementById("simpleRunSetup").onclick=function(){data.settings.setupStep=0;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));showPage("setup");};
  document.getElementById("simpleCleanStart").onclick=clearAllData;
@@ -4028,7 +4086,7 @@ function renderSettings(){
  '<div class="section-card"><h3>Data health</h3><div class="notice '+(health.length?'bad':'good')+'">'+(health.length?health.map(function(x){return'• '+x;}).join('<br>'):'No major data problems detected.')+'</div></div>'+
  (function(){var audit=foundationAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Foundation audit</h3><p>Automated checks for the calculations and data connections RyanOS depends on.</p></div><span class="status-pill '+(audit.passed===audit.total?'good':audit.passed>=audit.total-2?'warn':'bad')+'">'+audit.passed+' of '+audit.total+' passed</span></div><div class="audit-grid">'+audit.checks.map(function(x){return'<div class="audit-card '+(x.ok?'pass':'fail')+'"><div class="audit-title">'+(x.ok?'✓ ':'⚠ ')+esc(x.name)+'</div><div class="audit-copy">'+esc(x.copy)+'</div></div>';}).join("")+'</div><div class="quick-actions" style="margin-top:12px"><button id="runFoundationAudit" type="button">Run audit again</button></div></div>';})()+
  '<div class="section-card"><div class="page-intro"><div><h3>Calculation scope</h3><p>What RyanOS currently calculates and what still requires professional confirmation.</p></div><span class="estimate-tag">Planning estimate</span></div><div class="method-grid"><div class="method-card"><div class="label">Included</div><div class="value">Cash flow, account growth, pensions, CPP/OAS, stress scenarios and year-by-year balances</div></div><div class="method-card"><div class="label">Simplified</div><div class="value">Income tax, non-registered taxation and withdrawal sequencing</div></div><div class="method-card"><div class="label">Not included yet</div><div class="value">Full federal/provincial tax, RRIF minimums, survivor and estate calculations</div></div></div></div>'+
- (function(){var r=fullRegressionAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Full regression test</h3><p>Checks the primary pages, financial engines, planners, backup system and retirement calculations together.</p></div><span class="status-pill '+(r.failed===0?'good':'bad')+'">'+r.pass+' of '+r.total+' passed</span></div><div class="regression-grid"><div class="regression-card"><div class="label">Schema version</div><div class="value">20</div></div><div class="regression-card"><div class="label">Tests</div><div class="value">'+r.total+'</div></div><div class="regression-card"><div class="label">Passed</div><div class="value">'+r.pass+'</div></div><div class="regression-card"><div class="label">Failed</div><div class="value">'+r.failed+'</div></div></div><div class="regression-list">'+r.tests.map(function(x){return'<div class="regression-item '+(x.ok?'pass':'fail')+'"><div>'+(x.ok?'✓':'!')+'</div><div><strong>'+esc(x.name)+'</strong><div class="tx-muted">'+esc(x.copy)+'</div></div></div>';}).join("")+'</div><div class="quick-actions" style="margin-top:12px"><button id="runRegressionAudit" type="button">Run regression test again</button></div></div>';})()+
+ (function(){var r=fullRegressionAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Full regression test</h3><p>Checks the primary pages, financial engines, planners, backup system and retirement calculations together.</p></div><span class="status-pill '+(r.failed===0?'good':'bad')+'">'+r.pass+' of '+r.total+' passed</span></div><div class="regression-grid"><div class="regression-card"><div class="label">Schema version</div><div class="value">21</div></div><div class="regression-card"><div class="label">Tests</div><div class="value">'+r.total+'</div></div><div class="regression-card"><div class="label">Passed</div><div class="value">'+r.pass+'</div></div><div class="regression-card"><div class="label">Failed</div><div class="value">'+r.failed+'</div></div></div><div class="regression-list">'+r.tests.map(function(x){return'<div class="regression-item '+(x.ok?'pass':'fail')+'"><div>'+(x.ok?'✓':'!')+'</div><div><strong>'+esc(x.name)+'</strong><div class="tx-muted">'+esc(x.copy)+'</div></div></div>';}).join("")+'</div><div class="quick-actions" style="margin-top:12px"><button id="runRegressionAudit" type="button">Run regression test again</button></div></div>';})()+
  (function(){var c=backupCompatibilityAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Backup migration compatibility</h3><p>Checks whether older RyanOS data can be upgraded without losing important information.</p></div><span class="status-pill '+(c.pass===c.total?'good':'warn')+'">'+c.pass+' of '+c.total+' passed</span></div><div class="compat-grid"><div class="compat-card"><div class="label">Schema version</div><div class="value">9</div></div><div class="compat-card"><div class="label">Compatibility tests</div><div class="value">'+c.total+'</div></div><div class="compat-card"><div class="label">Passed</div><div class="value">'+c.pass+'</div></div><div class="compat-card"><div class="label">Warnings</div><div class="value">'+(c.total-c.pass)+'</div></div></div><div class="compat-list">'+c.tests.map(function(x){return'<div class="compat-item '+(x.ok?'pass':'warn')+'"><div>'+(x.ok?'✓':'!')+'</div><div><strong>'+esc(x.name)+'</strong><div class="tx-muted">'+esc(x.copy)+'</div></div></div>';}).join("")+'</div></div>';})()+
  '<div class="section-card"><div class="page-intro"><div><h3>Guided setup</h3><p>Run the question-and-answer setup again without deleting transactions, net worth history or backups.</p></div><button id="rerunSetup" type="button">Run Setup Wizard</button></div></div>'+
  '<div class="pension-grid">'+pensionEditor("user","Your workplace pension")+pensionEditor("spouse","Spouse workplace pension")+'</div>'+
@@ -4104,7 +4162,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.3.20-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.3.21-backup.json";a.click();};
 var modeToggle=document.getElementById("modeToggle");
 if(modeToggle)modeToggle.onclick=function(){
  data.settings.interfaceMode=isSimpleMode()?2:1;
