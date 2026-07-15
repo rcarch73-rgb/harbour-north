@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 5.3.5</title>
+<title>RyanOS 5.3.6</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -565,11 +565,23 @@ details.section-card[open]>summary:after{content:"−"}
 .audit-banner>div{border:1px solid var(--border);border-radius:14px;padding:12px;background:#fff}
 @media(max-width:720px){.pension-summary-grid,.audit-banner{grid-template-columns:1fr}.pension-facts{grid-template-columns:1fr}}
 
+
+.compat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.compat-card{border:1px solid var(--border);border-radius:14px;padding:13px;background:#fff}
+.compat-card .label{font-size:.75rem;text-transform:uppercase;font-weight:900;color:var(--muted)}
+.compat-card .value{font-size:1.3rem;font-weight:900;color:var(--brand);margin-top:4px}
+.compat-list{display:grid;gap:8px;margin-top:12px}
+.compat-item{display:grid;grid-template-columns:26px 1fr;gap:8px;align-items:start;border:1px solid var(--border);border-radius:12px;padding:10px;background:#fff}
+.compat-item.pass{border-color:#b7d8c0;background:#f7fcf8}
+.compat-item.warn{border-color:#ead9a4;background:#fffdf5}
+@media(max-width:760px){.compat-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:500px){.compat-grid{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>5.3.5 — Pension Timeline Audit</small></div>
+  <div><h1>RyanOS</h1><small>5.3.6 — Backup Migration & Compatibility</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -594,7 +606,7 @@ details.section-card[open]>summary:after{content:"−"}
 "use strict";
 
 var STORAGE_KEY="ryanos2-data";
-var defaults={
+var defaults={appVersion:"5.3.6",dataSchemaVersion:6,
  settings:{
   setupComplete:0,setupStep:0,
   userPensionEnabled:0,userPensionType:1,userPensionMonthly:0,userPensionStartAge:65,userPensionIndexed:0,userPensionIndexRate:0,userPensionBridgeMonthly:0,userPensionBridgeEndAge:65,
@@ -694,6 +706,15 @@ function migrate(raw){
   if(Array.isArray(raw.transactions))out.transactions=raw.transactions.map(function(t){return{date:t.date||"",description:t.description||t.desc||"",amount:Number(t.amount||0),category:t.category||t.cat||"Miscellaneous",include:t.include||t.inc||"Yes"};});
  if(Array.isArray(raw.tx))out.transactions=raw.tx.map(function(t){return{date:t.date||"",description:t.description||t.desc||"",amount:Number(t.amount||0),category:t.category||t.cat||"Miscellaneous",include:t.include||t.inc||"Yes"};});
  if(Array.isArray(raw.rules))out.rules=raw.rules.map(function(r){return{keyword:r.keyword||r.key||"",category:r.category||r.cat||"Miscellaneous",include:r.include||r.inc||"Yes"};});
+ if(Array.isArray(raw.netWorthHistory))out.netWorthHistory=raw.netWorthHistory.map(function(x){return{
+  date:x.date||x.month||"",assets:Number(x.assets||0),debts:Number(x.debts||x.debt||0),networth:Number(x.networth||x.value||0),investments:Number(x.investments||0),note:x.note||""
+ };});
+ if(raw.purchasePlanner&&typeof raw.purchasePlanner==="object")out.purchasePlanner=clone(raw.purchasePlanner);
+ if(raw.vehiclePlanner&&typeof raw.vehiclePlanner==="object")out.vehiclePlanner=clone(raw.vehiclePlanner);
+ if(raw.travelPlanner&&typeof raw.travelPlanner==="object")out.travelPlanner=clone(raw.travelPlanner);
+ if(raw.healthcarePlanner&&typeof raw.healthcarePlanner==="object")out.healthcarePlanner=clone(raw.healthcarePlanner);
+ out.appVersion="5.3.6";
+ out.dataSchemaVersion=6;
  if(raw&&raw.settings&&Number(raw.settings.age)===52&&!raw.settings.currentAgePrecisionCorrected){
  out.settings.age=52.96;
  out.settings.currentAgePrecisionCorrected=1;
@@ -3196,7 +3217,7 @@ function exportBackupFile(){
  var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
  var a=document.createElement("a");
  a.href=URL.createObjectURL(blob);
- a.download="RyanOS-5.3.5-backup.json";
+ a.download="RyanOS-5.3.6-backup.json";
  a.click();
  setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
 }
@@ -3383,6 +3404,31 @@ function renderSetup(){
   else{s.setupComplete=1;s.setupStep=0;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));render();showPage("home");}
  };
 }
+
+function backupCompatibilityAudit(){
+ var tests=[];
+ function add(ok,name,copy){tests.push({ok:!!ok,name:name,copy:copy});}
+ var sampleOld={
+  settings:{currentAge:52,retirementSpending:72000,wifePension:3200,wifeRetireAge:55,inflation:2.5},
+  tx:[{date:"2026-01-01",desc:"Test",amount:-10,cat:"Groceries",inc:"Yes"}],
+  budget:[["Groceries",1000]],goals:[]
+ };
+ var migratedOld=migrate(sampleOld);
+ add(Number(migratedOld.settings.age)===52,"Legacy age field","Old currentAge maps to the current age setting.");
+ add(Number(migratedOld.settings.retireSpend)===72000,"Legacy spending field","Old retirementSpending maps to annual retirement spending.");
+ add(Number(migratedOld.settings.spousePensionMonthly)===3200,"Legacy spouse pension","Old spouse pension values migrate to the new spouse pension model.");
+ add(Array.isArray(migratedOld.transactions)&&migratedOld.transactions.length===1,"Legacy transactions","Old tx arrays migrate into Transactions.");
+ add(Number(migratedOld.settings.spouseTfsaBalance||0)===0,"Missing spouse TFSA defaults safely","Older backups without spouse TFSA start at zero.");
+ add(Number(migratedOld.settings.userFhsaBalance||0)===0&&Number(migratedOld.settings.spouseFhsaBalance||0)===0,"Missing FHSA fields default safely","Older backups without FHSA data open with zero balances.");
+ add(Number(migratedOld.settings.userPensionEnabled||0)===0,"Missing user pension defaults safely","Older backups do not invent a user pension.");
+ var current=migrate(data);
+ add(Number(current.dataSchemaVersion||0)===6,"Current schema version","Migrated data is tagged with schema version 6.");
+ add(Array.isArray(current.netWorthHistory),"Net worth history preserved","Existing net worth snapshots remain available.");
+ add(Array.isArray(current.backupHistory),"Recovery history preserved","Recovery points remain attached to the profile.");
+ add(!!current.purchasePlanner&&!!current.vehiclePlanner&&!!current.travelPlanner&&!!current.healthcarePlanner,"Planner data preserved","All four planning tools survive migration.");
+ var pass=tests.filter(function(x){return x.ok;}).length;
+ return{tests:tests,pass:pass,total:tests.length};
+}
 function renderSettings(){
  var s=data.settings,summary=backupSummary(data),health=validateBackupObject(data);
  var fields=[["userPensionEnabled","Your pension enabled"],["userPensionType","Your pension type"],["userPensionMonthly","Your monthly pension"],["userPensionStartAge","Your pension start age"],["userPensionIndexed","Your pension indexing"],["userPensionIndexRate","Your pension index rate (%)"],["userPensionBridgeMonthly","Your monthly bridge benefit"],["userPensionBridgeEndAge","Your bridge ends at age"],["spousePensionEnabled","Spouse pension enabled"],["spousePensionType","Spouse pension type"],["spousePensionMonthly","Spouse monthly pension"],["spousePensionStartAge","Spouse pension start age"],["spousePensionIndexed","Spouse pension indexing"],["spousePensionIndexRate","Spouse pension index rate (%)"],["spousePensionBridgeMonthly","Spouse monthly bridge benefit"],["spousePensionBridgeEndAge","Spouse bridge ends at age"],["income1","Yellowhead monthly income"],["income2","Province monthly income"],["wcb","WorkSafeBC monthly income"],["investing","Retirement investing"],["bills","Annual-bills reserve"],["chores","Son's chores"],["loc","LOC balance"],["rate","LOC rate (%)"],["months","LOC months"],["investments","Current investments"],["rrspBalance","RRSP balance"],["userTfsaBalance","Your TFSA balance"],["wifeRrspBalance","Spouse RRSP balance"],["spouseTfsaBalance","Spouse TFSA balance"],
@@ -3430,6 +3476,7 @@ function renderSettings(){
  '</div></div>'+
  '<div class="section-card"><h3>Data health</h3><div class="notice '+(health.length?'bad':'good')+'">'+(health.length?health.map(function(x){return'• '+x;}).join('<br>'):'No major data problems detected.')+'</div></div>'+
  (function(){var audit=foundationAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Foundation audit</h3><p>Automated checks for the calculations and data connections RyanOS depends on.</p></div><span class="status-pill '+(audit.passed===audit.total?'good':audit.passed>=audit.total-2?'warn':'bad')+'">'+audit.passed+' of '+audit.total+' passed</span></div><div class="audit-grid">'+audit.checks.map(function(x){return'<div class="audit-card '+(x.ok?'pass':'fail')+'"><div class="audit-title">'+(x.ok?'✓ ':'⚠ ')+esc(x.name)+'</div><div class="audit-copy">'+esc(x.copy)+'</div></div>';}).join("")+'</div><div class="quick-actions" style="margin-top:12px"><button id="runFoundationAudit" type="button">Run audit again</button></div></div>';})()+
+ (function(){var c=backupCompatibilityAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Backup migration compatibility</h3><p>Checks whether older RyanOS data can be upgraded without losing important information.</p></div><span class="status-pill '+(c.pass===c.total?'good':'warn')+'">'+c.pass+' of '+c.total+' passed</span></div><div class="compat-grid"><div class="compat-card"><div class="label">Schema version</div><div class="value">6</div></div><div class="compat-card"><div class="label">Compatibility tests</div><div class="value">'+c.total+'</div></div><div class="compat-card"><div class="label">Passed</div><div class="value">'+c.pass+'</div></div><div class="compat-card"><div class="label">Warnings</div><div class="value">'+(c.total-c.pass)+'</div></div></div><div class="compat-list">'+c.tests.map(function(x){return'<div class="compat-item '+(x.ok?'pass':'warn')+'"><div>'+(x.ok?'✓':'!')+'</div><div><strong>'+esc(x.name)+'</strong><div class="tx-muted">'+esc(x.copy)+'</div></div></div>';}).join("")+'</div></div>';})()+
  '<div class="section-card"><div class="page-intro"><div><h3>Guided setup</h3><p>Run the question-and-answer setup again without deleting transactions, net worth history or backups.</p></div><button id="rerunSetup" type="button">Run Setup Wizard</button></div></div>'+
  '<div class="pension-grid">'+pensionEditor("user","Your workplace pension")+pensionEditor("spouse","Spouse workplace pension")+'</div>'+
  '<div class="settings-groups">'+fieldGroups.map(renderSettingsGroup).join("")+'</div>'+
@@ -3503,7 +3550,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.3.5-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.3.6-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
