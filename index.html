@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 5.1.6</title>
+<title>RyanOS 5.2.0</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -443,11 +443,24 @@ details.section-card[open]>summary:after{content:"−"}
  .risk-result{grid-column:2;text-align:left}
 }
 
+
+.purchase-form{display:grid;grid-template-columns:2fr repeat(3,1fr);gap:10px;align-items:end}
+.purchase-results{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}
+.purchase-card{border:1px solid var(--border);border-radius:14px;padding:14px;background:#fff}
+.purchase-card .label{font-size:.76rem;text-transform:uppercase;letter-spacing:.03em;font-weight:900;color:var(--muted)}
+.purchase-card .value{font-size:1.3rem;font-weight:900;color:var(--brand);margin-top:5px}
+.purchase-card .copy{font-size:.88rem;color:var(--muted);margin-top:5px}
+.purchase-card.good{border-color:#b7d8c0;background:#f7fcf8}
+.purchase-card.warn{border-color:#ead9a4;background:#fffdf5}
+.purchase-card.bad{border-color:#e7b8b8;background:#fff8f8}
+@media(max-width:900px){.purchase-form{grid-template-columns:repeat(2,1fr)}.purchase-results{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.purchase-form,.purchase-results{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>5.1.6 — Retirement Margin</small></div>
+  <div><h1>RyanOS</h1><small>5.2.0 — Major Purchase Planner</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -1011,8 +1024,43 @@ function renderHome(){
  '</tbody></table><div class="notice">The score is a planning indicator, not a credit score or financial-advice rating. A missing month of transaction data receives a neutral budget score rather than a perfect score.</div></div>' + '<div class="grid two" style="margin-top:12px"><div class="card"><h3>This month</h3><p>Imported spending: <strong>'+money(actualSpend())+'</strong></p><p>Budget: <strong>'+money(t.spending)+'</strong></p><p>LOC target payment: <strong>'+money(t.locPayment)+'</strong></p></div>'+
  '<div class="card"><h3>Next actions</h3><div class="notice">Import this month’s transactions.</div><p>Update LOC and goal balances.</p><p>Export a backup after your monthly review.</p></div></div>';
 }
+
+function ensurePurchasePlanner(){
+ if(!data.purchasePlanner||typeof data.purchasePlanner!=="object"){
+  var target=new Date();
+  target.setMonth(target.getMonth()+12);
+  data.purchasePlanner={
+   name:"Major purchase",
+   amount:10000,
+   saved:0,
+   targetDate:target.toISOString().slice(0,10)
+  };
+ }
+ return data.purchasePlanner;
+}
+function purchasePlanAnalysis(){
+ var p=ensurePurchasePlanner(),t=totals();
+ var target=new Date(String(p.targetDate||""));
+ var now=new Date();
+ var valid=!isNaN(target.getTime());
+ var months=valid?Math.max(1,(target.getFullYear()-now.getFullYear())*12+(target.getMonth()-now.getMonth())+(target.getDate()>=now.getDate()?0:-1)):0;
+ var remaining=Math.max(0,Number(p.amount||0)-Number(p.saved||0));
+ var monthly=months>0?remaining/months:remaining;
+ var capacity=Number(t.surplus||0);
+ var gap=monthly-capacity;
+ var status=remaining<=0?"funded":capacity>=monthly?"affordable":capacity>0?"partial":"unfunded";
+ return{
+  months:months,
+  remaining:remaining,
+  monthly:monthly,
+  capacity:capacity,
+  gap:gap,
+  status:status,
+  completion:monthly>0&&capacity>0?Math.ceil(remaining/capacity):0
+ };
+}
 function renderMoney(){
- var s=data.settings;
+ var s=data.settings,purchase=ensurePurchasePlanner(),purchaseResult=purchasePlanAnalysis();
  var month=data.reportMonth||data.review.month||new Date().toISOString().slice(0,7);
  var cat=byCategoryForMonth(month),estimate=spendingEstimate();
  var monthTx=monthTransactions(month);
@@ -1074,6 +1122,26 @@ function renderMoney(){
  '<tr><td><strong>Total</strong></td><td><strong>'+money(budgetTotal)+'</strong></td><td><strong>'+money(monthSpend)+'</strong></td><td class="'+(budgetTotal-monthSpend>=0?'good':'bad')+'"><strong>'+money(budgetTotal-monthSpend)+'</strong></td><td></td></tr>'+
  '</tbody></table></div><div class="notice">Only transactions marked “Include: Yes” are counted. Transfers, income and investments should normally be excluded from spending.</div></div>'+
 
+ '<div class="section-card"><div class="page-intro"><div><h3>Major purchase planner</h3><p>Test a vehicle, renovation, trip or other large purchase against your current monthly cash flow.</p></div><span class="status-pill '+(purchaseResult.status==="funded"||purchaseResult.status==="affordable"?"good":purchaseResult.status==="partial"?"warn":"bad")+'">'+(purchaseResult.status==="funded"?"Already funded":purchaseResult.status==="affordable"?"Affordable":purchaseResult.status==="partial"?"Funding gap":"Not currently funded")+'</span></div>'+
+  '<div class="purchase-form">'+
+   '<label>Purchase name<input id="purchaseName" value="'+esc(purchase.name||"")+'"></label>'+
+   '<label>Total cost<input id="purchaseAmount" type="number" min="0" step="100" value="'+Number(purchase.amount||0)+'"></label>'+
+   '<label>Already saved<input id="purchaseSaved" type="number" min="0" step="100" value="'+Number(purchase.saved||0)+'"></label>'+
+   '<label>Target date<input id="purchaseDate" type="date" value="'+esc(purchase.targetDate||"")+'"></label>'+
+  '</div>'+
+  '<div class="purchase-results">'+
+   '<div class="purchase-card"><div class="label">Amount remaining</div><div class="value">'+money(purchaseResult.remaining)+'</div><div class="copy">Purchase cost less money already saved.</div></div>'+
+   '<div class="purchase-card"><div class="label">Months available</div><div class="value">'+purchaseResult.months+'</div><div class="copy">Months remaining until the target date.</div></div>'+
+   '<div class="purchase-card '+(purchaseResult.capacity>=purchaseResult.monthly?"good":"warn")+'"><div class="label">Required monthly saving</div><div class="value">'+money(purchaseResult.monthly)+'</div><div class="copy">Amount needed each month to meet the target date.</div></div>'+
+   '<div class="purchase-card '+(purchaseResult.gap<=0?"good":"bad")+'"><div class="label">'+(purchaseResult.gap<=0?"Monthly room left":"Monthly funding gap")+'</div><div class="value">'+money(Math.abs(purchaseResult.gap))+'</div><div class="copy">'+(purchaseResult.gap<=0?"Cash remaining after funding this purchase.":"Additional monthly capacity required.")+'</div></div>'+
+  '</div>'+
+  '<div class="quick-actions" style="margin-top:12px"><button id="savePurchasePlan" type="button">Save purchase plan</button><button id="addPurchaseGoal" type="button" class="secondary">Add as savings goal</button></div>'+
+  '<div class="notice '+(purchaseResult.status==="funded"||purchaseResult.status==="affordable"?"good":purchaseResult.status==="partial"?"warn":"bad")+'">'+
+   (purchaseResult.status==="funded"?"This purchase is already fully funded.":
+    purchaseResult.status==="affordable"?"Your current planned surplus can fund this purchase by the target date.":
+    purchaseResult.capacity>0?"At your current surplus, this purchase would take about "+purchaseResult.completion+" months. Either extend the date, reduce the cost or redirect other monthly commitments.":
+    "RyanOS does not currently see available monthly cash for this purchase.")+
+  '</div></div>'+
  '<details class="section-card"><summary>Retirement spending estimate</summary><div class="details-body">'+
   '<div class="hero-grid">'+
    '<div class="hero-card"><div class="label">Core annual spending</div><div class="value">'+money(estimate.annualizedCore)+'</div></div>'+
@@ -1091,6 +1159,29 @@ function renderMoney(){
  };
  document.getElementById("moneyImportCsv").onclick=function(){showPage("transactions");};
  document.getElementById("moneyManageDebt").onclick=function(){showPage("goals");};
+ document.getElementById("savePurchasePlan").onclick=function(){
+  data.purchasePlanner={
+   name:document.getElementById("purchaseName").value||"Major purchase",
+   amount:Number(document.getElementById("purchaseAmount").value||0),
+   saved:Number(document.getElementById("purchaseSaved").value||0),
+   targetDate:document.getElementById("purchaseDate").value
+  };
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderMoney();
+ };
+ document.getElementById("addPurchaseGoal").onclick=function(){
+  var name=document.getElementById("purchaseName").value||"Major purchase";
+  var amount=Number(document.getElementById("purchaseAmount").value||0);
+  var saved=Number(document.getElementById("purchaseSaved").value||0);
+  var result=purchasePlanAnalysis();
+  var existing=(data.goals||[]).find(function(g){return String(g.name||"").toLowerCase()===String(name).toLowerCase();});
+  if(existing){
+   existing.target=amount;existing.current=saved;existing.monthly=Math.ceil(result.monthly);
+  }else{
+   data.goals.push({name:name,target:amount,current:saved,monthly:Math.ceil(result.monthly),priority:(data.goals||[]).length+1});
+  }
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));render();
+  showPage("goals");
+ };
  document.querySelectorAll(".budget-input").forEach(function(el){el.onchange=function(){
   data.budget[Number(el.dataset.i)][1]=Number(el.value||0);save();
  };});
@@ -2561,7 +2652,7 @@ function exportBackupFile(){
  var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
  var a=document.createElement("a");
  a.href=URL.createObjectURL(blob);
- a.download="RyanOS-5.1.6-backup.json";
+ a.download="RyanOS-5.2.0-backup.json";
  a.click();
  setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
 }
@@ -2687,7 +2778,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.1.6-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.2.0-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
