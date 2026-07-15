@@ -1,9 +1,9 @@
 {
-  "name": "RyanOS 5.3.7",
+  "name": "RyanOS 5.3.8",
   "short_name": "RyanOS",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f4f7fb",
   "theme_color": "#17365d",
-  "description": "RyanOS with a complete built-in regression audit."
+  "description": "RyanOS with clearer estimate labels, methodology and planning disclaimers."
 }
