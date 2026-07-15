@@ -1,9 +1,9 @@
 {
-  "name": "RyanOS 5.3.0",
+  "name": "RyanOS 5.3.1",
   "short_name": "RyanOS",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f4f7fb",
   "theme_color": "#17365d",
-  "description": "RyanOS with guided first-run setup and separate user/spouse workplace pension models."
+  "description": "RyanOS with directly accessible guided setup."
 }

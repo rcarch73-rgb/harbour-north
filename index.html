@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 5.3.0</title>
+<title>RyanOS 5.3.1</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -535,7 +535,7 @@ details.section-card[open]>summary:after{content:"−"}
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>5.3.0 — Guided Setup & Pension Model</small></div>
+  <div><h1>RyanOS</h1><small>5.3.1 — Setup Access Fix</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -830,7 +830,7 @@ function showPage(pageId){
 }
 window.showPage=showPage;
 function nav(){
- var items=[["home","Home"],["money","Money"],["planning","Planning"],["transactions","Transactions"],["goals","Debt"],["networth","Net Worth"],["retirement","Retirement"],["settings","Settings & Data"]];
+ var items=[["home","Home"],["setup","Setup"],["money","Money"],["planning","Planning"],["transactions","Transactions"],["goals","Debt"],["networth","Net Worth"],["retirement","Retirement"],["settings","Settings & Data"]];
  document.getElementById("nav").innerHTML=items.map(function(x,i){return'<button data-page="'+x[0]+'" class="'+(i===0?"active":"")+'">'+x[1]+"</button>";}).join("");
  document.querySelectorAll("#nav button").forEach(function(b){b.addEventListener("click",function(){showPage(b.dataset.page);});});
 }
@@ -1080,7 +1080,7 @@ function renderHomeStreamlined(){
  var estimatedNetWorth=netWorthTotals.networth;
  var warnings=[];
  document.getElementById("home").innerHTML=
- '<div class="page-intro"><div><h2>Home</h2><p>Your financial position, priorities and retirement status at a glance.</p></div><span class="status-pill '+(retirement.ok?'good':'bad')+'">'+(retirement.ok?'Retirement plan funded':'Retirement shortfall')+'</span></div>'+
+ '<div class="page-intro"><div><h2>Home</h2><p>Your financial position, priorities and retirement status at a glance.</p></div><div class="quick-actions"><button id="openSetupFromHome" type="button">Open Setup</button><span class="status-pill '+(retirement.ok?'good':'bad')+'">'+(retirement.ok?'Retirement plan funded':'Retirement shortfall')+'</span></div></div>'+
  '<div class="hero-grid">'+
   '<div class="hero-card"><div class="label">Monthly cash remaining</div><div class="value">'+money(cash)+'</div><div class="sub">After budget, bills, investing, goals and debt</div></div>'+
   '<div class="hero-card"><div class="label">Investments used by plan</div><div class="value">'+money(detailed)+'</div><div class="sub">Detailed account balances</div></div>'+
@@ -1093,6 +1093,13 @@ function renderHomeStreamlined(){
  '<div class="section-card"><div class="page-intro"><div><h3>Opportunity alerts</h3><p>Where your current cash flow could create additional options.</p></div></div><div class="opportunity-grid">'+opportunityAlerts().map(function(x){return'<div class="opportunity-card '+x.type+'"><div class="op-label">'+esc(x.label)+'</div><div class="op-value">'+esc(x.value)+'</div><div class="op-copy">'+esc(x.copy)+'</div></div>';}).join("")+'</div></div>'+
  '<div class="section-card"><h3>Next large expense</h3>'+(next?'<p><strong>'+esc(next.name)+'</strong> is planned for age '+Number(next.age).toFixed(0)+' at '+money(Number(next.amount||0))+' in today’s dollars.</p>':'<div class="notice">No future expenses are currently scheduled.</div>')+'</div>'+
  '';
+ var setupButton=document.getElementById("openSetupFromHome");
+ if(setupButton)setupButton.onclick=function(){
+  data.settings.setupStep=0;
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+  renderSetup();
+  showPage("setup");
+ };
 
 }
 function renderHome(){
@@ -3080,7 +3087,7 @@ function exportBackupFile(){
  var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
  var a=document.createElement("a");
  a.href=URL.createObjectURL(blob);
- a.download="RyanOS-5.3.0-backup.json";
+ a.download="RyanOS-5.3.1-backup.json";
  a.click();
  setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
 }
@@ -3127,7 +3134,7 @@ function renderSetup(){
  var titles=["Welcome","About your household","Income","Investments","Workplace pensions","Retirement plan","Review"];
  var body="";
  if(step===0){
-  body='<h2>Welcome to RyanOS</h2><p>RyanOS will guide you through the information needed to build your financial plan. You can change everything later in Settings.</p><div class="notice good">This setup takes about 10 minutes. Your progress is saved after every step.</div>';
+  body='<h2>Welcome to RyanOS</h2><p>RyanOS will guide you through the information needed to build or update your financial plan. You can return here anytime from the Setup tab.</p><div class="notice good">This setup takes about 10 minutes. Your progress is saved after every step.</div>';
  }else if(step===1){
   body='<h2>About your household</h2><div class="setup-question">When do you and your spouse plan to retire?</div><div class="setup-grid">'+
    setupInput("Your current age","age","number",".01")+setupInput("Your retirement age","retireAge","number",".1")+
@@ -3291,7 +3298,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.3.0-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.3.1-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
