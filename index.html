@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 5.2.2</title>
+<title>RyanOS 5.2.3</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -483,11 +483,24 @@ details.section-card[open]>summary:after{content:"−"}
 @media(max-width:900px){.travel-form,.travel-results{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.travel-form,.travel-results{grid-template-columns:1fr}}
 
+
+.health-form{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;align-items:end}
+.health-results{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}
+.health-card{border:1px solid var(--border);border-radius:14px;padding:14px;background:#fff}
+.health-card .label{font-size:.76rem;text-transform:uppercase;letter-spacing:.03em;font-weight:900;color:var(--muted)}
+.health-card .value{font-size:1.3rem;font-weight:900;color:var(--brand);margin-top:5px}
+.health-card .copy{font-size:.88rem;color:var(--muted);margin-top:5px}
+.health-card.good{border-color:#b7d8c0;background:#f7fcf8}
+.health-card.warn{border-color:#ead9a4;background:#fffdf5}
+.health-card.bad{border-color:#e7b8b8;background:#fff8f8}
+@media(max-width:900px){.health-form,.health-results{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.health-form,.health-results{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>5.2.2 — Travel Planner</small></div>
+  <div><h1>RyanOS</h1><small>5.2.3 — Healthcare Reserve Planner</small></div>
   <div><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -1054,6 +1067,49 @@ function renderHome(){
 
 
 
+
+function ensureHealthcarePlanner(){
+ if(!data.healthcarePlanner||typeof data.healthcarePlanner!=="object"){
+  data.healthcarePlanner={
+   currentReserve:5000,
+   targetReserve:25000,
+   monthlyPremiums:300,
+   annualDentalVision:2500,
+   annualMedications:1200,
+   annualTravelMedical:800,
+   annualOther:1500,
+   yearsUntilRetirement:Math.max(0,Number(data.settings.retireAge||0)-Number(data.settings.age||0))
+  };
+ }
+ return data.healthcarePlanner;
+}
+function healthcarePlanAnalysis(){
+ var h=ensureHealthcarePlanner(),t=totals();
+ var years=Math.max(.1,Number(h.yearsUntilRetirement||0));
+ var months=Math.max(1,Math.round(years*12));
+ var annualOngoing=
+  Number(h.monthlyPremiums||0)*12+
+  Number(h.annualDentalVision||0)+
+  Number(h.annualMedications||0)+
+  Number(h.annualTravelMedical||0)+
+  Number(h.annualOther||0);
+ var reserveGap=Math.max(0,Number(h.targetReserve||0)-Number(h.currentReserve||0));
+ var monthlyReserve=reserveGap/months;
+ var totalMonthlyNeed=monthlyReserve+annualOngoing/12;
+ var capacity=Number(t.surplus||0);
+ var gap=totalMonthlyNeed-capacity;
+ var fundedPercent=Number(h.targetReserve||0)>0?Math.min(100,Number(h.currentReserve||0)/Number(h.targetReserve||0)*100):100;
+ return{
+  annualOngoing:annualOngoing,
+  reserveGap:reserveGap,
+  monthlyReserve:monthlyReserve,
+  totalMonthlyNeed:totalMonthlyNeed,
+  capacity:capacity,
+  gap:gap,
+  fundedPercent:fundedPercent,
+  affordable:capacity>=totalMonthlyNeed
+ };
+}
 function ensureTravelPlanner(){
  if(!data.travelPlanner||typeof data.travelPlanner!=="object"){
   var d=new Date();
@@ -1183,7 +1239,7 @@ function purchasePlanAnalysis(){
  };
 }
 function renderMoney(){
- var s=data.settings,purchase=ensurePurchasePlanner(),purchaseResult=purchasePlanAnalysis(),vehicle=ensureVehiclePlanner(),vehicleResult=vehiclePlanAnalysis(),travel=ensureTravelPlanner(),travelResult=travelPlanAnalysis();
+ var s=data.settings,purchase=ensurePurchasePlanner(),purchaseResult=purchasePlanAnalysis(),vehicle=ensureVehiclePlanner(),vehicleResult=vehiclePlanAnalysis(),travel=ensureTravelPlanner(),travelResult=travelPlanAnalysis(),health=ensureHealthcarePlanner(),healthResult=healthcarePlanAnalysis();
  var month=data.reportMonth||data.review.month||new Date().toISOString().slice(0,7);
  var cat=byCategoryForMonth(month),estimate=spendingEstimate();
  var monthTx=monthTransactions(month);
@@ -1317,6 +1373,25 @@ function renderMoney(){
   '<div class="notice '+(travelResult.affordable?'good':'warn')+'">'+
    (travelResult.affordable?"Your current planned surplus can fund this trip by the target date.":"The current monthly surplus does not fully fund this trip by the target date. Reduce the budget, extend the date or redirect other commitments.")+
   '</div></div>'+
+ '<div class="section-card"><div class="page-intro"><div><h3>Healthcare reserve planner</h3><p>Estimate ongoing healthcare costs and build a reserve before retirement.</p></div><span class="status-pill '+(healthResult.affordable?'good':'warn')+'">'+(healthResult.affordable?'On track':'Funding gap')+'</span></div>'+
+  '<div class="health-form">'+
+   '<label>Current healthcare reserve<input id="healthCurrentReserve" type="number" min="0" step="100" value="'+Number(health.currentReserve||0)+'"></label>'+
+   '<label>Target reserve<input id="healthTargetReserve" type="number" min="0" step="500" value="'+Number(health.targetReserve||0)+'"></label>'+
+   '<label>Years until retirement<input id="healthYears" type="number" min=".1" step=".1" value="'+Number(health.yearsUntilRetirement||0)+'"></label>'+
+   '<label>Monthly premiums<input id="healthPremiums" type="number" min="0" step="25" value="'+Number(health.monthlyPremiums||0)+'"></label>'+
+   '<label>Annual dental and vision<input id="healthDental" type="number" min="0" step="100" value="'+Number(health.annualDentalVision||0)+'"></label>'+
+   '<label>Annual medications<input id="healthMedications" type="number" min="0" step="100" value="'+Number(health.annualMedications||0)+'"></label>'+
+   '<label>Annual travel medical<input id="healthTravel" type="number" min="0" step="100" value="'+Number(health.annualTravelMedical||0)+'"></label>'+
+   '<label>Annual other healthcare<input id="healthOther" type="number" min="0" step="100" value="'+Number(health.annualOther||0)+'"></label>'+
+  '</div>'+
+  '<div class="health-results">'+
+   '<div class="health-card"><div class="label">Annual ongoing cost</div><div class="value">'+money(healthResult.annualOngoing)+'</div><div class="copy">Premiums, dental, vision, medications, travel medical and other costs.</div></div>'+
+   '<div class="health-card"><div class="label">Reserve gap</div><div class="value">'+money(healthResult.reserveGap)+'</div><div class="copy">Target reserve less the amount already set aside.</div></div>'+
+   '<div class="health-card '+(healthResult.affordable?'good':'warn')+'"><div class="label">Monthly reserve saving</div><div class="value">'+money(healthResult.monthlyReserve)+'</div><div class="copy">Amount needed each month to reach the reserve target.</div></div>'+
+   '<div class="health-card '+(healthResult.gap<=0?'good':'bad')+'"><div class="label">'+(healthResult.gap<=0?"Monthly room left":"Monthly funding gap")+'</div><div class="value">'+money(Math.abs(healthResult.gap))+'</div><div class="copy">'+(healthResult.gap<=0?"Cash remaining after healthcare funding.":"Additional monthly capacity required.")+'</div></div>'+
+  '</div>'+
+  '<div class="quick-actions" style="margin-top:12px"><button id="saveHealthcarePlan" type="button">Save healthcare plan</button><button id="healthToGoal" type="button" class="secondary">Add reserve as savings goal</button></div>'+
+  '<div class="notice '+(healthResult.affordable?'good':'warn')+'">Healthcare reserve is '+healthResult.fundedPercent.toFixed(0)+'% funded. '+(healthResult.affordable?"Your current planned surplus can support the reserve target and estimated ongoing costs.":"The current surplus does not fully support the reserve target and ongoing costs without changing other priorities.")+'</div></div>'+
  '<details class="section-card"><summary>Retirement spending estimate</summary><div class="details-body">'+
   '<div class="hero-grid">'+
    '<div class="hero-card"><div class="label">Core annual spending</div><div class="value">'+money(estimate.annualizedCore)+'</div></div>'+
@@ -1405,6 +1480,32 @@ function renderMoney(){
    existing.target=r.total;existing.current=Number(v.saved||0);existing.monthly=Math.ceil(r.monthly);
   }else{
    data.goals.push({name:name,target:r.total,current:Number(v.saved||0),monthly:Math.ceil(r.monthly),priority:(data.goals||[]).length+1});
+  }
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));render();showPage("goals");
+ };
+ document.getElementById("saveHealthcarePlan").onclick=function(){
+  data.healthcarePlanner={
+   currentReserve:Number(document.getElementById("healthCurrentReserve").value||0),
+   targetReserve:Number(document.getElementById("healthTargetReserve").value||0),
+   yearsUntilRetirement:Number(document.getElementById("healthYears").value||0),
+   monthlyPremiums:Number(document.getElementById("healthPremiums").value||0),
+   annualDentalVision:Number(document.getElementById("healthDental").value||0),
+   annualMedications:Number(document.getElementById("healthMedications").value||0),
+   annualTravelMedical:Number(document.getElementById("healthTravel").value||0),
+   annualOther:Number(document.getElementById("healthOther").value||0)
+  };
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderMoney();
+ };
+ document.getElementById("healthToGoal").onclick=function(){
+  var h=ensureHealthcarePlanner(),r=healthcarePlanAnalysis();
+  var name="Healthcare reserve";
+  var existing=(data.goals||[]).find(function(g){return String(g.name||"").toLowerCase()===name.toLowerCase();});
+  if(existing){
+   existing.target=Number(h.targetReserve||0);
+   existing.current=Number(h.currentReserve||0);
+   existing.monthly=Math.ceil(r.monthlyReserve);
+  }else{
+   data.goals.push({name:name,target:Number(h.targetReserve||0),current:Number(h.currentReserve||0),monthly:Math.ceil(r.monthlyReserve),priority:(data.goals||[]).length+1});
   }
   localStorage.setItem(STORAGE_KEY,JSON.stringify(data));render();showPage("goals");
  };
@@ -2878,7 +2979,7 @@ function exportBackupFile(){
  var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
  var a=document.createElement("a");
  a.href=URL.createObjectURL(blob);
- a.download="RyanOS-5.2.2-backup.json";
+ a.download="RyanOS-5.2.3-backup.json";
  a.click();
  setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
 }
@@ -3004,7 +3105,7 @@ function render(){
  safeRender("reports",renderReports);
  safeRender("settings",renderSettings);
 }
-document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.2.2-backup.json";a.click();};
+document.getElementById("exportBtn").onclick=function(){data.review.lastBackup=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="RyanOS-5.2.3-backup.json";a.click();};
 if(!data.categorizationVersion||data.categorizationVersion<25){
  try{
   data.transactions.forEach(function(t){
