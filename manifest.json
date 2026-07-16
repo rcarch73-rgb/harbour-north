@@ -1,9 +1,9 @@
 {
-  "name": "RyanOS 5.3.31",
+  "name": "RyanOS 5.3.33",
   "short_name": "RyanOS",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f4f7fb",
   "theme_color": "#17365d",
-  "description": "RyanOS retirement ledger validation tests."
+  "description": "RyanOS integrated federal and British Columbia retirement tax engine."
 }
