@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 5.3.28</title>
+<title>RyanOS 5.3.29</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -772,11 +772,19 @@ details.section-card[open]>summary:after{content:"−"}
 .survivor-test-result.pass{color:var(--good)}
 .survivor-test-result.fail{color:var(--bad)}
 
+
+.tax-tests{display:grid;gap:10px;margin-top:12px}
+.tax-test{border:1px solid var(--border);border-radius:12px;padding:12px;background:#fff}
+.tax-test-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.tax-test-result{font-weight:900}
+.tax-test-result.pass{color:var(--good)}
+.tax-test-result.fail{color:var(--bad)}
+
 </style>
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>5.3.28 — Survivor Validation Tests</small></div>
+  <div><h1>RyanOS</h1><small>5.3.29 — Tax Validation Tests</small></div>
   <div class="header-actions"><button class="mode-toggle" id="modeToggle" type="button">Simple mode</button><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -801,7 +809,7 @@ details.section-card[open]>summary:after{content:"−"}
 "use strict";
 
 var STORAGE_KEY="ryanos2-data";
-var defaults={appVersion:"5.3.28",dataSchemaVersion:28,
+var defaults={appVersion:"5.3.29",dataSchemaVersion:29,
  settings:{
   setupComplete:0,setupStep:0,interfaceMode:1,demoData:0,spouseAge:40,taxFreeIncomeEndAge:65,hasUserFhsa:0,hasSpouseFhsa:0,hasNonRegistered:0,
   userPensionEnabled:0,userPensionType:1,userPensionMonthly:0,userPensionStartAge:65,userPensionIndexed:0,userPensionIndexRate:0,userPensionBridgeMonthly:0,userPensionBridgeEndAge:65,
@@ -888,8 +896,8 @@ function migrate(raw){
  if(raw.travelPlanner&&typeof raw.travelPlanner==="object")out.travelPlanner=clone(raw.travelPlanner);
  if(raw.healthcarePlanner&&typeof raw.healthcarePlanner==="object")out.healthcarePlanner=clone(raw.healthcarePlanner);
  if(!out.settings.spouseAge&&isFinite(Number(out.settings.age))&&isFinite(Number(out.settings.wifeAgeDiff)))out.settings.spouseAge=Number(out.settings.age)-Number(out.settings.wifeAgeDiff);
- out.appVersion="5.3.28";
- out.dataSchemaVersion=28;
+ out.appVersion="5.3.29";
+ out.dataSchemaVersion=29;
  if(raw&&raw.settings&&Number(raw.settings.age)===52&&!raw.settings.currentAgePrecisionCorrected){
  out.settings.age=52.96;
  out.settings.currentAgePrecisionCorrected=1;
@@ -1362,8 +1370,8 @@ function loadDemoData(){
  demo.travelPlanner=null;
  demo.healthcarePlanner=null;
  demo.optimizerExtra=0;
- demo.appVersion="5.3.28";
- demo.dataSchemaVersion=28;
+ demo.appVersion="5.3.29";
+ demo.dataSchemaVersion=29;
  data=demo;
  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
  nav();render();showPage("home");
@@ -2970,6 +2978,75 @@ function renderRetirementValidationConsole(rows){
  '</div>';
 }
 
+
+function runTaxValidationTests(){
+ var original=data,results=[];
+ function add(ok,name,copy,actual,expected){results.push({ok:!!ok,name:name,copy:copy,actual:actual,expected:expected});}
+ try{
+  var x=clone(defaults);data=x;
+  x.settings.age=65;x.settings.inflation=0;x.settings.federalBasicPersonalAmount=16452;x.settings.bcBasicPersonalAmount=13216;
+  x.settings.oasRecoveryThreshold2026=93454;x.settings.pensionSplitPercent=50;
+
+  var zero=estimatedBcFederalTax(0,65,0);
+  add(Math.abs(zero.total)<.01,"Zero-income tax","No taxable income produces no federal or B.C. tax.",zero.total,0);
+
+  var belowCredits=estimatedBcFederalTax(10000,65,0);
+  add(Math.abs(belowCredits.total)<1,"Basic credits shelter low income","Income below the combined basic-credit effect produces approximately zero tax.",belowCredits.total,"Near 0");
+
+  var firstBracket=estimatedBcFederalTax(50000,65,0);
+  add(firstBracket.total>0&&firstBracket.total<12000,"First-bracket tax is reasonable","A $50,000 taxable income produces a positive but bounded estimate.",firstBracket.total,"0 to 12,000");
+
+  var higher=estimatedBcFederalTax(100000,65,0);
+  add(higher.total>firstBracket.total,"Progressive tax increases","Tax rises as taxable income increases.",higher.total,"> "+firstBracket.total);
+
+  var pensionCredit=estimatedBcFederalTax(30000,65,2000);
+  var noPensionCredit=estimatedBcFederalTax(30000,65,0);
+  add(pensionCredit.total<noPensionCredit.total,"Pension credit reduces tax","Eligible pension income lowers estimated federal tax.",pensionCredit.total,"< "+noPensionCredit.total);
+
+  x.settings.age=60;x.settings.inflation=2;data=x;
+  var indexed=estimatedBcFederalTax(50000,70,0);
+  var current=estimatedBcFederalTax(50000,60,0);
+  add(indexed.total<=current.total,"Bracket indexing works","Future indexed brackets and credits do not increase tax on the same nominal income.",indexed.total,"<= "+current.total);
+
+  x=clone(defaults);data=x;
+  x.settings.age=65;x.settings.spouseAge=65;x.settings.inflation=0;x.settings.pensionSplitPercent=50;
+  x.settings.federalBasicPersonalAmount=16452;x.settings.bcBasicPersonalAmount=13216;x.settings.oasRecoveryThreshold2026=93454;
+  var row={
+   age:65,wifeAge:65,wifeEmployment:0,userPension:0,spousePension:40000,
+   cpp:0,wcpp:0,oas:0,woas:0,rrspWithdrawal:0,wifeRrspWithdrawal:0,
+   strategicRrspWithdrawal:0,userRrifMinimum:0,spouseRrifMinimum:0,withdrawalTax:0
+  };
+  var split=annualTaxEstimateForRow(row);
+  add(Math.abs(split.pensionTransferred-20000)<1,"Pension split amount","A 50% split transfers half of eligible spouse pension income.",split.pensionTransferred,20000);
+
+  x.settings.pensionSplitPercent=0;data=x;
+  var unsplit=annualTaxEstimateForRow(row);
+  add(split.totalTax<=unsplit.totalTax+1,"Pension splitting does not worsen tax","The split estimate should not materially exceed the unsplit household estimate.",split.totalTax,"<= "+unsplit.totalTax);
+
+  x.settings.oasRecoveryThreshold2026=50000;data=x;
+  row.oas=12000;row.cpp=60000;
+  var recovery=annualTaxEstimateForRow(row);
+  add(recovery.userOasRecovery>0&&recovery.userOasRecovery<=12000,"OAS recovery tax bounded","Recovery tax begins above the threshold and cannot exceed OAS received.",recovery.userOasRecovery,"0 to 12,000");
+
+  x.settings.oasRecoveryThreshold2026=93454;data=x;
+  row.oas=12000;row.cpp=20000;
+  var noRecovery=annualTaxEstimateForRow(row);
+  add(noRecovery.userOasRecovery<1,"OAS recovery below threshold","No recovery tax appears below the threshold.",noRecovery.userOasRecovery,0);
+
+  var finiteRows=[
+   {age:65,wifeAge:65,wifeEmployment:0,userPension:12000,spousePension:18000,cpp:10000,wcpp:8000,oas:9000,woas:9000,rrspWithdrawal:5000,wifeRrspWithdrawal:3000,strategicRrspWithdrawal:0,userRrifMinimum:0,spouseRrifMinimum:0,withdrawalTax:0},
+   {age:75,wifeAge:75,wifeEmployment:0,userPension:12000,spousePension:18000,cpp:12000,wcpp:10000,oas:10000,woas:10000,rrspWithdrawal:8000,wifeRrspWithdrawal:5000,strategicRrspWithdrawal:0,userRrifMinimum:5000,spouseRrifMinimum:4000,withdrawalTax:0}
+  ];
+  add(finiteRows.every(function(r){var t=annualTaxEstimateForRow(r);return isFinite(t.totalTax)&&t.totalTax>=0;}),"Tax estimates remain finite","Representative retirement rows return valid non-negative tax estimates.","All rows","All rows");
+ }catch(err){
+  add(false,"Tax test execution","The tax test suite stopped unexpectedly.",err.message||String(err),"No error");
+ }finally{data=original;}
+ return{tests:results,pass:results.filter(function(t){return t.ok;}).length,total:results.length};
+}
+function renderTaxValidationTests(){
+ var suite=runTaxValidationTests();
+ return'<div class="section-card"><div class="page-intro"><div><h3>Tax validation tests</h3><p>Fixed known-outcome checks for the federal and B.C. tax estimate. Your saved plan is restored immediately.</p></div><span class="status-pill '+(suite.pass===suite.total?'good':'bad')+'">'+suite.pass+'/'+suite.total+' passed</span></div><div class="tax-tests">'+suite.tests.map(function(t){return'<div class="tax-test"><div class="tax-test-head"><strong>'+esc(t.name)+'</strong><span class="tax-test-result '+(t.ok?'pass':'fail')+'">'+(t.ok?'PASS':'FAIL')+'</span></div><div class="tx-muted">'+esc(t.copy)+'</div><div class="tx-muted">Actual: '+esc(String(t.actual))+' · Expected: '+esc(String(t.expected))+'</div></div>';}).join("")+'</div></div>';
+}
 function renderAnnualTaxAudit(rows){
  var milestones=retirementMilestoneRows(rows),estimates=milestones.map(function(x){return{name:x.name,row:x.row,tax:annualTaxEstimateForRow(x.row)};});
  var peak=estimates.reduce(function(best,x){return Number(x.tax.totalTax)>Number(best.tax.totalTax)?x:best;},estimates[0]||{tax:{totalTax:0},row:{}});
@@ -3485,7 +3562,7 @@ function renderRetirement(){
   (function(){
    var first=rows[0]||{},last=rows[rows.length-1]||{};
    return'<div class="section-card"><div class="page-intro"><div><h3>Retirement-age calculation audit</h3><p>The projection starts at the exact retirement age and advances in one-year periods.</p></div><span class="estimate-tag">Audited</span></div><div class="age-audit-grid"><div class="age-audit-card"><div class="label">Exact retirement age</div><div class="value">'+Number(s.retireAge||0).toFixed(2)+'</div></div><div class="age-audit-card"><div class="label">Spouse age then</div><div class="value">'+Number(first.wifeAge||0).toFixed(2)+'</div></div><div class="age-audit-card"><div class="label">First period ends</div><div class="value">'+Number(first.endAge||0).toFixed(2)+'</div></div><div class="age-audit-card"><div class="label">Plan ends at</div><div class="value">'+Number(last.endAge||0).toFixed(2)+'</div></div></div><p class="tx-muted">CPP, OAS, pensions, tax-free income and spouse salary are prorated monthly when they begin or end during a projection period.</p></div>';
-  })()+renderRetirementValidationConsole(rows)+renderKnownScenarioTests()+renderAnnualTaxAudit(rows)+renderSurvivorScenario()+renderSurvivorValidationTests()+
+  })()+renderRetirementValidationConsole(rows)+renderKnownScenarioTests()+renderAnnualTaxAudit(rows)+renderTaxValidationTests()+renderSurvivorScenario()+renderSurvivorValidationTests()+
   (function(){
    var firstUser=rows.find(function(r){return Number(r.userRrifMinimum||0)>0;});
    var firstSpouse=rows.find(function(r){return Number(r.spouseRrifMinimum||0)>0;});
@@ -4282,7 +4359,7 @@ function backupCompatibilityAudit(){
  add(Number(migratedOld.settings.userFhsaBalance||0)===0&&Number(migratedOld.settings.spouseFhsaBalance||0)===0,"Missing FHSA fields default safely","Older backups without FHSA data open with zero balances.");
  add(Number(migratedOld.settings.userPensionEnabled||0)===0,"Missing user pension defaults safely","Older backups do not invent a user pension.");
  var current=migrate(data);
- add(Number(current.dataSchemaVersion||0)===28,"Current schema version","Migrated data is tagged with schema version 28.");
+ add(Number(current.dataSchemaVersion||0)===29,"Current schema version","Migrated data is tagged with schema version 29.");
  add(Array.isArray(current.netWorthHistory),"Net worth history preserved","Existing net worth snapshots remain available.");
  add(Array.isArray(current.backupHistory),"Recovery history preserved","Recovery points remain attached to the profile.");
  add(!!current.purchasePlanner&&!!current.vehiclePlanner&&!!current.travelPlanner&&!!current.healthcarePlanner,"Planner data preserved","All four planning tools survive migration.");
@@ -4317,6 +4394,8 @@ function fullRegressionAudit(){
   add(rows.length>0&&Math.abs(Number(rows[rows.length-1].endAge)-Number(data.settings.retirementEndAge||95))<.0001,"Plan end age preserved","The final period ends at the selected plan-through age.");
   add(rows.every(function(r){return Math.abs(Number(r.wifeAge)-spouseAgeAtUserAge(Number(r.age)))<.0001;}),"Spouse age progression aligned","Spouse age advances from the two current ages rather than a stale age-difference field.");
   add(Array.isArray(rows)&&rows.length>0,"Retirement plan generated","The year-by-year retirement model returns rows.");
+  var taxSuite=runTaxValidationTests();
+  add(taxSuite.pass===taxSuite.total,"Tax validation tests pass","All fixed tax scenarios pass.");
   var survivorSuite=runSurvivorScenarioTests();
   add(survivorSuite.pass===survivorSuite.total,"Survivor validation tests pass","All fixed survivor scenarios pass.");
   var survivorSample=survivorScenarioSummary();
@@ -4342,7 +4421,7 @@ function fullRegressionAudit(){
   add(rows.every(function(r){return isFinite(Number(r.rrifMinimumGross||0));}),"RRIF minimum rows valid","Mandatory RRIF withdrawals return finite values.");
   add(typeof pensionIncomeAudit==="function"&&pensionIncomeAudit(rows).rows.length>0,"Pension timeline audit available","Milestone income rows are generated.");
   add(typeof validateBackupObject==="function"&&validateBackupObject(data).length===0,"Current backup validates","Current saved data passes backup validation.");
-  add(Number(data.dataSchemaVersion||0)===28,"Current schema version","Data is tagged with schema version 28.");
+  add(Number(data.dataSchemaVersion||0)===29,"Current schema version","Data is tagged with schema version 29.");
  }catch(err){
   add(false,"Regression audit execution","Audit stopped because: "+(err.message||String(err)));
  }
@@ -4357,7 +4436,7 @@ function renderSimpleSettings(){
   '<div class="mode-note"><strong>Simple mode hides technical controls.</strong><div>All calculations and saved information remain available. Switch to Advanced mode for detailed assumptions, withdrawal strategies and diagnostic tables.</div></div>'+
   '<div class="section-card"><h3>Guided setup</h3><p>Review household income, accounts, pensions and retirement assumptions.</p><button id="simpleRunSetup" type="button">Run Setup Wizard</button></div>'+  '<div class="section-card"><h3>Start or explore</h3><div class="clean-start-grid"><div class="clean-start-card"><h4>Use my own information</h4><p>Start with empty balances and build your plan through Guided Setup.</p><button id="simpleCleanStart" type="button">Start clean</button></div><div class="clean-start-card"><h4>Explore with sample data</h4><p>Load a fictional Canadian household to see how RyanOS works.</p><button id="simpleLoadDemo" class="secondary" type="button">Load demo</button></div></div></div>'+
   '<div class="section-card"><h3>Backup and recovery</h3><p>Export a backup before making major changes or moving to another device.</p><div class="simple-actions"><button id="simpleExport" type="button">Export backup</button><button id="simpleAdvancedSettings" class="secondary" type="button">Open advanced settings</button></div></div>'+
-  '<div class="section-card"><h3>Data health</h3><div class="simple-next-grid"><div class="simple-next-card"><div class="label">Compatibility checks</div><div class="value">'+c.pass+'/'+c.total+'</div></div><div class="simple-next-card"><div class="label">Schema</div><div class="value">28</div></div><div class="simple-next-card"><div class="label">Storage</div><div class="value">This device</div></div></div></div>'+
+  '<div class="section-card"><h3>Data health</h3><div class="simple-next-grid"><div class="simple-next-card"><div class="label">Compatibility checks</div><div class="value">'+c.pass+'/'+c.total+'</div></div><div class="simple-next-card"><div class="label">Schema</div><div class="value">29</div></div><div class="simple-next-card"><div class="label">Storage</div><div class="value">This device</div></div></div></div>'+
   '<div class="trust-banner"><strong>Privacy reminder</strong>RyanOS stores data in this browser. Keep exported backups in a secure location.</div>';
  document.getElementById("simpleRunSetup").onclick=function(){data.settings.setupStep=0;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));showPage("setup");};
  document.getElementById("simpleCleanStart").onclick=clearAllData;
@@ -4414,7 +4493,7 @@ function renderSettings(){
  '<div class="section-card"><h3>Data health</h3><div class="notice '+(health.length?'bad':'good')+'">'+(health.length?health.map(function(x){return'• '+x;}).join('<br>'):'No major data problems detected.')+'</div></div>'+
  (function(){var audit=foundationAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Foundation audit</h3><p>Automated checks for the calculations and data connections RyanOS depends on.</p></div><span class="status-pill '+(audit.passed===audit.total?'good':audit.passed>=audit.total-2?'warn':'bad')+'">'+audit.passed+' of '+audit.total+' passed</span></div><div class="audit-grid">'+audit.checks.map(function(x){return'<div class="audit-card '+(x.ok?'pass':'fail')+'"><div class="audit-title">'+(x.ok?'✓ ':'⚠ ')+esc(x.name)+'</div><div class="audit-copy">'+esc(x.copy)+'</div></div>';}).join("")+'</div><div class="quick-actions" style="margin-top:12px"><button id="runFoundationAudit" type="button">Run audit again</button></div></div>';})()+
  '<div class="section-card"><div class="page-intro"><div><h3>Calculation scope</h3><p>What RyanOS currently calculates and what still requires professional confirmation.</p></div><span class="estimate-tag">Planning estimate</span></div><div class="method-grid"><div class="method-card"><div class="label">Included</div><div class="value">Cash flow, account growth, pensions, CPP/OAS, stress scenarios and year-by-year balances</div></div><div class="method-card"><div class="label">Simplified</div><div class="value">Income tax, non-registered taxation and withdrawal sequencing</div></div><div class="method-card"><div class="label">Not included yet</div><div class="value">Full federal/provincial tax, RRIF minimums, survivor and estate calculations</div></div></div></div>'+
- (function(){var r=fullRegressionAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Full regression test</h3><p>Checks the primary pages, financial engines, planners, backup system and retirement calculations together.</p></div><span class="status-pill '+(r.failed===0?'good':'bad')+'">'+r.pass+' of '+r.total+' passed</span></div><div class="regression-grid"><div class="regression-card"><div class="label">Schema version</div><div class="value">28</div></div><div class="regression-card"><div class="label">Tests</div><div class="value">'+r.total+'</div></div><div class="regression-card"><div class="label">Passed</div><div class="value">'+r.pass+'</div></div><div class="regression-card"><div class="label">Failed</div><div class="value">'+r.failed+'</div></div></div><div class="regression-list">'+r.tests.map(function(x){return'<div class="regression-item '+(x.ok?'pass':'fail')+'"><div>'+(x.ok?'✓':'!')+'</div><div><strong>'+esc(x.name)+'</strong><div class="tx-muted">'+esc(x.copy)+'</div></div></div>';}).join("")+'</div><div class="quick-actions" style="margin-top:12px"><button id="runRegressionAudit" type="button">Run regression test again</button></div></div>';})()+
+ (function(){var r=fullRegressionAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Full regression test</h3><p>Checks the primary pages, financial engines, planners, backup system and retirement calculations together.</p></div><span class="status-pill '+(r.failed===0?'good':'bad')+'">'+r.pass+' of '+r.total+' passed</span></div><div class="regression-grid"><div class="regression-card"><div class="label">Schema version</div><div class="value">29</div></div><div class="regression-card"><div class="label">Tests</div><div class="value">'+r.total+'</div></div><div class="regression-card"><div class="label">Passed</div><div class="value">'+r.pass+'</div></div><div class="regression-card"><div class="label">Failed</div><div class="value">'+r.failed+'</div></div></div><div class="regression-list">'+r.tests.map(function(x){return'<div class="regression-item '+(x.ok?'pass':'fail')+'"><div>'+(x.ok?'✓':'!')+'</div><div><strong>'+esc(x.name)+'</strong><div class="tx-muted">'+esc(x.copy)+'</div></div></div>';}).join("")+'</div><div class="quick-actions" style="margin-top:12px"><button id="runRegressionAudit" type="button">Run regression test again</button></div></div>';})()+
  (function(){var c=backupCompatibilityAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Backup migration compatibility</h3><p>Checks whether older RyanOS data can be upgraded without losing important information.</p></div><span class="status-pill '+(c.pass===c.total?'good':'warn')+'">'+c.pass+' of '+c.total+' passed</span></div><div class="compat-grid"><div class="compat-card"><div class="label">Schema version</div><div class="value">9</div></div><div class="compat-card"><div class="label">Compatibility tests</div><div class="value">'+c.total+'</div></div><div class="compat-card"><div class="label">Passed</div><div class="value">'+c.pass+'</div></div><div class="compat-card"><div class="label">Warnings</div><div class="value">'+(c.total-c.pass)+'</div></div></div><div class="compat-list">'+c.tests.map(function(x){return'<div class="compat-item '+(x.ok?'pass':'warn')+'"><div>'+(x.ok?'✓':'!')+'</div><div><strong>'+esc(x.name)+'</strong><div class="tx-muted">'+esc(x.copy)+'</div></div></div>';}).join("")+'</div></div>';})()+
  '<div class="section-card"><div class="page-intro"><div><h3>Guided setup</h3><p>Run the question-and-answer setup again without deleting transactions, net worth history or backups.</p></div><button id="rerunSetup" type="button">Run Setup Wizard</button></div></div>'+
  '<div class="pension-grid">'+pensionEditor("user","Your workplace pension")+pensionEditor("spouse","Spouse workplace pension")+'</div>'+
