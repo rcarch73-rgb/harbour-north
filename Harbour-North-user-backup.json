@@ -1,0 +1,6163 @@
+{
+  "settings": {
+    "income1": 5428.78,
+    "income2": 5147.32,
+    "wcb": 1352.34,
+    "investing": 2300,
+    "bills": 1200,
+    "chores": 173,
+    "loc": 22545,
+    "rate": 5.19,
+    "months": 24,
+    "investments": 548266,
+    "rrspBalance": 442000,
+    "userTfsaBalance": 45000,
+    "wifeRrspBalance": 33000,
+    "nonRegisteredBalance": 0,
+    "rrspMonthlyContribution": 1800,
+    "userTfsaMonthlyContribution": 500,
+    "wifeRrspMonthlyContribution": 300,
+    "nonRegisteredMonthlyContribution": 0,
+    "withdrawalStrategy": 1,
+    "nonRegisteredWithdrawalTaxRate": 5,
+    "rrspDrawdownEnabled": 1,
+    "rrspDrawdownStartAge": 55,
+    "rrspDrawdownEndAge": 70,
+    "lowestTaxBracketCeiling": 50363,
+    "lowestBracketMarginalTaxRate": 19.6,
+    "tfsaAnnualLimit": 7000,
+    "tfsaAvailableRoom": 7000,
+    "age": 52,
+    "retireAge": 55.5,
+    "returnRate": 7,
+    "inflation": 2.5,
+    "retireSpend": 72000,
+    "wifePension": 3200,
+    "wifeAgeDiff": 7,
+    "wifeRetireAge": 55,
+    "wifeEmploymentAnnual": 110000,
+    "wifeEmploymentNetAnnual": 65000,
+    "wifeWorkUntilUserAge": 62,
+    "wifeEmploymentGrowth": 3,
+    "userOasMonthly": 751.97,
+    "userOasStart": 65,
+    "wifeOasMonthly": 751.97,
+    "wifeOasStart": 65,
+    "spendingLookbackMonths": 12,
+    "irregularAnnualAllowance": 9000,
+    "retirementScenarioUserAge": 55,
+    "retirementScenarioWifeAge": 48,
+    "retirementEndAge": 95,
+    "retirementTaxRate": 15,
+    "conservativeReturn": 4,
+    "optimisticReturn": 8,
+    "inheritanceAmount": 0,
+    "inheritanceAge": 65,
+    "oneTimeExpenseAmount": 0,
+    "oneTimeExpenseAge": 60,
+    "userCpp65": 1308.21,
+    "userCpp70": 1857.66,
+    "userCppStart": 70,
+    "wifeCpp60": 878,
+    "wifeCpp65": 1372,
+    "wifeCpp70": 1948,
+    "wifeCppStart": 65,
+    "home": 650000,
+    "ns1": 100000,
+    "ns2": 40000,
+    "vehicles": 65000,
+    "boat": 25000,
+    "camper": 30000,
+    "cash": 3060,
+    "ccDebt": 3318
+  },
+  "budget": [
+    [
+      "Groceries",
+      1400
+    ],
+    [
+      "Dining",
+      500
+    ],
+    [
+      "Transportation",
+      550
+    ],
+    [
+      "Vehicle",
+      500
+    ],
+    [
+      "Home & Garden",
+      400
+    ],
+    [
+      "Utilities",
+      600
+    ],
+    [
+      "Subscriptions",
+      175
+    ],
+    [
+      "Shopping & Personal",
+      550
+    ],
+    [
+      "Pets",
+      150
+    ],
+    [
+      "Entertainment",
+      200
+    ],
+    [
+      "Alcohol",
+      250
+    ],
+    [
+      "Boat & Outdoor",
+      300
+    ],
+    [
+      "Travel",
+      500
+    ],
+    [
+      "Medical",
+      75
+    ],
+    [
+      "Education",
+      70
+    ],
+    [
+      "Donations & Family",
+      75
+    ],
+    [
+      "Miscellaneous",
+      300
+    ]
+  ],
+  "goals": [
+    {
+      "name": "Son's car",
+      "target": 6000,
+      "current": 0,
+      "monthly": 500,
+      "priority": 1
+    },
+    {
+      "name": "LOC",
+      "target": 0,
+      "current": 22545,
+      "monthly": 800,
+      "priority": 2
+    },
+    {
+      "name": "Emergency fund",
+      "target": 4000,
+      "current": 0,
+      "monthly": 150,
+      "priority": 3
+    },
+    {
+      "name": "Garmin",
+      "target": 1300,
+      "current": 0,
+      "monthly": 100,
+      "priority": 4
+    },
+    {
+      "name": "Fence",
+      "target": 6000,
+      "current": 0,
+      "monthly": 0,
+      "priority": 5
+    }
+  ],
+  "life": [],
+  "transactions": [
+    {
+      "date": "2026-07-09",
+      "description": "TIM HORTONS #2191 CRANBROOK BC",
+      "merchant": "TIM HORTONS #2191 CRANBROOK BC",
+      "amount": 5.96,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-10",
+      "description": "WOODLAND CONVENIENCE CRANBROOK BC",
+      "merchant": "WOODLAND CONVENIENCE CRANBROOK BC",
+      "amount": 12.89,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-12",
+      "description": "CHV40149 CRANBROOK CHE CRANBROOK BC",
+      "merchant": "CHV40149 CRANBROOK CHE CRANBROOK BC",
+      "amount": 75,
+      "category": "Vehicle",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-12",
+      "description": "GOOGLE *Pokemon GO HALIFAX NS",
+      "merchant": "GOOGLE *POKEMON GO HALIFAX NS",
+      "amount": 1.56,
+      "category": "Subscriptions",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-13",
+      "description": "GOOGLE *Pokemon GO HALIFAX NS",
+      "merchant": "GOOGLE *POKEMON GO HALIFAX NS",
+      "amount": 7.83,
+      "category": "Subscriptions",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-09",
+      "description": "SHAW CABLESYSTEMS CALGARY AB",
+      "merchant": "SHAW CABLESYSTEMS CALGARY AB",
+      "amount": 160.16,
+      "category": "Utilities",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-10",
+      "description": "FAMILY THAI RESTAURANT CRANBROOK BC",
+      "merchant": "FAMILY THAI RESTAURANT CRANBROOK BC",
+      "amount": 88.91,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-07-10",
+      "description": "CRANBROOK ST. LIQUOR S CRANBROOK BC",
+      "merchant": "CRANBROOK ST. LIQUOR S CRANBROOK BC",
+      "amount": 21.29,
+      "category": "Alcohol",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-13",
+      "description": "STARLINK INTERNET Halifax NS",
+      "merchant": "STARLINK INTERNET HALIFAX NS",
+      "amount": 62.72,
+      "category": "Utilities",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-06-12",
+      "description": "WWW.VAGARO.C* STUDIO J CRANBROOK BC",
+      "merchant": "WWW.VAGARO.C* STUDIO J CRANBROOK BC",
+      "amount": 368,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-06-13",
+      "description": "EXPEDIA 72075458976941 EXPEDIA.CA ON",
+      "merchant": "EXPEDIA 72075458976941 EXPEDIA.CA ON",
+      "amount": 188.96,
+      "category": "Travel",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-12",
+      "description": "TACO TIME - 210902 CRANBROOK BC",
+      "merchant": "TACO TIME - 210902 CRANBROOK BC",
+      "amount": 11.53,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-06-12",
+      "description": "SAFEWAY #4974 CRANBROOK BC",
+      "merchant": "SAFEWAY #4974 CRANBROOK BC",
+      "amount": 5.2,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-14",
+      "description": "WLOKA FARMS FRUIT STAN CRESTON BC",
+      "merchant": "WLOKA FARMS FRUIT STAN CRESTON BC",
+      "amount": 13.3,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-14",
+      "description": "REDS BREAD & BAKERY CRAWFORD BAY BC",
+      "merchant": "REDS BREAD & BAKERY CRAWFORD BAY BC",
+      "amount": 25.88,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-10",
+      "description": "DAIRY QUEEN #27104 CRANBROOK BC",
+      "merchant": "DAIRY QUEEN #27104 CRANBROOK BC",
+      "amount": 24.32,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-06-11",
+      "description": "CANADIAN TIRE #395 CRANBROOK BC",
+      "merchant": "CANADIAN TIRE #395 CRANBROOK BC",
+      "amount": 39.41,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-06-11",
+      "description": "SAVE ON FOODS #915 CRANBROOK BC",
+      "merchant": "SAVE ON FOODS #915 CRANBROOK BC",
+      "amount": 155.05,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-11",
+      "description": "SAVE ON FOODS #915 CRANBROOK BC",
+      "merchant": "SAVE ON FOODS #915 CRANBROOK BC",
+      "amount": 27.5,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-12",
+      "description": "PETRO-CANADA 69983 CRANBROOK BC",
+      "merchant": "PETRO-CANADA 69983 CRANBROOK BC",
+      "amount": 75.23,
+      "category": "Transportation",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-13",
+      "description": "STARLINK INTERNET Halifax NS",
+      "merchant": "STARLINK INTERNET HALIFAX NS",
+      "amount": 62.72,
+      "category": "Utilities",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-06-13",
+      "description": "CRAWFORD BAY MARKET Crawford Bay BC",
+      "merchant": "CRAWFORD BAY MARKET CRAWFORD BAY BC",
+      "amount": 45.92,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-12",
+      "description": "SAVE ON FOODS # 2216 CRESTON BC",
+      "merchant": "SAVE ON FOODS # 2216 CRESTON BC",
+      "amount": 16.79,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-12",
+      "description": "SAVE ON FOODS #915 CRANBROOK BC",
+      "merchant": "SAVE ON FOODS #915 CRANBROOK BC",
+      "amount": 56.45,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-13",
+      "description": "NEW KEYS PLACE CRAWFORD BAY BC",
+      "merchant": "NEW KEYS PLACE CRAWFORD BAY BC",
+      "amount": 71.47,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-14",
+      "description": "ROGERS ******1102 TORONTO ON",
+      "merchant": "ROGERS ******1102 TORONTO ON",
+      "amount": 100.8,
+      "category": "Utilities",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-15",
+      "description": "TRSF FROM/DE ACCT/CPT 0722-XXXX-239",
+      "merchant": "TRSF FROM/DE ACCT/CPT 0722-XXXX-239",
+      "amount": -3775.55,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-15",
+      "description": "CPC SCP/D365670217 OTTAWA ON",
+      "merchant": "CPC SCP/D365670217 OTTAWA ON",
+      "amount": 9.79,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-14",
+      "description": "DEFENDER 8884906844 QC",
+      "merchant": "DEFENDER 8884906844 QC",
+      "amount": 79.83,
+      "category": "Boat & Outdoor",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-06-15",
+      "description": "AMZN Mktp CA*0396F5S73 TORONTO ON",
+      "merchant": "AMZN MKTP CA*0396F5S73 TORONTO ON",
+      "amount": 29.11,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-16",
+      "description": "COURSERA.ORG SCHIPHOL NH",
+      "merchant": "COURSERA.ORG SCHIPHOL NH",
+      "amount": 68,
+      "category": "Education",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-06-16",
+      "description": "PIZZA HUT CRANBROOK BC",
+      "merchant": "PIZZA HUT CRANBROOK BC",
+      "amount": 21.18,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-06-16",
+      "description": "CHATTERS SALON 125 CRANBROOK BC",
+      "merchant": "CHATTERS SALON 125 CRANBROOK BC",
+      "amount": 46.2,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-16",
+      "description": "ARBY'S CRANBROOK CRANBROOK BC",
+      "merchant": "ARBY'S CRANBROOK CRANBROOK BC",
+      "amount": 12.82,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-17",
+      "description": "DOLLAR TREE CANADA #40 CRANBROOK BC",
+      "merchant": "DOLLAR TREE CANADA #40 CRANBROOK BC",
+      "amount": 15.13,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-17",
+      "description": "QUEEN NAILS BAR CRANBROOK BC",
+      "merchant": "QUEEN NAILS BAR CRANBROOK BC",
+      "amount": 72.45,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-17",
+      "description": "WINNERS 348 CRANBROOK BC",
+      "merchant": "WINNERS 348 CRANBROOK BC",
+      "amount": 119.81,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-06-15",
+      "description": "SAFEWAY #4974 CRANBROOK BC",
+      "merchant": "SAFEWAY #4974 CRANBROOK BC",
+      "amount": 35.2,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-16",
+      "description": "FOOD & STUFF ESSO CRANBROOK BC",
+      "merchant": "FOOD & STUFF ESSO CRANBROOK BC",
+      "amount": 15.26,
+      "category": "Transportation",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-06-17",
+      "description": "STAPLES #252 CRANBROOK BC",
+      "merchant": "STAPLES #252 CRANBROOK BC",
+      "amount": 62.66,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-06-17",
+      "description": "SDM 290 CRANBROOK BC",
+      "merchant": "SDM 290 CRANBROOK BC",
+      "amount": 8.95,
+      "category": "Medical",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-06-17",
+      "description": "TIM HORTONS #2191 CRANBROOK BC",
+      "merchant": "TIM HORTONS #2191 CRANBROOK BC",
+      "amount": 4.5,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-18",
+      "description": "EASTERN WOK CRANBROOK BC",
+      "merchant": "EASTERN WOK CRANBROOK BC",
+      "amount": 15.75,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-18",
+      "description": "AIRALO AMSTERDAM NH",
+      "merchant": "AIRALO AMSTERDAM NH",
+      "amount": 15,
+      "category": "Travel",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-18",
+      "description": "APPLE.COM/BILL TORONTO ON",
+      "merchant": "APPLE.COM/BILL TORONTO ON",
+      "amount": 10.62,
+      "category": "Subscriptions",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-06-17",
+      "description": "#5119 SPORT CHEK CRANBROOK BC",
+      "merchant": "#5119 SPORT CHEK CRANBROOK BC",
+      "amount": 245.65,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-19",
+      "description": "SP DIRECT SAILS STORE LAICHIKOK KL",
+      "merchant": "SP DIRECT SAILS STORE LAICHIKOK KL",
+      "amount": 1875,
+      "category": "Boat & Outdoor",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-06-19",
+      "description": "LIVRARIA LELLO SA CIDADE PRT",
+      "merchant": "LIVRARIA LELLO SA CIDADE PRT",
+      "amount": 60.04,
+      "category": "Travel",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-19",
+      "description": "AIR TRANSAICE00M Montreal QC",
+      "merchant": "AIR TRANSAICE00M MONTREAL QC",
+      "amount": 999.58,
+      "category": "Travel",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-19",
+      "description": "WAL-MART #3183 CRANBROOK BC",
+      "merchant": "WAL-MART #3183 CRANBROOK BC",
+      "amount": 12.29,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-19",
+      "description": "CHV40149 CRANBROOK CHE CRANBROOK BC",
+      "merchant": "CHV40149 CRANBROOK CHE CRANBROOK BC",
+      "amount": 74.27,
+      "category": "Vehicle",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-19",
+      "description": "DAIRY QUEEN #27495 BLAIRMORE AB",
+      "merchant": "DAIRY QUEEN #27495 BLAIRMORE AB",
+      "amount": 10.49,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-06-19",
+      "description": "TIM HORTONS #2991 BLAIRMORE AB",
+      "merchant": "TIM HORTONS #2991 BLAIRMORE AB",
+      "amount": 9.44,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-21",
+      "description": "3732_YUL_Maison_De_La_ Dorval QC",
+      "merchant": "3732_YUL_MAISON_DE_LA_ DORVAL QC",
+      "amount": 10.09,
+      "category": "Travel",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-20",
+      "description": "Porter Air Toronto ON",
+      "merchant": "PORTER AIR TORONTO ON",
+      "amount": 136.5,
+      "category": "Travel",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-20",
+      "description": "Porter Air Toronto ON",
+      "merchant": "PORTER AIR TORONTO ON",
+      "amount": 68.25,
+      "category": "Travel",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-20",
+      "description": "ARCHIBALD DORVAL QC",
+      "merchant": "ARCHIBALD DORVAL QC",
+      "amount": 152.26,
+      "category": "Travel",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-20",
+      "description": "JUGO JUICE - 2240 CALGARY AB",
+      "merchant": "JUGO JUICE - 2240 CALGARY AB",
+      "amount": 20.9,
+      "category": "Travel",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-21",
+      "description": "3732_YUL_Maison_De_La_ Dorval QC",
+      "merchant": "3732_YUL_MAISON_DE_LA_ DORVAL QC",
+      "amount": 26.28,
+      "category": "Travel",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-20",
+      "description": "TIM HORTON'S #0845A CALGARY AB",
+      "merchant": "TIM HORTON'S #0845A CALGARY AB",
+      "amount": 12.45,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-06-21",
+      "description": "LAGOCASTICO - LDA PORTO PRT",
+      "merchant": "LAGOCASTICO - LDA PORTO PRT",
+      "amount": 78.48,
+      "category": "Travel",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-21",
+      "description": "O FORNO DOS CLERIGOS PORTO PRT",
+      "merchant": "O FORNO DOS CLERIGOS PORTO PRT",
+      "amount": 16.67,
+      "category": "Travel",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-20",
+      "description": "HUDSON ST 2181 CALGARY AB",
+      "merchant": "HUDSON ST 2181 CALGARY AB",
+      "amount": 14.88,
+      "category": "Travel",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-21",
+      "description": "CORNER CLERIGOS PORTO PRT",
+      "merchant": "CORNER CLERIGOS PORTO PRT",
+      "amount": 6.67,
+      "category": "Travel",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-17",
+      "description": "SAFEWAY #4974 CRANBROOK BC",
+      "merchant": "SAFEWAY #4974 CRANBROOK BC",
+      "amount": 27.43,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-18",
+      "description": "SERVICE BC - CRANBROOK CRANBROOK BC",
+      "merchant": "SERVICE BC - CRANBROOK CRANBROOK BC",
+      "amount": 15,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-18",
+      "description": "SERVICE BC - CRANBROOK CRANBROOK BC",
+      "merchant": "SERVICE BC - CRANBROOK CRANBROOK BC",
+      "amount": 10,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-19",
+      "description": "AIRALO AMSTERDAM NH",
+      "merchant": "AIRALO AMSTERDAM NH",
+      "amount": 15,
+      "category": "Travel",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-19",
+      "description": "CRANBROOK ST. LIQUOR S CRANBROOK BC",
+      "merchant": "CRANBROOK ST. LIQUOR S CRANBROOK BC",
+      "amount": 21.29,
+      "category": "Alcohol",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-20",
+      "description": "APPLE.COM/BILL TORONTO ON",
+      "merchant": "APPLE.COM/BILL TORONTO ON",
+      "amount": 4.47,
+      "category": "Subscriptions",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-06-19",
+      "description": "SAFEWAY #4974 CRANBROOK BC",
+      "merchant": "SAFEWAY #4974 CRANBROOK BC",
+      "amount": 11.72,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-20",
+      "description": "CANADIAN TIRE #395 CRANBROOK BC",
+      "merchant": "CANADIAN TIRE #395 CRANBROOK BC",
+      "amount": 156.78,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-06-20",
+      "description": "SAVE ON FOODS #915 CRANBROOK BC",
+      "merchant": "SAVE ON FOODS #915 CRANBROOK BC",
+      "amount": 53.43,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-22",
+      "description": "AMZN Mktp CA*PY55H73O3 TORONTO ON",
+      "merchant": "AMZN MKTP CA*PY55H73O3 TORONTO ON",
+      "amount": 43.62,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-20",
+      "description": "TRSF FROM/DE ACCT/CPT 0722-XXXX-239",
+      "merchant": "TRSF FROM/DE ACCT/CPT 0722-XXXX-239",
+      "amount": -4051.44,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-22",
+      "description": "Spotify P43CEAFAF2 Stockholm SWE",
+      "merchant": "SPOTIFY P43CEAFAF2 STOCKHOLM SWE",
+      "amount": 23.51,
+      "category": "Subscriptions",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-22",
+      "description": "TIME OUT MARKET PORTO PRT",
+      "merchant": "TIME OUT MARKET PORTO PRT",
+      "amount": 17.5,
+      "category": "Travel",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-22",
+      "description": "TIME OUT MARKET PORTO PRT",
+      "merchant": "TIME OUT MARKET PORTO PRT",
+      "amount": 5.83,
+      "category": "Travel",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-21",
+      "description": "RESTAURANTE CRU PORTO PRT",
+      "merchant": "RESTAURANTE CRU PORTO PRT",
+      "amount": 78.38,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-22",
+      "description": "TMP BOLHAO PORTO PRT",
+      "merchant": "TMP BOLHAO PORTO PRT",
+      "amount": 3.33,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-22",
+      "description": "MA CEDOFEITA PORTO PRT",
+      "merchant": "MA CEDOFEITA PORTO PRT",
+      "amount": 34.59,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-22",
+      "description": "MA CEDOFEITA PORTO PRT",
+      "merchant": "MA CEDOFEITA PORTO PRT",
+      "amount": 13.32,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-22",
+      "description": "STRADIVARIUS PORTO PRT",
+      "merchant": "STRADIVARIUS PORTO PRT",
+      "amount": 33.34,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-22",
+      "description": "PADARIA RIBEIRO FOZ PORTO PRT",
+      "merchant": "PADARIA RIBEIRO FOZ PORTO PRT",
+      "amount": 11,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-22",
+      "description": "SIBS PAGAMENTOS  SA PORTO",
+      "merchant": "SIBS PAGAMENTOS SA PORTO",
+      "amount": 193.82,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-23",
+      "description": "CASH ADVANCE FEE",
+      "merchant": "CASH ADVANCE FEE",
+      "amount": 5,
+      "category": "Bank Fees",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-22",
+      "description": "ARBY'S CRANBROOK CRANBROOK BC",
+      "merchant": "ARBY'S CRANBROOK CRANBROOK BC",
+      "amount": 13.87,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-23",
+      "description": "Carmo Rooftop LISBOA 11",
+      "merchant": "CARMO ROOFTOP LISBOA 11",
+      "amount": 69.17,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-23",
+      "description": "MUSEU CARMO LISBOA PRT",
+      "merchant": "MUSEU CARMO LISBOA PRT",
+      "amount": 28.34,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-23",
+      "description": "MCDONALDS MQ POMBAL LISBOA PRT",
+      "merchant": "MCDONALDS MQ POMBAL LISBOA PRT",
+      "amount": 30.5,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-22",
+      "description": "HTTPS //OCEANARIO.PT CIDADE PRT",
+      "merchant": "HTTPS //OCEANARIO.PT CIDADE PRT",
+      "amount": 129.28,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-23",
+      "description": "PADARIA RIBEIRO PORTO PRT",
+      "merchant": "PADARIA RIBEIRO PORTO PRT",
+      "amount": 20.5,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-23",
+      "description": "STRADIVARIUS CHIADO LISBOA PRT",
+      "merchant": "STRADIVARIUS CHIADO LISBOA PRT",
+      "amount": 73.54,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-23",
+      "description": "MARQUES POMBAL 1 LISBOA PRT",
+      "merchant": "MARQUES POMBAL 1 LISBOA PRT",
+      "amount": 12.08,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-23",
+      "description": "SANTA APOLONIA LISBOA PRT",
+      "merchant": "SANTA APOLONIA LISBOA PRT",
+      "amount": 12,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-21",
+      "description": "SAFEWAY #4974 CRANBROOK BC",
+      "merchant": "SAFEWAY #4974 CRANBROOK BC",
+      "amount": 12.99,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-24",
+      "description": "a.saily Amsterdam NLD",
+      "merchant": "A.SAILY AMSTERDAM NLD",
+      "amount": 11.61,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-24",
+      "description": "GLOBALREST BELEMMCDO LISBOA PRT",
+      "merchant": "GLOBALREST BELEMMCDO LISBOA PRT",
+      "amount": 32.64,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-24",
+      "description": "LIGA DOS COMBATENTES LISBOA PRT",
+      "merchant": "LIGA DOS COMBATENTES LISBOA PRT",
+      "amount": 24.92,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-24",
+      "description": "SANTA APOLONIA LISBOA PRT",
+      "merchant": "SANTA APOLONIA LISBOA PRT",
+      "amount": 3.15,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-23",
+      "description": "BC LIQUOR #009 CRANBROOK BC",
+      "merchant": "BC LIQUOR #009 CRANBROOK BC",
+      "amount": 17.81,
+      "category": "Alcohol",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-24",
+      "description": "ARBY'S CRANBROOK CRANBROOK BC",
+      "merchant": "ARBY'S CRANBROOK CRANBROOK BC",
+      "amount": 15.44,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-24",
+      "description": "EASYHOTEL LISB VEND LISBOA PRT",
+      "merchant": "EASYHOTEL LISB VEND LISBOA PRT",
+      "amount": 2.15,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-24",
+      "description": "EASYHOTEL LISB VEND LISBOA PRT",
+      "merchant": "EASYHOTEL LISB VEND LISBOA PRT",
+      "amount": 2.49,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-25",
+      "description": "NAH NAH BAH LAGOS PRT",
+      "merchant": "NAH NAH BAH LAGOS PRT",
+      "amount": 105.48,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-25",
+      "description": "APART TUR SOLLAGOS LAGOS PRT",
+      "merchant": "APART TUR SOLLAGOS LAGOS PRT",
+      "amount": 997.19,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-25",
+      "description": "MARQUES POMBAL 1 LISBOA PRT",
+      "merchant": "MARQUES POMBAL 1 LISBOA PRT",
+      "amount": 3.14,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-25",
+      "description": "SPAR LAGOS FARO PRT",
+      "merchant": "SPAR LAGOS FARO PRT",
+      "amount": 113.51,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-26",
+      "description": "DIVERSOS LAGOS PRT",
+      "merchant": "DIVERSOS LAGOS PRT",
+      "amount": 33.17,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-27",
+      "description": "GRAO NOBRE LAGOS PRT",
+      "merchant": "GRAO NOBRE LAGOS PRT",
+      "amount": 13.37,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-27",
+      "description": "SUMMERTOMORROW ACTIVID Lagos",
+      "merchant": "SUMMERTOMORROW ACTIVID LAGOS",
+      "amount": 149.53,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-28",
+      "description": "Hotel at Booking.com Amsterdam NLD",
+      "merchant": "HOTEL AT BOOKING.COM AMSTERDAM NLD",
+      "amount": 211.42,
+      "category": "Travel",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-06-28",
+      "description": "REPSOL E1588 SETUBAL PRT",
+      "merchant": "REPSOL E1588 SETUBAL PRT",
+      "amount": 112.6,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-27",
+      "description": "REST CASA DO MAR LAGOS PRT",
+      "merchant": "REST CASA DO MAR LAGOS PRT",
+      "amount": 86.62,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-28",
+      "description": "ANA PQ ESTAC DROPOFF LISBOA PRT",
+      "merchant": "ANA PQ ESTAC DROPOFF LISBOA PRT",
+      "amount": 59.81,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-28",
+      "description": "Farmarcia Telo Lagos PRT",
+      "merchant": "FARMARCIA TELO LAGOS PRT",
+      "amount": 30.71,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-25",
+      "description": "SAVE ON FOODS #915 CRANBROOK BC",
+      "merchant": "SAVE ON FOODS #915 CRANBROOK BC",
+      "amount": 65.31,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-26",
+      "description": "EASTERN WOK CRANBROOK BC",
+      "merchant": "EASTERN WOK CRANBROOK BC",
+      "amount": 15.75,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-27",
+      "description": "EXPEDIA 73482895131876 EXPEDIA.CA ON",
+      "merchant": "EXPEDIA 73482895131876 EXPEDIA.CA ON",
+      "amount": 64.78,
+      "category": "Travel",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-27",
+      "description": "PETRO-CANADA 69236 CRESTON BC",
+      "merchant": "PETRO-CANADA 69236 CRESTON BC",
+      "amount": 137.94,
+      "category": "Transportation",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-28",
+      "description": "22175 MACS CONV. STORE BLAIRMORE AB",
+      "merchant": "22175 MACS CONV. STORE BLAIRMORE AB",
+      "amount": 12.99,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-27",
+      "description": "MCDONALD'S #41186 CRESTON BC",
+      "merchant": "MCDONALD'S #41186 CRESTON BC",
+      "amount": 11.32,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-29",
+      "description": "OLD TAVERN FARO PRT",
+      "merchant": "OLD TAVERN FARO PRT",
+      "amount": 53.99,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-29",
+      "description": "REPSOL E0876 FARO PRT",
+      "merchant": "REPSOL E0876 FARO PRT",
+      "amount": 123.29,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-29",
+      "description": "PIZZARIA AMOREMIO FARO PRT",
+      "merchant": "PIZZARIA AMOREMIO FARO PRT",
+      "amount": 44.03,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-29",
+      "description": "GRAO NOBRE LAGOS PRT",
+      "merchant": "GRAO NOBRE LAGOS PRT",
+      "amount": 4.81,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-29",
+      "description": "EUR50.00@1.707400 BANCO SANTANDER TOTTA",
+      "merchant": "EUR50.00@1.707400 BANCO SANTANDER TOTTA",
+      "amount": 85.37,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-30",
+      "description": "CASH ADVANCE FEE",
+      "merchant": "CASH ADVANCE FEE",
+      "amount": 5,
+      "category": "Bank Fees",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-29",
+      "description": "TIM HORTONS #2709 CALGARY AB",
+      "merchant": "TIM HORTONS #2709 CALGARY AB",
+      "amount": 15.1,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-28",
+      "description": "DIVYA SUTRA PLAZA CONF CALGARY AB",
+      "merchant": "DIVYA SUTRA PLAZA CONF CALGARY AB",
+      "amount": 26.25,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-29",
+      "description": "SHELL FLYING J 869 NANTON AB",
+      "merchant": "SHELL FLYING J 869 NANTON AB",
+      "amount": 150,
+      "category": "Transportation",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-28",
+      "description": "MCDONALD'S #2784 CRANBROOK BC",
+      "merchant": "MCDONALD'S #2784 CRANBROOK BC",
+      "amount": 1.77,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-28",
+      "description": "MCDONALD'S #6617 CALGARY AB",
+      "merchant": "MCDONALD'S #6617 CALGARY AB",
+      "amount": 16.58,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-29",
+      "description": "MCDONALD'S #6617 CALGARY AB",
+      "merchant": "MCDONALD'S #6617 CALGARY AB",
+      "amount": 9.33,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-30",
+      "description": "1828_YYZ_Relay Mississauga ON",
+      "merchant": "1828_YYZ_RELAY MISSISSAUGA ON",
+      "amount": 14.54,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-29",
+      "description": "PAUL AR FARO PRT",
+      "merchant": "PAUL AR FARO PRT",
+      "amount": 24.46,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-30",
+      "description": "HERTZ PORTUGUESA PRIOR VELHO PRT",
+      "merchant": "HERTZ PORTUGUESA PRIOR VELHO PRT",
+      "amount": 104.4,
+      "category": "Travel",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-06-30",
+      "description": "AREAS PORTUGAL SA MAIA PRT",
+      "merchant": "AREAS PORTUGAL SA MAIA PRT",
+      "amount": 15.06,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-30",
+      "description": "A&W CALGARY AIRPORT #1 CALGARY AB",
+      "merchant": "A&W CALGARY AIRPORT #1 CALGARY AB",
+      "amount": 41.03,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-07-01",
+      "description": "SHELL C00208 CALGARY AB",
+      "merchant": "SHELL C00208 CALGARY AB",
+      "amount": 51.16,
+      "category": "Transportation",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-30",
+      "description": "CALGARY AIRPORT EXIT T CALGARY AB",
+      "merchant": "CALGARY AIRPORT EXIT T CALGARY AB",
+      "amount": 151.2,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-07-01",
+      "description": "CRC_DON_DONATION OTTAWA ON",
+      "merchant": "CRC_DON_DONATION OTTAWA ON",
+      "amount": 35,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-30",
+      "description": "BEST WESTERN HOTELS CALGARY AB",
+      "merchant": "BEST WESTERN HOTELS CALGARY AB",
+      "amount": 167.31,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-07-01",
+      "description": "BELL MEDIA TORONTO ON",
+      "merchant": "BELL MEDIA TORONTO ON",
+      "amount": 145.59,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-30",
+      "description": "SAVE ON FOODS #915 CRANBROOK BC",
+      "merchant": "SAVE ON FOODS #915 CRANBROOK BC",
+      "amount": 316.19,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-02",
+      "description": "NETFLIX.COM Vancover BC",
+      "merchant": "NETFLIX.COM VANCOVER BC",
+      "amount": 26.87,
+      "category": "Subscriptions",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-03",
+      "description": "TRSF FROM/DE ACCT/CPT 0722-XXXX-239",
+      "merchant": "TRSF FROM/DE ACCT/CPT 0722-XXXX-239",
+      "amount": -2800,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-03",
+      "description": "TRSF FROM/DE ACCT/CPT 0722-XXXX-133",
+      "merchant": "TRSF FROM/DE ACCT/CPT 0722-XXXX-133",
+      "amount": -2000,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-03",
+      "description": "CRAWFORD BAY MARKET Crawford Bay BC",
+      "merchant": "CRAWFORD BAY MARKET CRAWFORD BAY BC",
+      "amount": 22.84,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-02",
+      "description": "SAFEWAY #4974 CRANBROOK BC",
+      "merchant": "SAFEWAY #4974 CRANBROOK BC",
+      "amount": 17.08,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-05",
+      "description": "WLOKA FARMS FRUIT STAN CRESTON BC",
+      "merchant": "WLOKA FARMS FRUIT STAN CRESTON BC",
+      "amount": 35.64,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-03",
+      "description": "TST-The Mountain Barn Creston BC",
+      "merchant": "TST-THE MOUNTAIN BARN CRESTON BC",
+      "amount": 5.24,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-07-03",
+      "description": "CHV40149 CRANBROOK CHE CRANBROOK BC",
+      "merchant": "CHV40149 CRANBROOK CHE CRANBROOK BC",
+      "amount": 65.8,
+      "category": "Vehicle",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-03",
+      "description": "CRAWFORD BAY STORE CRAWFORD BAY BC",
+      "merchant": "CRAWFORD BAY STORE CRAWFORD BAY BC",
+      "amount": 16.61,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-07-02",
+      "description": "SAVE ON FOODS #915 CRANBROOK BC",
+      "merchant": "SAVE ON FOODS #915 CRANBROOK BC",
+      "amount": 3.99,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-03",
+      "description": "CRESTON PHARMACY #282 CRESTON BC",
+      "merchant": "CRESTON PHARMACY #282 CRESTON BC",
+      "amount": 5.02,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-07-05",
+      "description": "TWO SCOOP STEVE CENTRAL KOOTEBC",
+      "merchant": "TWO SCOOP STEVE CENTRAL KOOTEBC",
+      "amount": 13.63,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-07-05",
+      "description": "REDS BREAD & BAKERY CRAWFORD BAY BC",
+      "merchant": "REDS BREAD & BAKERY CRAWFORD BAY BC",
+      "amount": 26.45,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-06",
+      "description": "GOOGLE *Pokemon GO HALIFAX NS",
+      "merchant": "GOOGLE *POKEMON GO HALIFAX NS",
+      "amount": 7.83,
+      "category": "Subscriptions",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-06",
+      "description": "GOOGLE *Pokemon GO HALIFAX NS",
+      "merchant": "GOOGLE *POKEMON GO HALIFAX NS",
+      "amount": 3.13,
+      "category": "Subscriptions",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-06",
+      "description": "SP VORA CO EDINBURGH LND",
+      "merchant": "SP VORA CO EDINBURGH LND",
+      "amount": 56.99,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-07-07",
+      "description": "SIRIUSXM.CA/ACCT TORONTO ON",
+      "merchant": "SIRIUSXM.CA/ACCT TORONTO ON",
+      "amount": 13.34,
+      "category": "Subscriptions",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-07-07",
+      "description": "GOOGLE *Pokemon GO HALIFAX NS",
+      "merchant": "GOOGLE *POKEMON GO HALIFAX NS",
+      "amount": 15.67,
+      "category": "Subscriptions",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-06",
+      "description": "POSTMEDIA DIGITAL SUBS TORONTO ON",
+      "merchant": "POSTMEDIA DIGITAL SUBS TORONTO ON",
+      "amount": 2.1,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-07-07",
+      "description": "TOP CROP GARDEN  FARM CRANBROOK BC",
+      "merchant": "TOP CROP GARDEN FARM CRANBROOK BC",
+      "amount": 101.01,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-07-08",
+      "description": "Disney Plus Burbank CA",
+      "merchant": "DISNEY PLUS BURBANK CA",
+      "amount": 19.03,
+      "category": "Subscriptions",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-07-06",
+      "description": "SUKURA SUSHI & GRILL CRANBROOK BC",
+      "merchant": "SUKURA SUSHI & GRILL CRANBROOK BC",
+      "amount": 80.54,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-07-06",
+      "description": "SAFEWAY #4974 CRANBROOK BC",
+      "merchant": "SAFEWAY #4974 CRANBROOK BC",
+      "amount": 9.99,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-07",
+      "description": "SAVE ON FOODS #915 CRANBROOK BC",
+      "merchant": "SAVE ON FOODS #915 CRANBROOK BC",
+      "amount": 33.72,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-06",
+      "description": "SAFEWAY #4974 CRANBROOK BC",
+      "merchant": "SAFEWAY #4974 CRANBROOK BC",
+      "amount": 23.12,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-07",
+      "description": "SERVICE BC - CRANBROOK CRANBROOK BC",
+      "merchant": "SERVICE BC - CRANBROOK CRANBROOK BC",
+      "amount": 75,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-07",
+      "description": "SAVE ON FOODS #915 CRANBROOK BC",
+      "merchant": "SAVE ON FOODS #915 CRANBROOK BC",
+      "amount": 252.4,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-08",
+      "description": "MIKE'S AUTO WASH/00003 CRANBROOK BC",
+      "merchant": "MIKE'S AUTO WASH/00003 CRANBROOK BC",
+      "amount": 18,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-07-08",
+      "description": "WAL-MART #3183 CRANBROOK BC",
+      "merchant": "WAL-MART #3183 CRANBROOK BC",
+      "amount": 1.85,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-09",
+      "description": "GOOGLE *Pokemon GO HALIFAX NS",
+      "merchant": "GOOGLE *POKEMON GO HALIFAX NS",
+      "amount": 15.67,
+      "category": "Subscriptions",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-09",
+      "description": "SEPHORA.CA TORONTO ON",
+      "merchant": "SEPHORA.CA TORONTO ON",
+      "amount": 84,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-07-09",
+      "description": "SEPHORA.CA TORONTO ON",
+      "merchant": "SEPHORA.CA TORONTO ON",
+      "amount": 53.76,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-07-09",
+      "description": "COBS BREAD Cranbrook Cranbrook BC",
+      "merchant": "COBS BREAD CRANBROOK CRANBROOK BC",
+      "amount": 6.5,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-07-09",
+      "description": "Ricks Fine Meats & Sau CRANBROOK BC",
+      "merchant": "RICKS FINE MEATS & SAU CRANBROOK BC",
+      "amount": 13.99,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-07-10",
+      "description": "INTEREST ADVANCES",
+      "merchant": "INTEREST ADVANCES",
+      "amount": 2.6,
+      "category": "Bank Fees",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-12",
+      "description": "REAL CDN SUPERSTORE #1 CRANBROOK BC",
+      "merchant": "REAL CDN SUPERSTORE #1 CRANBROOK BC",
+      "amount": 37.02,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-11",
+      "description": "SAVE ON FOODS #915 CRANBROOK BC",
+      "merchant": "SAVE ON FOODS #915 CRANBROOK BC",
+      "amount": 220.6,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-10",
+      "description": "SAFEWAY #4974 CRANBROOK BC",
+      "merchant": "SAFEWAY #4974 CRANBROOK BC",
+      "amount": 14.55,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-10",
+      "description": "SAFEWAY #4974 CRANBROOK BC",
+      "merchant": "SAFEWAY #4974 CRANBROOK BC",
+      "amount": 7.12,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-11",
+      "description": "YVR DIRTY APRON PIER C RICHMOND BC",
+      "merchant": "YVR DIRTY APRON PIER C RICHMOND BC",
+      "amount": 11.29,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-12",
+      "description": "PETRO-CANADA 77979 MEZIADIN JUNCBC",
+      "merchant": "PETRO-CANADA 77979 MEZIADIN JUNCBC",
+      "amount": 6.02,
+      "category": "Transportation",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-12",
+      "description": "THE HOME DEPOT #7255 CRANBROOK BC",
+      "merchant": "THE HOME DEPOT #7255 CRANBROOK BC",
+      "amount": 43.07,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-13",
+      "description": "TOP CROP GARDEN  FARM CRANBROOK BC",
+      "merchant": "TOP CROP GARDEN FARM CRANBROOK BC",
+      "amount": 77.87,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-11",
+      "description": "BOSTON PIZZA # 046 TERRACE BC",
+      "merchant": "BOSTON PIZZA # 046 TERRACE BC",
+      "amount": 26.88,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-13",
+      "description": "STARLINK INTERNET Halifax NS",
+      "merchant": "STARLINK INTERNET HALIFAX NS",
+      "amount": 62.72,
+      "category": "Utilities",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-13",
+      "description": "TST-Bell 2 Lodge Meziadin LakeBC",
+      "merchant": "TST-BELL 2 LODGE MEZIADIN LAKEBC",
+      "amount": 11.55,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-12",
+      "description": "MCDONALD'S #6833 TERRACE BC",
+      "merchant": "MCDONALD'S #6833 TERRACE BC",
+      "amount": 6.09,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-14",
+      "description": "EASTERN WOK CRANBROOK BC",
+      "merchant": "EASTERN WOK CRANBROOK BC",
+      "amount": 13.65,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-14",
+      "description": "PET VALU CANADA INC. CRANBROOK BC",
+      "merchant": "PET VALU CANADA INC. CRANBROOK BC",
+      "amount": 83.99,
+      "category": "Pets",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-14",
+      "description": "PRETTY POOCH CRANBROOK BC",
+      "merchant": "PRETTY POOCH CRANBROOK BC",
+      "amount": 15.75,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-14",
+      "description": "ROGERS ******1102 TORONTO ON",
+      "merchant": "ROGERS ******1102 TORONTO ON",
+      "amount": 100.8,
+      "category": "Utilities",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-14",
+      "description": "TST-Bell 2 Lodge Meziadin LakeBC",
+      "merchant": "TST-BELL 2 LODGE MEZIADIN LAKEBC",
+      "amount": 21.3,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-14",
+      "description": "PETRO-CANADA 77979 MEZIADIN JUNCBC",
+      "merchant": "PETRO-CANADA 77979 MEZIADIN JUNCBC",
+      "amount": 6.02,
+      "category": "Transportation",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-15",
+      "description": "TST-Bell 2 Lodge Meziadin LakeBC",
+      "merchant": "TST-BELL 2 LODGE MEZIADIN LAKEBC",
+      "amount": 6.3,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-15",
+      "description": "TRSF FROM/DE ACCT/CPT 0722-XXXX-239",
+      "merchant": "TRSF FROM/DE ACCT/CPT 0722-XXXX-239",
+      "amount": -2881.76,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-14",
+      "description": "BC PARKS CAMPING VICTORIA BC",
+      "merchant": "BC PARKS CAMPING VICTORIA BC",
+      "amount": 76.6,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-14",
+      "description": "SERVICE BC - CRANBROOK CRANBROOK BC",
+      "merchant": "SERVICE BC - CRANBROOK CRANBROOK BC",
+      "amount": 75,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-14",
+      "description": "DAIRY QUEEN #27104 CRANBROOK BC",
+      "merchant": "DAIRY QUEEN #27104 CRANBROOK BC",
+      "amount": 11,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-15",
+      "description": "STARBUCKS 04894 CRANBROOK BC",
+      "merchant": "STARBUCKS 04894 CRANBROOK BC",
+      "amount": 12.24,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-15",
+      "description": "THE HOME DEPOT #7255 CRANBROOK BC",
+      "merchant": "THE HOME DEPOT #7255 CRANBROOK BC",
+      "amount": 140.36,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-16",
+      "description": "COURSERA.ORG SCHIPHOL NH",
+      "merchant": "COURSERA.ORG SCHIPHOL NH",
+      "amount": 68,
+      "category": "Education",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-16",
+      "description": "BCF - ONLINE SALES & B VICTORIA BC",
+      "merchant": "BCF - ONLINE SALES & B VICTORIA BC",
+      "amount": 153.5,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-16",
+      "description": "Ricks Fine Meats & Sau CRANBROOK BC",
+      "merchant": "RICKS FINE MEATS & SAU CRANBROOK BC",
+      "amount": 30,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-16",
+      "description": "BC PARKS CAMPING VICTORIA BC",
+      "merchant": "BC PARKS CAMPING VICTORIA BC",
+      "amount": 105.6,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-14",
+      "description": "MCDONALD'S #6833 TERRACE BC",
+      "merchant": "MCDONALD'S #6833 TERRACE BC",
+      "amount": 12.16,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-15",
+      "description": "BC LIQUOR #009 CRANBROOK BC",
+      "merchant": "BC LIQUOR #009 CRANBROOK BC",
+      "amount": 72.84,
+      "category": "Alcohol",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-15",
+      "description": "STARBUCKS PIER C RICHMOND BC",
+      "merchant": "STARBUCKS PIER C RICHMOND BC",
+      "amount": 13.7,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-16",
+      "description": "COBS BREAD Cranbrook Cranbrook BC",
+      "merchant": "COBS BREAD CRANBROOK CRANBROOK BC",
+      "amount": 6.5,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-15",
+      "description": "THE HOME DEPOT #7255 CRANBROOK BC",
+      "merchant": "THE HOME DEPOT #7255 CRANBROOK BC",
+      "amount": 22.36,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-15",
+      "description": "SAVE ON FOODS #915 CRANBROOK BC",
+      "merchant": "SAVE ON FOODS #915 CRANBROOK BC",
+      "amount": 86.15,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-17",
+      "description": "APPLE.COM/BILL TORONTO ON",
+      "merchant": "APPLE.COM/BILL TORONTO ON",
+      "amount": 7.83,
+      "category": "Subscriptions",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-16",
+      "description": "STARBUCKS 04894 CRANBROOK BC",
+      "merchant": "STARBUCKS 04894 CRANBROOK BC",
+      "amount": 8.61,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-16",
+      "description": "STARBUCKS 04894 CRANBROOK BC",
+      "merchant": "STARBUCKS 04894 CRANBROOK BC",
+      "amount": 11.87,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-16",
+      "description": "THE HOME DEPOT #7255 CRANBROOK BC",
+      "merchant": "THE HOME DEPOT #7255 CRANBROOK BC",
+      "amount": 182.92,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-16",
+      "description": "CANADIAN TIRE #395 CRANBROOK BC",
+      "merchant": "CANADIAN TIRE #395 CRANBROOK BC",
+      "amount": 21.27,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-17",
+      "description": "TOP CROP GARDEN  FARM CRANBROOK BC",
+      "merchant": "TOP CROP GARDEN FARM CRANBROOK BC",
+      "amount": 7.83,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-17",
+      "description": "THE HOME DEPOT #7255 CRANBROOK BC",
+      "merchant": "THE HOME DEPOT #7255 CRANBROOK BC",
+      "amount": 37.8,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-17",
+      "description": "TIM HORTONS #3655 CRANBROOK BC",
+      "merchant": "TIM HORTONS #3655 CRANBROOK BC",
+      "amount": 17.71,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-17",
+      "description": "THE HOME DEPOT #7255 CRANBROOK BC",
+      "merchant": "THE HOME DEPOT #7255 CRANBROOK BC",
+      "amount": 100.66,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-17",
+      "description": "THE HOME DEPOT #7255 CRANBROOK BC",
+      "merchant": "THE HOME DEPOT #7255 CRANBROOK BC",
+      "amount": 44.71,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-18",
+      "description": "CRANBROOK ST. LIQUOR S CRANBROOK BC",
+      "merchant": "CRANBROOK ST. LIQUOR S CRANBROOK BC",
+      "amount": 35.69,
+      "category": "Alcohol",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-19",
+      "description": "SQ *MAX'S PLACE CRANBROOK BC",
+      "merchant": "SQ *MAX'S PLACE CRANBROOK BC",
+      "amount": 9.56,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-18",
+      "description": "TIM HORTONS #2191 CRANBROOK BC",
+      "merchant": "TIM HORTONS #2191 CRANBROOK BC",
+      "amount": 19.38,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-18",
+      "description": "CANADIAN TIRE #395 CRANBROOK BC",
+      "merchant": "CANADIAN TIRE #395 CRANBROOK BC",
+      "amount": 71.08,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-19",
+      "description": "CRANBROOK WATER CRANBROOK BC",
+      "merchant": "CRANBROOK WATER CRANBROOK BC",
+      "amount": 172.71,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-19",
+      "description": "SAVE ON FOODS #915 CRANBROOK BC",
+      "merchant": "SAVE ON FOODS #915 CRANBROOK BC",
+      "amount": 245.07,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-20",
+      "description": "APPLE.COM/BILL TORONTO ON",
+      "merchant": "APPLE.COM/BILL TORONTO ON",
+      "amount": 4.47,
+      "category": "Subscriptions",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-18",
+      "description": "SAFEWAY #4974 CRANBROOK BC",
+      "merchant": "SAFEWAY #4974 CRANBROOK BC",
+      "amount": 48.21,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-19",
+      "description": "Integra Tire and Auto CRANBROOK BC",
+      "merchant": "INTEGRA TIRE AND AUTO CRANBROOK BC",
+      "amount": 53.01,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-20",
+      "description": "TOP CROP GARDEN  FARM CRANBROOK BC",
+      "merchant": "TOP CROP GARDEN FARM CRANBROOK BC",
+      "amount": 92.11,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-20",
+      "description": "TOP CROP GARDEN  FARM CRANBROOK BC",
+      "merchant": "TOP CROP GARDEN FARM CRANBROOK BC",
+      "amount": 2.23,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-20",
+      "description": "CRANBROOK WATER CRANBROOK BC",
+      "merchant": "CRANBROOK WATER CRANBROOK BC",
+      "amount": 2.67,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-21",
+      "description": "CRANBROOK TOYOTA CRANBROOK BC",
+      "merchant": "CRANBROOK TOYOTA CRANBROOK BC",
+      "amount": 880.19,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-22",
+      "description": "TRSF FROM/DE ACCT/CPT 0722-XXXX-239",
+      "merchant": "TRSF FROM/DE ACCT/CPT 0722-XXXX-239",
+      "amount": -2331.22,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-22",
+      "description": "Spotify P42B8B4ADD Stockholm SWE",
+      "merchant": "SPOTIFY P42B8B4ADD STOCKHOLM SWE",
+      "amount": 23.51,
+      "category": "Subscriptions",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-22",
+      "description": "DOLLAR TREE CANADA #40 CRANBROOK BC",
+      "merchant": "DOLLAR TREE CANADA #40 CRANBROOK BC",
+      "amount": 15.13,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-23",
+      "description": "CRAWFORD BAY MARKET Crawford Bay BC",
+      "merchant": "CRAWFORD BAY MARKET CRAWFORD BAY BC",
+      "amount": 49.51,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-22",
+      "description": "SAVE ON FOODS #915 CRANBROOK BC",
+      "merchant": "SAVE ON FOODS #915 CRANBROOK BC",
+      "amount": 65.07,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-22",
+      "description": "MR. MIKES STEAKHOUSE C CRANBROOK BC",
+      "merchant": "MR. MIKES STEAKHOUSE C CRANBROOK BC",
+      "amount": 288.25,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-24",
+      "description": "GOOGLE *Pokemon GO HALIFAX NS",
+      "merchant": "GOOGLE *POKEMON GO HALIFAX NS",
+      "amount": 15.67,
+      "category": "Subscriptions",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-22",
+      "description": "SAFEWAY #4974 CRANBROOK BC",
+      "merchant": "SAFEWAY #4974 CRANBROOK BC",
+      "amount": 11.78,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-24",
+      "description": "AIR TRANSAO09QSM Montreal QC",
+      "merchant": "AIR TRANSAO09QSM MONTREAL QC",
+      "amount": 225,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-24",
+      "description": "TOP CROP GARDEN  FARM CRANBROOK BC",
+      "merchant": "TOP CROP GARDEN FARM CRANBROOK BC",
+      "amount": 37.75,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-23",
+      "description": "TIM HORTONS #3701 CRESTON BC",
+      "merchant": "TIM HORTONS #3701 CRESTON BC",
+      "amount": 17.88,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-23",
+      "description": "FGP40138 VAN HORNE SER CRANBROOK BC",
+      "merchant": "FGP40138 VAN HORNE SER CRANBROOK BC",
+      "amount": 141.3,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-23",
+      "description": "A&W STORE 0650 CRESTON BC",
+      "merchant": "A&W STORE 0650 CRESTON BC",
+      "amount": 51.67,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-24",
+      "description": "TOP CROP GARDEN  FARM CRANBROOK BC",
+      "merchant": "TOP CROP GARDEN FARM CRANBROOK BC",
+      "amount": 28.34,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-24",
+      "description": "THE HOME DEPOT #7255 CRANBROOK BC",
+      "merchant": "THE HOME DEPOT #7255 CRANBROOK BC",
+      "amount": 70.12,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-25",
+      "description": "TANGLEFOOT VETERINARY CRANBROOK BC",
+      "merchant": "TANGLEFOOT VETERINARY CRANBROOK BC",
+      "amount": 219.34,
+      "category": "Pets",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-24",
+      "description": "CANADIAN TIRE #395 CRANBROOK BC",
+      "merchant": "CANADIAN TIRE #395 CRANBROOK BC",
+      "amount": 36.95,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-25",
+      "description": "STAPLES #252 CRANBROOK BC",
+      "merchant": "STAPLES #252 CRANBROOK BC",
+      "amount": 71.1,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-25",
+      "description": "RSBC BCGOV* WWW.RESPON EDMONTON AB",
+      "merchant": "RSBC BCGOV* WWW.RESPON EDMONTON AB",
+      "amount": 42,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-24",
+      "description": "SAFEWAY #4974 CRANBROOK BC",
+      "merchant": "SAFEWAY #4974 CRANBROOK BC",
+      "amount": 31.83,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-25",
+      "description": "SAVE ON FOODS #915 CRANBROOK BC",
+      "merchant": "SAVE ON FOODS #915 CRANBROOK BC",
+      "amount": 13.99,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-25",
+      "description": "MOBIL@ 1753 GAS STN CRANBROOK BC",
+      "merchant": "MOBIL@ 1753 GAS STN CRANBROOK BC",
+      "amount": 100,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-25",
+      "description": "DAIRY QUEEN #27104 CRANBROOK BC",
+      "merchant": "DAIRY QUEEN #27104 CRANBROOK BC",
+      "amount": 46.91,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-27",
+      "description": "FIRE HALL KITCHEN & TA CRANBROOK BC",
+      "merchant": "FIRE HALL KITCHEN & TA CRANBROOK BC",
+      "amount": 91.39,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-28",
+      "description": "COBS BREAD Cranbrook Cranbrook BC",
+      "merchant": "COBS BREAD CRANBROOK CRANBROOK BC",
+      "amount": 9,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-27",
+      "description": "MCDONALD'S #2784 CRANBROOK BC",
+      "merchant": "MCDONALD'S #2784 CRANBROOK BC",
+      "amount": 10.15,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-28",
+      "description": "CRANBROOK ST. LIQUOR S CRANBROOK BC",
+      "merchant": "CRANBROOK ST. LIQUOR S CRANBROOK BC",
+      "amount": 60.68,
+      "category": "Alcohol",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-28",
+      "description": "APPLE.COM/BILL TORONTO ON",
+      "merchant": "APPLE.COM/BILL TORONTO ON",
+      "amount": 2.79,
+      "category": "Subscriptions",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-26",
+      "description": "SAFEWAY #4974 CRANBROOK BC",
+      "merchant": "SAFEWAY #4974 CRANBROOK BC",
+      "amount": 37.1,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-29",
+      "description": "TRSF FROM/DE ACCT/CPT 0722-XXXX-239",
+      "merchant": "TRSF FROM/DE ACCT/CPT 0722-XXXX-239",
+      "amount": -2603.02,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-29",
+      "description": "CRANBROOK PHOTO CRANBROOK BC",
+      "merchant": "CRANBROOK PHOTO CRANBROOK BC",
+      "amount": 25,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-30",
+      "description": "GOOGLE *Pokemon GO HALIFAX NS",
+      "merchant": "GOOGLE *POKEMON GO HALIFAX NS",
+      "amount": 12.31,
+      "category": "Subscriptions",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-30",
+      "description": "GOOGLE *Pokemon GO HALIFAX NS",
+      "merchant": "GOOGLE *POKEMON GO HALIFAX NS",
+      "amount": 7.83,
+      "category": "Subscriptions",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-29",
+      "description": "WINNERS 348 CRANBROOK BC",
+      "merchant": "WINNERS 348 CRANBROOK BC",
+      "amount": 55.99,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-30",
+      "description": "SQ *MARAR ORCHARD LTD. Creston BC",
+      "merchant": "SQ *MARAR ORCHARD LTD. CRESTON BC",
+      "amount": 5.9,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-31",
+      "description": "SQ *MARAR ORCHARD LTD. Creston BC",
+      "merchant": "SQ *MARAR ORCHARD LTD. CRESTON BC",
+      "amount": 13.73,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-30",
+      "description": "LIBERTY FOOD STORE LTD FRUIT VALE BC",
+      "merchant": "LIBERTY FOOD STORE LTD FRUIT VALE BC",
+      "amount": 9.44,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-30",
+      "description": "CANCO PETROLEUM #114 FRUITVALE BC",
+      "merchant": "CANCO PETROLEUM #114 FRUITVALE BC",
+      "amount": 87.28,
+      "category": "Transportation",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-30",
+      "description": "BCAA - NELSON 84 NELSON BC",
+      "merchant": "BCAA - NELSON 84 NELSON BC",
+      "amount": 32,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-30",
+      "description": "TIM HORTONS #3701 CRESTON BC",
+      "merchant": "TIM HORTONS #3701 CRESTON BC",
+      "amount": 9.75,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-31",
+      "description": "CHATTERS SALON 125 CRANBROOK BC",
+      "merchant": "CHATTERS SALON 125 CRANBROOK BC",
+      "amount": 34.72,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-30",
+      "description": "SQ *ROYAL CANADIAN LEG Cranbrook BC",
+      "merchant": "SQ *ROYAL CANADIAN LEG CRANBROOK BC",
+      "amount": 14.38,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-28",
+      "description": "SAFEWAY #4974 CRANBROOK BC",
+      "merchant": "SAFEWAY #4974 CRANBROOK BC",
+      "amount": 34.18,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-29",
+      "description": "FENWICK & BAKER PUBLIC CRANBROOK BC",
+      "merchant": "FENWICK & BAKER PUBLIC CRANBROOK BC",
+      "amount": 69.4,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-29",
+      "description": "CANADIAN TIRE #395 CRANBROOK BC",
+      "merchant": "CANADIAN TIRE #395 CRANBROOK BC",
+      "amount": 96,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-31",
+      "description": "PET VALU CANADA INC. CRANBROOK BC",
+      "merchant": "PET VALU CANADA INC. CRANBROOK BC",
+      "amount": 88.47,
+      "category": "Pets",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-06-01",
+      "description": "COSTCO *ANNUAL RENEWAL OTTAWA ON",
+      "merchant": "COSTCO *ANNUAL RENEWAL OTTAWA ON",
+      "amount": 68.25,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-31",
+      "description": "SAVE ON FOODS #915 CRANBROOK BC",
+      "merchant": "SAVE ON FOODS #915 CRANBROOK BC",
+      "amount": 343.64,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-31",
+      "description": "SAVE ON FOODS #915 CRANBROOK BC",
+      "merchant": "SAVE ON FOODS #915 CRANBROOK BC",
+      "amount": 17.07,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-01",
+      "description": "CRC_DON_DONATION OTTAWA ON",
+      "merchant": "CRC_DON_DONATION OTTAWA ON",
+      "amount": 35,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-30",
+      "description": "SAFEWAY #4974 CRANBROOK BC",
+      "merchant": "SAFEWAY #4974 CRANBROOK BC",
+      "amount": 28.57,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-02",
+      "description": "Netflix.com TORONTO ON",
+      "merchant": "NETFLIX.COM TORONTO ON",
+      "amount": 26.87,
+      "category": "Subscriptions",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-01",
+      "description": "THE HOME DEPOT #7255 CRANBROOK BC",
+      "merchant": "THE HOME DEPOT #7255 CRANBROOK BC",
+      "amount": 15.32,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-01",
+      "description": "THE HOME DEPOT #7255 CRANBROOK BC",
+      "merchant": "THE HOME DEPOT #7255 CRANBROOK BC",
+      "amount": 10.61,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-01",
+      "description": "THE HOME DEPOT #7255 CRANBROOK BC",
+      "merchant": "THE HOME DEPOT #7255 CRANBROOK BC",
+      "amount": -10.61,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-02",
+      "description": "FAMILY THAI RESTAURANT CRANBROOK BC",
+      "merchant": "FAMILY THAI RESTAURANT CRANBROOK BC",
+      "amount": 126.43,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-06-01",
+      "description": "SAVE ON FOODS #915 CRANBROOK BC",
+      "merchant": "SAVE ON FOODS #915 CRANBROOK BC",
+      "amount": 39.02,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-02",
+      "description": "CRANBROOK ST. LIQUOR S CRANBROOK BC",
+      "merchant": "CRANBROOK ST. LIQUOR S CRANBROOK BC",
+      "amount": 20.14,
+      "category": "Alcohol",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-01",
+      "description": "SAFEWAY #4974 CRANBROOK BC",
+      "merchant": "SAFEWAY #4974 CRANBROOK BC",
+      "amount": 4.14,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-01",
+      "description": "DAIRY QUEEN #27104 CRANBROOK BC",
+      "merchant": "DAIRY QUEEN #27104 CRANBROOK BC",
+      "amount": 18.13,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-06-02",
+      "description": "BC LIQUOR #009 CRANBROOK BC",
+      "merchant": "BC LIQUOR #009 CRANBROOK BC",
+      "amount": 112.88,
+      "category": "Alcohol",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-02",
+      "description": "SAVE ON FOODS #915 CRANBROOK BC",
+      "merchant": "SAVE ON FOODS #915 CRANBROOK BC",
+      "amount": 22.84,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-02",
+      "description": "SAFEWAY #4974 CRANBROOK BC",
+      "merchant": "SAFEWAY #4974 CRANBROOK BC",
+      "amount": 10.65,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-04",
+      "description": "EVENTBRITE/THEHIPREPLA SAINT JOHN NB",
+      "merchant": "EVENTBRITE/THEHIPREPLA SAINT JOHN NB",
+      "amount": 60,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-05",
+      "description": "TRSF FROM/DE ACCT/CPT 0722-XXXX-239",
+      "merchant": "TRSF FROM/DE ACCT/CPT 0722-XXXX-239",
+      "amount": -1594.4,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-04",
+      "description": "MCDONALD'S #2784 CRANBROOK BC",
+      "merchant": "MCDONALD'S #2784 CRANBROOK BC",
+      "amount": 10.15,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-06",
+      "description": "CHATTERS SALON 125 CRANBROOK BC",
+      "merchant": "CHATTERS SALON 125 CRANBROOK BC",
+      "amount": 42.56,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-06",
+      "description": "LOTUS BOOKS CRANBROOK BC",
+      "merchant": "LOTUS BOOKS CRANBROOK BC",
+      "amount": 22.37,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-06",
+      "description": "POSTMEDIA DIGITAL SUBS TORONTO ON",
+      "merchant": "POSTMEDIA DIGITAL SUBS TORONTO ON",
+      "amount": 2.1,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-05",
+      "description": "SQ *HIGH COUNTRY SPORT CRANBROOK BC",
+      "merchant": "SQ *HIGH COUNTRY SPORT CRANBROOK BC",
+      "amount": 54.88,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-03",
+      "description": "FOOD & STUFF ESSO CRANBROOK BC",
+      "merchant": "FOOD & STUFF ESSO CRANBROOK BC",
+      "amount": 6.49,
+      "category": "Transportation",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-06-05",
+      "description": "FENWICK & BAKER PUBLIC CRANBROOK BC",
+      "merchant": "FENWICK & BAKER PUBLIC CRANBROOK BC",
+      "amount": 65.48,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-06",
+      "description": "REAL CDN SUPERSTORE #1 CRANBROOK BC",
+      "merchant": "REAL CDN SUPERSTORE #1 CRANBROOK BC",
+      "amount": 13.48,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-06-07",
+      "description": "SIRIUSXM.CA/ACCT TORONTO ON",
+      "merchant": "SIRIUSXM.CA/ACCT TORONTO ON",
+      "amount": 13.34,
+      "category": "Subscriptions",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-06-08",
+      "description": "Disney Plus Burbank CA",
+      "merchant": "DISNEY PLUS BURBANK CA",
+      "amount": 19.03,
+      "category": "Subscriptions",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-06-07",
+      "description": "CANADIAN TIRE #395 CRANBROOK BC",
+      "merchant": "CANADIAN TIRE #395 CRANBROOK BC",
+      "amount": 113.81,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-06-09",
+      "description": "BC TRANSIT/00000187311 VICTORIA BC",
+      "merchant": "BC TRANSIT/00000187311 VICTORIA BC",
+      "amount": 30,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-09",
+      "description": "Ricks Fine Meats & Sau CRANBROOK BC",
+      "merchant": "RICKS FINE MEATS & SAU CRANBROOK BC",
+      "amount": 8,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-10",
+      "description": "GOOGLE *Pokemon GO HALIFAX NS",
+      "merchant": "GOOGLE *POKEMON GO HALIFAX NS",
+      "amount": 15.67,
+      "category": "Subscriptions",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-08",
+      "description": "SHAW CABLESYSTEMS CALGARY AB",
+      "merchant": "SHAW CABLESYSTEMS CALGARY AB",
+      "amount": 160.16,
+      "category": "Utilities",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-08",
+      "description": "THE HOME DEPOT #7255 CRANBROOK BC",
+      "merchant": "THE HOME DEPOT #7255 CRANBROOK BC",
+      "amount": 58.52,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-09",
+      "description": "AMZN Mktp CA*AF7BQ7HR3 TORONTO ON",
+      "merchant": "AMZN MKTP CA*AF7BQ7HR3 TORONTO ON",
+      "amount": 106.39,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-09",
+      "description": "BC LIQUOR #009 CRANBROOK BC",
+      "merchant": "BC LIQUOR #009 CRANBROOK BC",
+      "amount": 146.41,
+      "category": "Alcohol",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-10",
+      "description": "ARMSTRONG CO-OP CGB P@ CRANBROOK BC",
+      "merchant": "ARMSTRONG CO-OP CGB P@ CRANBROOK BC",
+      "amount": 185.59,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-10",
+      "description": "WAL-MART #3183 CRANBROOK BC",
+      "merchant": "WAL-MART #3183 CRANBROOK BC",
+      "amount": 10.54,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-10",
+      "description": "SAVE ON FOODS #915 CRANBROOK BC",
+      "merchant": "SAVE ON FOODS #915 CRANBROOK BC",
+      "amount": 28.15,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-10",
+      "description": "RESORT OF THE CANADIAN CALGARY AB",
+      "merchant": "RESORT OF THE CANADIAN CALGARY AB",
+      "amount": 922.95,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-10",
+      "description": "ICBC #75769 CRANBROOK BC",
+      "merchant": "ICBC #75769 CRANBROOK BC",
+      "amount": 1513,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-11",
+      "description": "SQ *ENCORE BREWING COM Cranbrook BC",
+      "merchant": "SQ *ENCORE BREWING COM CRANBROOK BC",
+      "amount": 19.13,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-12",
+      "description": "SQ *ENCORE BREWING COM Cranbrook BC",
+      "merchant": "SQ *ENCORE BREWING COM CRANBROOK BC",
+      "amount": 66.23,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-12",
+      "description": "SQ *ENCORE BREWING COM Cranbrook BC",
+      "merchant": "SQ *ENCORE BREWING COM CRANBROOK BC",
+      "amount": 8.56,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-12",
+      "description": "SQ *ENCORE BREWING COM Cranbrook BC",
+      "merchant": "SQ *ENCORE BREWING COM CRANBROOK BC",
+      "amount": 17.13,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-11",
+      "description": "SQ *MADISYNHAIR CRANBROOK BC",
+      "merchant": "SQ *MADISYNHAIR CRANBROOK BC",
+      "amount": 36.22,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-11",
+      "description": "GOOGLE *NYT Games Word HALIFAX NS",
+      "merchant": "GOOGLE *NYT GAMES WORD HALIFAX NS",
+      "amount": 33.59,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-10",
+      "description": "TIM HORTONS #2191 CRANBROOK BC",
+      "merchant": "TIM HORTONS #2191 CRANBROOK BC",
+      "amount": 13.73,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-12",
+      "description": "WINNERS 348 CRANBROOK BC",
+      "merchant": "WINNERS 348 CRANBROOK BC",
+      "amount": 58.42,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-04-10",
+      "description": "AMZN Mktp CA TORONTO ON",
+      "merchant": "AMZN MKTP CA TORONTO ON",
+      "amount": -30.23,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-09",
+      "description": "FOOD & STUFF ESSO CRANBROOK BC",
+      "merchant": "FOOD & STUFF ESSO CRANBROOK BC",
+      "amount": 5,
+      "category": "Transportation",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-04-11",
+      "description": "WINNERS 348 CRANBROOK BC",
+      "merchant": "WINNERS 348 CRANBROOK BC",
+      "amount": 36.67,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-04-10",
+      "description": "SAFEWAY #4974 CRANBROOK BC",
+      "merchant": "SAFEWAY #4974 CRANBROOK BC",
+      "amount": 35.36,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-11",
+      "description": "SAVE ON FOODS #915 CRANBROOK BC",
+      "merchant": "SAVE ON FOODS #915 CRANBROOK BC",
+      "amount": 69.4,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-13",
+      "description": "AMZN Mktp CA*B781691L1 TORONTO ON",
+      "merchant": "AMZN MKTP CA*B781691L1 TORONTO ON",
+      "amount": 63.83,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-12",
+      "description": "WAL-MART #3183 CRANBROOK BC",
+      "merchant": "WAL-MART #3183 CRANBROOK BC",
+      "amount": 21.2,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-13",
+      "description": "GAP.COM BRAMPTON ON",
+      "merchant": "GAP.COM BRAMPTON ON",
+      "amount": 60.03,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-11",
+      "description": "SAFEWAY #4974 CRANBROOK BC",
+      "merchant": "SAFEWAY #4974 CRANBROOK BC",
+      "amount": 5.9,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-12",
+      "description": "SAVE ON FOODS #915 CRANBROOK BC",
+      "merchant": "SAVE ON FOODS #915 CRANBROOK BC",
+      "amount": 321.7,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-13",
+      "description": "MIKE'S AUTO WASH/00003 CRANBROOK BC",
+      "merchant": "MIKE'S AUTO WASH/00003 CRANBROOK BC",
+      "amount": 16,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-13",
+      "description": "LORDCO PARTS #35 CRANBROOK BC",
+      "merchant": "LORDCO PARTS #35 CRANBROOK BC",
+      "amount": -11.33,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-13",
+      "description": "LORDCO PARTS #35 CRANBROOK BC",
+      "merchant": "LORDCO PARTS #35 CRANBROOK BC",
+      "amount": 24.51,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-14",
+      "description": "AMZN Mktp CA*B75N97ZG0 TORONTO ON",
+      "merchant": "AMZN MKTP CA*B75N97ZG0 TORONTO ON",
+      "amount": 172.37,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-13",
+      "description": "ARBY'S CRANBROOK CRANBROOK BC",
+      "merchant": "ARBY'S CRANBROOK CRANBROOK BC",
+      "amount": 6.81,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-14",
+      "description": "WAL-MART #3183 CRANBROOK BC",
+      "merchant": "WAL-MART #3183 CRANBROOK BC",
+      "amount": 33.76,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-14",
+      "description": "ROGERS ******1102 TORONTO ON",
+      "merchant": "ROGERS ******1102 TORONTO ON",
+      "amount": 100.8,
+      "category": "Utilities",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-15",
+      "description": "AMZN Mktp CA*B71FG0EL0 TORONTO ON",
+      "merchant": "AMZN MKTP CA*B71FG0EL0 TORONTO ON",
+      "amount": 61.38,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-15",
+      "description": "AMZN Mktp CA*B71G27D11 TORONTO ON",
+      "merchant": "AMZN MKTP CA*B71G27D11 TORONTO ON",
+      "amount": 11.19,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-15",
+      "description": "AMZN Mktp CA*B73ES4AX0 TORONTO ON",
+      "merchant": "AMZN MKTP CA*B73ES4AX0 TORONTO ON",
+      "amount": 17.14,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-15",
+      "description": "GAP.COM BRAMPTON ON",
+      "merchant": "GAP.COM BRAMPTON ON",
+      "amount": 160.04,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-15",
+      "description": "LORDCO PARTS #35 CRANBROOK BC",
+      "merchant": "LORDCO PARTS #35 CRANBROOK BC",
+      "amount": 6.59,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-15",
+      "description": "ARMSTRONG CO-OP CGB P@ CRANBROOK BC",
+      "merchant": "ARMSTRONG CO-OP CGB P@ CRANBROOK BC",
+      "amount": 195.4,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-15",
+      "description": "FIRE & OAK CRANBROOK BC",
+      "merchant": "FIRE & OAK CRANBROOK BC",
+      "amount": 69.7,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-16",
+      "description": "COURSERA.ORG SCHIPHOL NH",
+      "merchant": "COURSERA.ORG SCHIPHOL NH",
+      "amount": 68,
+      "category": "Education",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-04-16",
+      "description": "CRANBROOK ST. LIQUOR S CRANBROOK BC",
+      "merchant": "CRANBROOK ST. LIQUOR S CRANBROOK BC",
+      "amount": 26.54,
+      "category": "Alcohol",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-16",
+      "description": "CANADIAN 2 FOR 1 PIZZA CRANBROOK BC",
+      "merchant": "CANADIAN 2 FOR 1 PIZZA CRANBROOK BC",
+      "amount": 60.45,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-15",
+      "description": "DAIRY QUEEN #27104 CRANBROOK BC",
+      "merchant": "DAIRY QUEEN #27104 CRANBROOK BC",
+      "amount": 30.08,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-04-18",
+      "description": "WOODLAND CONVENIENCE CRANBROOK BC",
+      "merchant": "WOODLAND CONVENIENCE CRANBROOK BC",
+      "amount": 8.1,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-20",
+      "description": "EXPEDIA 73424745109295 EXPEDIA.CA ON",
+      "merchant": "EXPEDIA 73424745109295 EXPEDIA.CA ON",
+      "amount": 281.93,
+      "category": "Travel",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-19",
+      "description": "RYANAIR0000000000Z3SC9T0 DUBLIN",
+      "merchant": "RYANAIR0000000000Z3SC9T0 DUBLIN",
+      "amount": 289.89,
+      "category": "Travel",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-04-16",
+      "description": "A&W #0260 CRANBROOK BC",
+      "merchant": "A&W #0260 CRANBROOK BC",
+      "amount": 8.06,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-18",
+      "description": "Amazon.ca*B70VR1DM0 TORONTO ON",
+      "merchant": "AMAZON.CA*B70VR1DM0 TORONTO ON",
+      "amount": 18.88,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-04-18",
+      "description": "bougerv HONG KONG HKG",
+      "merchant": "BOUGERV HONG KONG HKG",
+      "amount": 201.59,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-18",
+      "description": "APPLE.COM/BILL TORONTO ON",
+      "merchant": "APPLE.COM/BILL TORONTO ON",
+      "amount": 10.62,
+      "category": "Subscriptions",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-04-17",
+      "description": "FENWICK & BAKER PUBLIC CRANBROOK BC",
+      "merchant": "FENWICK & BAKER PUBLIC CRANBROOK BC",
+      "amount": 89.49,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-17",
+      "description": "TIM HORTONS #3655 CRANBROOK BC",
+      "merchant": "TIM HORTONS #3655 CRANBROOK BC",
+      "amount": 3.35,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-18",
+      "description": "CRANBROOK ST. LIQUOR S CRANBROOK BC",
+      "merchant": "CRANBROOK ST. LIQUOR S CRANBROOK BC",
+      "amount": 76.08,
+      "category": "Alcohol",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-17",
+      "description": "SAFEWAY #4974 CRANBROOK BC",
+      "merchant": "SAFEWAY #4974 CRANBROOK BC",
+      "amount": 4.49,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-18",
+      "description": "THE HOME DEPOT #7255 CRANBROOK BC",
+      "merchant": "THE HOME DEPOT #7255 CRANBROOK BC",
+      "amount": 73.56,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-18",
+      "description": "SAVE ON FOODS #915 CRANBROOK BC",
+      "merchant": "SAVE ON FOODS #915 CRANBROOK BC",
+      "amount": 111.78,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-18",
+      "description": "FOOD & STUFF ESSO CRANBROOK BC",
+      "merchant": "FOOD & STUFF ESSO CRANBROOK BC",
+      "amount": 12.99,
+      "category": "Transportation",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-04-19",
+      "description": "PrimeVideo.c*B75OK3WG0 VANCOUVER BC",
+      "merchant": "PRIMEVIDEO.C*B75OK3WG0 VANCOUVER BC",
+      "amount": 5.59,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-20",
+      "description": "APPLE.COM/BILL TORONTO ON",
+      "merchant": "APPLE.COM/BILL TORONTO ON",
+      "amount": 4.47,
+      "category": "Subscriptions",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-04-20",
+      "description": "SQ *HOT SHOTS CAFE Cranbrook BC",
+      "merchant": "SQ *HOT SHOTS CAFE CRANBROOK BC",
+      "amount": 16.54,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-20",
+      "description": "ARMSTRONG CO-OP CGB P@ CRANBROOK BC",
+      "merchant": "ARMSTRONG CO-OP CGB P@ CRANBROOK BC",
+      "amount": 96.84,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-20",
+      "description": "TRSF FROM/DE ACCT/CPT 0722-XXXX-239",
+      "merchant": "TRSF FROM/DE ACCT/CPT 0722-XXXX-239",
+      "amount": -4207.48,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-21",
+      "description": "SQ *MAX'S PLACE CRANBROOK BC",
+      "merchant": "SQ *MAX'S PLACE CRANBROOK BC",
+      "amount": 8.88,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-21",
+      "description": "NEATOLOGY INC CRANBROOK BC",
+      "merchant": "NEATOLOGY INC CRANBROOK BC",
+      "amount": 134.66,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-22",
+      "description": "Spotify P41B2718C3 Stockholm SWE",
+      "merchant": "SPOTIFY P41B2718C3 STOCKHOLM SWE",
+      "amount": 23.51,
+      "category": "Subscriptions",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-21",
+      "description": "THE HEID OUT CRANBROOK BC",
+      "merchant": "THE HEID OUT CRANBROOK BC",
+      "amount": 91.46,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-22",
+      "description": "EASTERN WOK CRANBROOK BC",
+      "merchant": "EASTERN WOK CRANBROOK BC",
+      "amount": 14.95,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-22",
+      "description": "SP THE SHEEPDOGS TORONTO ON",
+      "merchant": "SP THE SHEEPDOGS TORONTO ON",
+      "amount": 60,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-21",
+      "description": "BOSTON PIZZA #094 OLM CRANBROOK BC",
+      "merchant": "BOSTON PIZZA #094 OLM CRANBROOK BC",
+      "amount": 18.57,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-20",
+      "description": "DAIRY QUEEN #27104 CRANBROOK BC",
+      "merchant": "DAIRY QUEEN #27104 CRANBROOK BC",
+      "amount": 15.93,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-04-21",
+      "description": "THE HOME DEPOT #7255 CRANBROOK BC",
+      "merchant": "THE HOME DEPOT #7255 CRANBROOK BC",
+      "amount": 58.22,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-22",
+      "description": "SP THE SHEEPDOGS TORONTO ON",
+      "merchant": "SP THE SHEEPDOGS TORONTO ON",
+      "amount": 40,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-23",
+      "description": "SQ *KEY CITY THEATRE S CRANBROOK BC",
+      "merchant": "SQ *KEY CITY THEATRE S CRANBROOK BC",
+      "amount": 16.1,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-21",
+      "description": "DAIRY QUEEN #27104 CRANBROOK BC",
+      "merchant": "DAIRY QUEEN #27104 CRANBROOK BC",
+      "amount": 31.74,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-04-22",
+      "description": "FENWICK & BAKER PUBLIC CRANBROOK BC",
+      "merchant": "FENWICK & BAKER PUBLIC CRANBROOK BC",
+      "amount": 73.38,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-23",
+      "description": "SQ *HOT SHOTS CAFE Cranbrook BC",
+      "merchant": "SQ *HOT SHOTS CAFE CRANBROOK BC",
+      "amount": 23.9,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-23",
+      "description": "CRANBROOK SUBARU CRANBROOK BC",
+      "merchant": "CRANBROOK SUBARU CRANBROOK BC",
+      "amount": 1007.82,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-24",
+      "description": "TRSF FROM/DE ACCT/CPT 0722-XXXX-239",
+      "merchant": "TRSF FROM/DE ACCT/CPT 0722-XXXX-239",
+      "amount": -1842.71,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-23",
+      "description": "SAVE ON FOODS #915 CRANBROOK BC",
+      "merchant": "SAVE ON FOODS #915 CRANBROOK BC",
+      "amount": 39.5,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-24",
+      "description": "EASTERN WOK CRANBROOK BC",
+      "merchant": "EASTERN WOK CRANBROOK BC",
+      "amount": 28.6,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-24",
+      "description": "PHARMASAVE #255 CRANBR CRANBROOK BC",
+      "merchant": "PHARMASAVE #255 CRANBR CRANBROOK BC",
+      "amount": 11.74,
+      "category": "Medical",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-04-24",
+      "description": "QUEEN NAILS BAR CRANBROOK BC",
+      "merchant": "QUEEN NAILS BAR CRANBROOK BC",
+      "amount": 138.9,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-24",
+      "description": "LA VIE EN ROSE #68 CRANBROOK BC",
+      "merchant": "LA VIE EN ROSE #68 CRANBROOK BC",
+      "amount": 55.93,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-24",
+      "description": "BC LIQUOR #009 CRANBROOK BC",
+      "merchant": "BC LIQUOR #009 CRANBROOK BC",
+      "amount": 21.94,
+      "category": "Alcohol",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-24",
+      "description": "SAVE ON FOODS #915 CRANBROOK BC",
+      "merchant": "SAVE ON FOODS #915 CRANBROOK BC",
+      "amount": 5.59,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-24",
+      "description": "SAVE ON FOODS #915 CRANBROOK BC",
+      "merchant": "SAVE ON FOODS #915 CRANBROOK BC",
+      "amount": 10.48,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-24",
+      "description": "ST EUGENE - NUMA LOUNG CRANBROOK BC",
+      "merchant": "ST EUGENE - NUMA LOUNG CRANBROOK BC",
+      "amount": 125.71,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-25",
+      "description": "TIM HORTONS #3655 CRANBROOK BC",
+      "merchant": "TIM HORTONS #3655 CRANBROOK BC",
+      "amount": 9.3,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-25",
+      "description": "SAVE ON FOODS #915 CRANBROOK BC",
+      "merchant": "SAVE ON FOODS #915 CRANBROOK BC",
+      "amount": 386.36,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-25",
+      "description": "MCDONALD'S #2784 CRANBROOK BC",
+      "merchant": "MCDONALD'S #2784 CRANBROOK BC",
+      "amount": 5.57,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-25",
+      "description": "ST. EUGENE GOLF RESORT C BC",
+      "merchant": "ST. EUGENE GOLF RESORT C BC",
+      "amount": 250.96,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-22",
+      "description": "FOOD & STUFF ESSO CRANBROOK BC",
+      "merchant": "FOOD & STUFF ESSO CRANBROOK BC",
+      "amount": 13.5,
+      "category": "Transportation",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-04-23",
+      "description": "MCDONALD'S #2784 CRANBROOK BC",
+      "merchant": "MCDONALD'S #2784 CRANBROOK BC",
+      "amount": 6.59,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-25",
+      "description": "PAGES BOOK EMPORIUM CRANBROOK BC",
+      "merchant": "PAGES BOOK EMPORIUM CRANBROOK BC",
+      "amount": 12.1,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-24",
+      "description": "SAFEWAY #4974 CRANBROOK BC",
+      "merchant": "SAFEWAY #4974 CRANBROOK BC",
+      "amount": 19.69,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-25",
+      "description": "CANADIAN TIRE #395 CRANBROOK BC",
+      "merchant": "CANADIAN TIRE #395 CRANBROOK BC",
+      "amount": 171.34,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-04-26",
+      "description": "SP JOOLCA CALGARY AB",
+      "merchant": "SP JOOLCA CALGARY AB",
+      "amount": 350.95,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-26",
+      "description": "REAL CDN SUPERSTORE #1 CRANBROOK BC",
+      "merchant": "REAL CDN SUPERSTORE #1 CRANBROOK BC",
+      "amount": 38.97,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-04-26",
+      "description": "TRSF FROM/DE ACCT/CPT 0722-XXXX-239",
+      "merchant": "TRSF FROM/DE ACCT/CPT 0722-XXXX-239",
+      "amount": -350,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-26",
+      "description": "SHAW CABLESYSTEMS CALGARY AB",
+      "merchant": "SHAW CABLESYSTEMS CALGARY AB",
+      "amount": 326.6,
+      "category": "Utilities",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-27",
+      "description": "SAVE ON FOODS #915 CRANBROOK BC",
+      "merchant": "SAVE ON FOODS #915 CRANBROOK BC",
+      "amount": 24.06,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-28",
+      "description": "CANADIAN 2 FOR 1 PIZZA CRANBROOK BC",
+      "merchant": "CANADIAN 2 FOR 1 PIZZA CRANBROOK BC",
+      "amount": 41.98,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-28",
+      "description": "CRANBROOK ST. LIQUOR S CRANBROOK BC",
+      "merchant": "CRANBROOK ST. LIQUOR S CRANBROOK BC",
+      "amount": 55.23,
+      "category": "Alcohol",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-29",
+      "description": "AMZN Mktp CA TORONTO ON",
+      "merchant": "AMZN MKTP CA TORONTO ON",
+      "amount": -11.19,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-29",
+      "description": "AMZN Mktp CA TORONTO ON",
+      "merchant": "AMZN MKTP CA TORONTO ON",
+      "amount": -61.38,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-29",
+      "description": "WOODLAND CONVENIENCE CRANBROOK BC",
+      "merchant": "WOODLAND CONVENIENCE CRANBROOK BC",
+      "amount": 15.9,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-28",
+      "description": "CANADIAN TIRE #395 CRANBROOK BC",
+      "merchant": "CANADIAN TIRE #395 CRANBROOK BC",
+      "amount": 257.58,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-04-29",
+      "description": "MIKE'S AUTO WASH/00003 CRANBROOK BC",
+      "merchant": "MIKE'S AUTO WASH/00003 CRANBROOK BC",
+      "amount": 16,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-30",
+      "description": "TRSF FROM/DE ACCT/CPT 0722-XXXX-239",
+      "merchant": "TRSF FROM/DE ACCT/CPT 0722-XXXX-239",
+      "amount": -2865.86,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-30",
+      "description": "REAL CDN SUPERSTORE #1 CRANBROOK BC",
+      "merchant": "REAL CDN SUPERSTORE #1 CRANBROOK BC",
+      "amount": 32.48,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-04-30",
+      "description": "STARLINK INTERNET Halifax NS",
+      "merchant": "STARLINK INTERNET HALIFAX NS",
+      "amount": 2.58,
+      "category": "Utilities",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-04-30",
+      "description": "WAL-MART #3183 CRANBROOK BC",
+      "merchant": "WAL-MART #3183 CRANBROOK BC",
+      "amount": 45.32,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-01",
+      "description": "SHELL C81547 CRANBROOK BC",
+      "merchant": "SHELL C81547 CRANBROOK BC",
+      "amount": 67.42,
+      "category": "Transportation",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-01",
+      "description": "CRC_DON_DONATION OTTAWA ON",
+      "merchant": "CRC_DON_DONATION OTTAWA ON",
+      "amount": 35,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-30",
+      "description": "DAIRY QUEEN #27104 CRANBROOK BC",
+      "merchant": "DAIRY QUEEN #27104 CRANBROOK BC",
+      "amount": 16.42,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-01",
+      "description": "SAVE ON FOODS #915 CRANBROOK BC",
+      "merchant": "SAVE ON FOODS #915 CRANBROOK BC",
+      "amount": 220.69,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-03",
+      "description": "REAL CDN SUPERSTORE #1 CRANBROOK BC",
+      "merchant": "REAL CDN SUPERSTORE #1 CRANBROOK BC",
+      "amount": 50.28,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-04-29",
+      "description": "SAFEWAY #4974 CRANBROOK BC",
+      "merchant": "SAFEWAY #4974 CRANBROOK BC",
+      "amount": 7.12,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-01",
+      "description": "CRAWFORD BAY MARKET Crawford Bay BC",
+      "merchant": "CRAWFORD BAY MARKET CRAWFORD BAY BC",
+      "amount": 38.59,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-30",
+      "description": "FOOD & STUFF ESSO CRANBROOK BC",
+      "merchant": "FOOD & STUFF ESSO CRANBROOK BC",
+      "amount": 12.99,
+      "category": "Transportation",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-01",
+      "description": "TIM HORTONS #3701 CRESTON BC",
+      "merchant": "TIM HORTONS #3701 CRESTON BC",
+      "amount": 23.91,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-02",
+      "description": "CRAWFORD BAY MARKET Crawford Bay BC",
+      "merchant": "CRAWFORD BAY MARKET CRAWFORD BAY BC",
+      "amount": 25.99,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-02",
+      "description": "NETFLIX.COM VANCOUVER BC",
+      "merchant": "NETFLIX.COM VANCOUVER BC",
+      "amount": 26.87,
+      "category": "Subscriptions",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-02",
+      "description": "Rockwood Cafe CRAWFORD BAY BC",
+      "merchant": "ROCKWOOD CAFE CRAWFORD BAY BC",
+      "amount": 64.07,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-03",
+      "description": "ROCKCREEK CENTEX ROCK CREEK BC",
+      "merchant": "ROCKCREEK CENTEX ROCK CREEK BC",
+      "amount": 8.36,
+      "category": "Transportation",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-03",
+      "description": "PETRO-CANADA 91206 NELSON BC",
+      "merchant": "PETRO-CANADA 91206 NELSON BC",
+      "amount": 167.06,
+      "category": "Transportation",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-03",
+      "description": "REDS BREAD & BAKERY CRAWFORD BAY BC",
+      "merchant": "REDS BREAD & BAKERY CRAWFORD BAY BC",
+      "amount": 13.5,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-03",
+      "description": "SP THEBUMWRAP PENTICTON BC",
+      "merchant": "SP THEBUMWRAP PENTICTON BC",
+      "amount": 5.59,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-03",
+      "description": "CANADIAN TIRE #395 CRANBROOK BC",
+      "merchant": "CANADIAN TIRE #395 CRANBROOK BC",
+      "amount": 361.18,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-04",
+      "description": "WAL-MART #3183 CRANBROOK BC",
+      "merchant": "WAL-MART #3183 CRANBROOK BC",
+      "amount": 25.66,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-04",
+      "description": "WAL-MART #3183 CRANBROOK BC",
+      "merchant": "WAL-MART #3183 CRANBROOK BC",
+      "amount": 9.04,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-04",
+      "description": "ABC COUNTRY RESTAURANT CRANBROOK BC",
+      "merchant": "ABC COUNTRY RESTAURANT CRANBROOK BC",
+      "amount": 45.81,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-03",
+      "description": "7 ELEVEN STORE #25662 NELSON BC",
+      "merchant": "7 ELEVEN STORE #25662 NELSON BC",
+      "amount": 10.95,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-03",
+      "description": "BARKING PARROT BAR PENTICTON BC",
+      "merchant": "BARKING PARROT BAR PENTICTON BC",
+      "amount": 47.74,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-04",
+      "description": "SUPERWASH ON MAIN PENTICTON BC",
+      "merchant": "SUPERWASH ON MAIN PENTICTON BC",
+      "amount": 15,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-04",
+      "description": "SUPERWASH ON MAIN PENTICTON BC",
+      "merchant": "SUPERWASH ON MAIN PENTICTON BC",
+      "amount": 3.5,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-05",
+      "description": "TST-Yellow Dog Brewing Penticton BC",
+      "merchant": "TST-YELLOW DOG BREWING PENTICTON BC",
+      "amount": 18.51,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-05",
+      "description": "TST-Yellow Dog Brewing Penticton BC",
+      "merchant": "TST-YELLOW DOG BREWING PENTICTON BC",
+      "amount": 34.36,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-05",
+      "description": "TST-Yellow Dog Brewing Penticton BC",
+      "merchant": "TST-YELLOW DOG BREWING PENTICTON BC",
+      "amount": 26.42,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-05",
+      "description": "GABLES LIQUOR STORE PENTICTON BC",
+      "merchant": "GABLES LIQUOR STORE PENTICTON BC",
+      "amount": 41.95,
+      "category": "Alcohol",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-05",
+      "description": "EASTERN WOK CRANBROOK BC",
+      "merchant": "EASTERN WOK CRANBROOK BC",
+      "amount": 14.95,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-06",
+      "description": "COMBOIOS LISBOA",
+      "merchant": "COMBOIOS LISBOA",
+      "amount": 105.43,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-05",
+      "description": "NEATOLOGY INC CRANBROOK BC",
+      "merchant": "NEATOLOGY INC CRANBROOK BC",
+      "amount": 134.66,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-04",
+      "description": "HOODED MERGANSER PENTICTON BC",
+      "merchant": "HOODED MERGANSER PENTICTON BC",
+      "amount": 8.99,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-05",
+      "description": "BARKING PARROT BAR PENTICTON BC",
+      "merchant": "BARKING PARROT BAR PENTICTON BC",
+      "amount": 59.86,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-04",
+      "description": "DAIRY QUEEN #27104 CRANBROOK BC",
+      "merchant": "DAIRY QUEEN #27104 CRANBROOK BC",
+      "amount": 28.62,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-05",
+      "description": "NBX*CITY OF CRANBROOK CRANBROOK BC",
+      "merchant": "NBX*CITY OF CRANBROOK CRANBROOK BC",
+      "amount": 35.88,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-06",
+      "description": "CANCO PETROLEUM #104 OLIVER BC",
+      "merchant": "CANCO PETROLEUM #104 OLIVER BC",
+      "amount": 139.36,
+      "category": "Transportation",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-05",
+      "description": "HOODED MERGANSER PENTICTON BC",
+      "merchant": "HOODED MERGANSER PENTICTON BC",
+      "amount": 22.61,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-06",
+      "description": "CANADIAN 2 FOR 1 PIZZA CRANBROOK BC",
+      "merchant": "CANADIAN 2 FOR 1 PIZZA CRANBROOK BC",
+      "amount": 41.98,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-06",
+      "description": "BC PARKS CAMPING VICTORIA BC",
+      "merchant": "BC PARKS CAMPING VICTORIA BC",
+      "amount": 42.8,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-06",
+      "description": "POSTMEDIA DIGITAL SUBS TORONTO ON",
+      "merchant": "POSTMEDIA DIGITAL SUBS TORONTO ON",
+      "amount": 2.1,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-07",
+      "description": "SIRIUSXM.CA/ACCT TORONTO ON",
+      "merchant": "SIRIUSXM.CA/ACCT TORONTO ON",
+      "amount": 13.34,
+      "category": "Subscriptions",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-06",
+      "description": "STARBUCKS 04972 PENTICTON BC",
+      "merchant": "STARBUCKS 04972 PENTICTON BC",
+      "amount": 12.18,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-07",
+      "description": "SQ *MADISYNHAIR CRANBROOK BC",
+      "merchant": "SQ *MADISYNHAIR CRANBROOK BC",
+      "amount": 42.26,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-06",
+      "description": "MCDONALD'S #41241 GRAND FORKS BC",
+      "merchant": "MCDONALD'S #41241 GRAND FORKS BC",
+      "amount": 15.45,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-06",
+      "description": "PENTICTON LAKESIDE RES PENTICTON BC",
+      "merchant": "PENTICTON LAKESIDE RES PENTICTON BC",
+      "amount": 27.15,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-07",
+      "description": "OPA| 162 CRANBROOK B.C CRANBROOK BC",
+      "merchant": "OPA| 162 CRANBROOK B.C CRANBROOK BC",
+      "amount": 25.57,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-08",
+      "description": "TRSF FROM/DE ACCT/CPT 0722-XXXX-239",
+      "merchant": "TRSF FROM/DE ACCT/CPT 0722-XXXX-239",
+      "amount": -2420.54,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-07",
+      "description": "BC PARKS CAMPING VICTORIA BC",
+      "merchant": "BC PARKS CAMPING VICTORIA BC",
+      "amount": 114.6,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-08",
+      "description": "SQ *HAIR BY XEN Cranbrook BC",
+      "merchant": "SQ *HAIR BY XEN CRANBROOK BC",
+      "amount": 176.4,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-08",
+      "description": "TOP CROP GARDEN  FARM CRANBROOK BC",
+      "merchant": "TOP CROP GARDEN FARM CRANBROOK BC",
+      "amount": 192.43,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-08",
+      "description": "GOOGLE *Pokemon GO HALIFAX NS",
+      "merchant": "GOOGLE *POKEMON GO HALIFAX NS",
+      "amount": 7.83,
+      "category": "Subscriptions",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-07",
+      "description": "SAFEWAY #4974 CRANBROOK BC",
+      "merchant": "SAFEWAY #4974 CRANBROOK BC",
+      "amount": 11.48,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-08",
+      "description": "TIM HORTONS #3655 CRANBROOK BC",
+      "merchant": "TIM HORTONS #3655 CRANBROOK BC",
+      "amount": 13.73,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-09",
+      "description": "BC FISH LIC OR HUNT LE VICTORIA BC",
+      "merchant": "BC FISH LIC OR HUNT LE VICTORIA BC",
+      "amount": 61.22,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-10",
+      "description": "BCF - ONLINE SALES & B VICTORIA BC",
+      "merchant": "BCF - ONLINE SALES & B VICTORIA BC",
+      "amount": 173,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-09",
+      "description": "SAVE ON FOODS #915 CRANBROOK BC",
+      "merchant": "SAVE ON FOODS #915 CRANBROOK BC",
+      "amount": 118.92,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-10",
+      "description": "ALLIANZ GLOBAL ASSISTA CAMBRIDGE ON",
+      "merchant": "ALLIANZ GLOBAL ASSISTA CAMBRIDGE ON",
+      "amount": 20,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-08",
+      "description": "Disney Plus Burbank CA",
+      "merchant": "DISNEY PLUS BURBANK CA",
+      "amount": 19.03,
+      "category": "Subscriptions",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-08",
+      "description": "SHELL C22524 CRANBROOK BC",
+      "merchant": "SHELL C22524 CRANBROOK BC",
+      "amount": 12.01,
+      "category": "Transportation",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-07",
+      "description": "FOOD & STUFF ESSO CRANBROOK BC",
+      "merchant": "FOOD & STUFF ESSO CRANBROOK BC",
+      "amount": 114.06,
+      "category": "Transportation",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-09",
+      "description": "CHV40149 CRANBROOK CHE CRANBROOK BC",
+      "merchant": "CHV40149 CRANBROOK CHE CRANBROOK BC",
+      "amount": 9.6,
+      "category": "Vehicle",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-09",
+      "description": "CHV40149 CRANBROOK CHE CRANBROOK BC",
+      "merchant": "CHV40149 CRANBROOK CHE CRANBROOK BC",
+      "amount": 197.97,
+      "category": "Vehicle",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-10",
+      "description": "Amazon.ca*LX1YX22Y3 TORONTO ON",
+      "merchant": "AMAZON.CA*LX1YX22Y3 TORONTO ON",
+      "amount": 314.59,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-09",
+      "description": "CRANBROOK TRIPLE O #53 CRANBROOK BC",
+      "merchant": "CRANBROOK TRIPLE O #53 CRANBROOK BC",
+      "amount": 12.27,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-09",
+      "description": "WINNERS 348 CRANBROOK BC",
+      "merchant": "WINNERS 348 CRANBROOK BC",
+      "amount": 43.65,
+      "category": "Shopping & Personal",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-09",
+      "description": "WASA LAKE GAS AND FOOD WASA BC",
+      "merchant": "WASA LAKE GAS AND FOOD WASA BC",
+      "amount": 11.9,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-08",
+      "description": "DAIRY QUEEN #27104 CRANBROOK BC",
+      "merchant": "DAIRY QUEEN #27104 CRANBROOK BC",
+      "amount": 15.72,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-10",
+      "description": "BC PARKS CAMPING VICTORIA BC",
+      "merchant": "BC PARKS CAMPING VICTORIA BC",
+      "amount": 134.9,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-10",
+      "description": "WESTJET 883821085273450 CALGARY AB",
+      "merchant": "WESTJET 883821085273450 CALGARY AB",
+      "amount": 287.13,
+      "category": "Travel",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-09",
+      "description": "SAFEWAY #4974 CRANBROOK BC",
+      "merchant": "SAFEWAY #4974 CRANBROOK BC",
+      "amount": 52.47,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-03",
+      "description": "[CW] TF 0722#3171-239",
+      "merchant": "TF 0722#3171-239",
+      "amount": 600,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-14",
+      "description": "[CW] TF 0722#3986-980",
+      "merchant": "TF 0722#3986-980",
+      "amount": -40,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-15",
+      "description": "[DN]YELLOWHEAD HELI PAY/PAY",
+      "merchant": "YELLOWHEAD HELI PAY/PAY",
+      "amount": 2714.39,
+      "category": "Income",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-15",
+      "description": "[CW] TF 0000000022195856593",
+      "merchant": "TF 0000000022195856593",
+      "amount": -400,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-20",
+      "description": "[PR]SAFEWAY #4974            CRANBROOK     BC                    CAN",
+      "merchant": "SAFEWAY #4974 CRANBROOK BC CAN",
+      "amount": -10.72,
+      "category": "Groceries",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-20",
+      "description": "[DS]EDWARD JONES    MSP/DIV",
+      "merchant": "EDWARD JONES MSP/DIV",
+      "amount": -500,
+      "category": "Investments",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-20",
+      "description": "[CW]INTERAC ETRNSFR AD RECVD YELLOWHEAD HELICOPTERS L 20261101335D62BMG",
+      "merchant": "INTERAC ETRNSFR AD RECVD YELLOWHEAD HELICOPTERS L 20261101335D62BMG",
+      "amount": 2743.04,
+      "category": "Income",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-20",
+      "description": "[CW] TF 0005524890094470549",
+      "merchant": "TF 0005524890094470549",
+      "amount": -4207.48,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-21",
+      "description": "[CW] TF 0722#3986-980",
+      "merchant": "TF 0722#3986-980",
+      "amount": -40,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-21",
+      "description": "[DS]EDWARD JONES    MSP/DIV",
+      "merchant": "EDWARD JONES MSP/DIV",
+      "amount": -131.25,
+      "category": "Investments",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-21",
+      "description": "[DS]EDWARD JONES    MSP/DIV",
+      "merchant": "EDWARD JONES MSP/DIV",
+      "amount": -52.5,
+      "category": "Investments",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-21",
+      "description": "[OP]ONLINE PURCHASE 19APR2026PLAYNOW.COM 877706678 BC",
+      "merchant": ".COM 877706678 BC",
+      "amount": -10,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-23",
+      "description": "[DN]CANADA          RIT/RIF",
+      "merchant": "CANADA RIT/RIF",
+      "amount": 382.18,
+      "category": "Income",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-23",
+      "description": "[OP]RECURRING PYMNT 22APR2026SGT VSTYLIXAPP CYP",
+      "merchant": "VSTYLIXAPP CYP",
+      "amount": -1.39,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-24",
+      "description": "[DN]WCB OF BC       WCB/CST",
+      "merchant": "WCB OF BC WCB/CST",
+      "amount": 1352.34,
+      "category": "Income",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-24",
+      "description": "[DN]PROVINCE OF B.C PAY/PAY",
+      "merchant": "PROVINCE OF B.C PAY/PAY",
+      "amount": 2444.99,
+      "category": "Income",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-24",
+      "description": "[SO]AP    0000000022195856593",
+      "merchant": "AP 0000000022195856593",
+      "amount": -110.94,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-24",
+      "description": "[CW] TF 0722#3172-901",
+      "merchant": "TF 0722#3172-901",
+      "amount": -600,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-24",
+      "description": "[CW] TF 0005524890094470549",
+      "merchant": "TF 0005524890094470549",
+      "amount": -1842.71,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-24",
+      "description": "[CW] TF 0722#3986-980",
+      "merchant": "TF 0722#3986-980",
+      "amount": -40,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-24",
+      "description": "[CW] TF 0722#8340-839",
+      "merchant": "TF 0722#8340-839",
+      "amount": -1000,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-24",
+      "description": "[IB]           934 BAKER STRE",
+      "merchant": "934 BAKER STRE",
+      "amount": -40,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-24",
+      "description": "[CW] TF 0722#3950-136",
+      "merchant": "TF 0722#3950-136",
+      "amount": -40,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-27",
+      "description": "[CW]INTERAC ETRNSFR AD RECVD JASON AND SARAH SIMS     20261152017NSUP9J",
+      "merchant": "INTERAC ETRNSFR AD RECVD JASON AND SARAH SIMS 20261152017NSUP9J",
+      "amount": 50.96,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-27",
+      "description": "[CW]INTERAC ETRNSFR RECVD    LINDYLYNES               20261152118019881",
+      "merchant": "INTERAC ETRNSFR RECVD LINDYLYNES 20261152118019881",
+      "amount": 50,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-27",
+      "description": "[CW]INTERAC ETRNSFR AD RECVD SCOTT MORRISON           20261152328NSVVRK",
+      "merchant": "INTERAC ETRNSFR AD RECVD SCOTT MORRISON 20261152328NSVVRK",
+      "amount": 50,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-27",
+      "description": "[CW]INTERAC ETRNSFR AD RECVD KELSEY JOHNSON           20261160011KSG5KY",
+      "merchant": "INTERAC ETRNSFR AD RECVD KELSEY JOHNSON 20261160011KSG5KY",
+      "amount": 50,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-27",
+      "description": "[CW]INTERAC ETRNSFR SENT     KELSEY JOHNSON           20261161416MKWZHV",
+      "merchant": "INTERAC ETRNSFR SENT KELSEY JOHNSON 20261161416MKWZHV",
+      "amount": -30,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-27",
+      "description": "[IB]           934 BAKER STRE",
+      "merchant": "934 BAKER STRE",
+      "amount": 345,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-27",
+      "description": "[CW] TF 0005524890094470549",
+      "merchant": "TF 0005524890094470549",
+      "amount": -350,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-27",
+      "description": "[OP]ONLINE PURCHASE 24APR2026PLAYNOW.COM 877706678 BC",
+      "merchant": ".COM 877706678 BC",
+      "amount": -10,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-28",
+      "description": "[CW] TF 0722#3986-980",
+      "merchant": "TF 0722#3986-980",
+      "amount": -40,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-28",
+      "description": "[CW]CRANBROOK UTIL",
+      "merchant": "CRANBROOK UTIL",
+      "amount": -69.5,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-30",
+      "description": "[DN]YELLOWHEAD HELI PAY/PAY",
+      "merchant": "YELLOWHEAD HELI PAY/PAY",
+      "amount": 2714.39,
+      "category": "Income",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-30",
+      "description": "[DN]BMO INV INC.    INV/PLA",
+      "merchant": "BMO INV INC. INV/PLA",
+      "amount": -300,
+      "category": "Income",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-30",
+      "description": "[CW] TF 0005524890094470549",
+      "merchant": "TF 0005524890094470549",
+      "amount": -2865.86,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-30",
+      "description": "[CW] TF 0722#3986-980",
+      "merchant": "TF 0722#3986-980",
+      "amount": 257,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-30",
+      "description": "[CW] TF 0722#8972-262",
+      "merchant": "TF 0722#8972-262",
+      "amount": -5,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-30",
+      "description": "[SC]PERFORMANCE PLAN",
+      "merchant": "PERFORMANCE PLAN",
+      "amount": -17.95,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-30",
+      "description": "[SC]FULL PLAN FEE REBATE",
+      "merchant": "FULL PLAN FEE REBATE",
+      "amount": 17.95,
+      "category": "Bank Fees",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-04-30",
+      "description": "[SC]O/D PROTECTION - STD FEE",
+      "merchant": "O/D PROTECTION - STD FEE",
+      "amount": -5,
+      "category": "Bank Fees",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-01",
+      "description": "[DS]SUN LIFE        INS/ASS",
+      "merchant": "SUN LIFE INS/ASS",
+      "amount": -50.85,
+      "category": "Investments",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-01",
+      "description": "[CW] TF 0000000022195856593",
+      "merchant": "TF 0000000022195856593",
+      "amount": -400,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-01",
+      "description": "[DS]ASSOMPTION VIE  MSP/DIV",
+      "merchant": "ASSOMPTION VIE MSP/DIV",
+      "amount": -52.01,
+      "category": "Investments",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-01",
+      "description": "[DS]EDWARD JONES    MSP/DIV",
+      "merchant": "EDWARD JONES MSP/DIV",
+      "amount": -650,
+      "category": "Investments",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-01",
+      "description": "[DS]CGHLI           LNS/PRE",
+      "merchant": "CGHLI LNS/PRE",
+      "amount": -184.86,
+      "category": "Investments",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-04",
+      "description": "[DS]EDWARD JONES    MSP/DIV",
+      "merchant": "EDWARD JONES MSP/DIV",
+      "amount": -500,
+      "category": "Investments",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-04",
+      "description": "[OP]ONLINE PURCHASE 30APR2026PLAYNOW.COM 877706678 BC",
+      "merchant": ".COM 877706678 BC",
+      "amount": -10,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-05",
+      "description": "[CW] TF 0722#3986-980",
+      "merchant": "TF 0722#3986-980",
+      "amount": -40,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-07",
+      "description": "[CW]INTERAC ETRNSFR SENT     BECKY LITZ               20261272007JERXQ4",
+      "merchant": "INTERAC ETRNSFR SENT BECKY LITZ 20261272007JERXQ4",
+      "amount": -20,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-08",
+      "description": "[DN]PROVINCE OF B.C PAY/PAY",
+      "merchant": "PROVINCE OF B.C PAY/PAY",
+      "amount": 2615.99,
+      "category": "Income",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-08",
+      "description": "[CW] TF 0722#3172-901",
+      "merchant": "TF 0722#3172-901",
+      "amount": -600,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-08",
+      "description": "[CW] TF 0005524890094470549",
+      "merchant": "TF 0005524890094470549",
+      "amount": -2420.54,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-11",
+      "description": "[DS]FORTISBC ENERGY BPY/FAC",
+      "merchant": "FORTISBC ENERGY BPY/FAC",
+      "amount": -89,
+      "category": "Utilities",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-11",
+      "description": "[OP]ONLINE PURCHASE  8MAY2026PLAYNOW.COM BC",
+      "merchant": ".COM BC",
+      "amount": -10,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-12",
+      "description": "[CW] TF 0722#3986-980",
+      "merchant": "TF 0722#3986-980",
+      "amount": -40,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-15",
+      "description": "[DN]YELLOWHEAD HELI PAY/PAY",
+      "merchant": "YELLOWHEAD HELI PAY/PAY",
+      "amount": 2714.39,
+      "category": "Income",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-15",
+      "description": "[CW] TF 0000000022195856593",
+      "merchant": "TF 0000000022195856593",
+      "amount": -400,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-15",
+      "description": "[DS]EDWARD JONES    MSP/DIV",
+      "merchant": "EDWARD JONES MSP/DIV",
+      "amount": -500,
+      "category": "Investments",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-15",
+      "description": "[CW] TF 0005524890094470549",
+      "merchant": "TF 0005524890094470549",
+      "amount": -2881.76,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-19",
+      "description": "[PR]TOP CROP GARDEN  FARM    CRANBROOK     BC                    CAN",
+      "merchant": "TOP CROP GARDEN FARM CRANBROOK BC CAN",
+      "amount": -4.19,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-05-19",
+      "description": "[PR]THE HOME DEPOT #7255     CRANBROOK     BC                    CAN",
+      "merchant": "THE HOME DEPOT #7255 CRANBROOK BC CAN",
+      "amount": -6.66,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-19",
+      "description": "[PR]THE HOME DEPOT #7255     CRANBROOK     BC                    CAN",
+      "merchant": "THE HOME DEPOT #7255 CRANBROOK BC CAN",
+      "amount": -19,
+      "category": "Home & Garden",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-19",
+      "description": "[CW] TF 0722#3986-980",
+      "merchant": "TF 0722#3986-980",
+      "amount": -40,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-19",
+      "description": "[CW]INTERAC ETRNSFR AD RECVD CANADIAN BREAD SETTLEMEN 202613911478VZBHP",
+      "merchant": "INTERAC ETRNSFR AD RECVD CANADIAN BREAD SETTLEMEN 202613911478VZBHP",
+      "amount": 49.11,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-20",
+      "description": "[PR]EASTERN WOK              CRANBROOK     BC                    CAN",
+      "merchant": "EASTERN WOK CRANBROOK BC CAN",
+      "amount": -13.65,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-20",
+      "description": "[OP]ONLINE PURCHASE 18MAY2026PLAYNOW.COM 877706678 BC",
+      "merchant": ".COM 877706678 BC",
+      "amount": -10,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-22",
+      "description": "[DN]PROVINCE OF B.C PAY/PAY",
+      "merchant": "PROVINCE OF B.C PAY/PAY",
+      "amount": 4230.76,
+      "category": "Income",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-22",
+      "description": "[CW] TF 0722#3172-901",
+      "merchant": "TF 0722#3172-901",
+      "amount": -600,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-22",
+      "description": "[CW] TF 0005524890094470549",
+      "merchant": "TF 0005524890094470549",
+      "amount": -2331.22,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-22",
+      "description": "[PR]MCDONALD'S #2784         CRANBROOK     BC                    CAN",
+      "merchant": "MCDONALD'S #2784 CRANBROOK BC CAN",
+      "amount": -10.15,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-25",
+      "description": "[DN]WCB OF BC       WCB/CST",
+      "merchant": "WCB OF BC WCB/CST",
+      "amount": 1352.34,
+      "category": "Income",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-25",
+      "description": "[SO]AP    0000000022195856593",
+      "merchant": "AP 0000000022195856593",
+      "amount": -104.02,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-25",
+      "description": "[OP]ONLINE PURCHASE 22MAY2026PLAYNOW.COM 877706678 BC",
+      "merchant": ".COM 877706678 BC",
+      "amount": -10,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-26",
+      "description": "[CW] TF 0722#3986-980",
+      "merchant": "TF 0722#3986-980",
+      "amount": -40,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-28",
+      "description": "[CW]CRANBROOK UTIL",
+      "merchant": "CRANBROOK UTIL",
+      "amount": -69.5,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-29",
+      "description": "[DN]YELLOWHEAD HELI PAY/PAY",
+      "merchant": "YELLOWHEAD HELI PAY/PAY",
+      "amount": 2714.39,
+      "category": "Income",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-29",
+      "description": "[CW] TF 0005524890094470549",
+      "merchant": "TF 0005524890094470549",
+      "amount": -2603.02,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-05-29",
+      "description": "[SC]PERFORMANCE PLAN",
+      "merchant": "PERFORMANCE PLAN",
+      "amount": -17.95,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-05-29",
+      "description": "[SC]O/D PROTECTION - STD FEE",
+      "merchant": "O/D PROTECTION - STD FEE",
+      "amount": -5,
+      "category": "Bank Fees",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-01",
+      "description": "[DN]BMO INV INC.    INV/PLA",
+      "merchant": "BMO INV INC. INV/PLA",
+      "amount": -300,
+      "category": "Income",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-01",
+      "description": "[DS]SUN LIFE        INS/ASS",
+      "merchant": "SUN LIFE INS/ASS",
+      "amount": -50.85,
+      "category": "Investments",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-01",
+      "description": "[CW] TF 0000000022195856593",
+      "merchant": "TF 0000000022195856593",
+      "amount": -400,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-01",
+      "description": "[DS]EDWARD JONES    MSP/DIV",
+      "merchant": "EDWARD JONES MSP/DIV",
+      "amount": -500,
+      "category": "Investments",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-01",
+      "description": "[DS]ASSOMPTION VIE  MSP/DIV",
+      "merchant": "ASSOMPTION VIE MSP/DIV",
+      "amount": -52.01,
+      "category": "Investments",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-01",
+      "description": "[DS]EDWARD JONES    MSP/DIV",
+      "merchant": "EDWARD JONES MSP/DIV",
+      "amount": -650,
+      "category": "Investments",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-01",
+      "description": "[DS]CGHLI           LNS/PRE",
+      "merchant": "CGHLI LNS/PRE",
+      "amount": -184.86,
+      "category": "Investments",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-01",
+      "description": "[OP]ONLINE PURCHASE 28MAY2026PLAYNOW.COM 877706678 BC",
+      "merchant": ".COM 877706678 BC",
+      "amount": -10,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-02",
+      "description": "[CW] TF 0722#3986-980",
+      "merchant": "TF 0722#3986-980",
+      "amount": -40,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-04",
+      "description": "[CW]MOBILE CHEQUE DEPOSIT",
+      "merchant": "MOBILE CHEQUE DEPOSIT",
+      "amount": 100,
+      "category": "Income",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-05",
+      "description": "[DN]PROVINCE OF B.C PAY/PAY",
+      "merchant": "PROVINCE OF B.C PAY/PAY",
+      "amount": 4184,
+      "category": "Income",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-05",
+      "description": "[DN]YELLOWHEAD HELI EXP/RDD",
+      "merchant": "YELLOWHEAD HELI EXP/RDD",
+      "amount": 1241,
+      "category": "Income",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-05",
+      "description": "[CW] TF 0722#3172-901",
+      "merchant": "TF 0722#3172-901",
+      "amount": -600,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-05",
+      "description": "[CW] TF 0722#8929-133",
+      "merchant": "TF 0722#8929-133",
+      "amount": -1000,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-05",
+      "description": "[CW] TF 0005524890094470549",
+      "merchant": "TF 0005524890094470549",
+      "amount": -1594.4,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-08",
+      "description": "[IB]           934 BAKER STRE",
+      "merchant": "934 BAKER STRE",
+      "amount": -100,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-08",
+      "description": "[DS]FORTISBC ENERGY BPY/FAC",
+      "merchant": "FORTISBC ENERGY BPY/FAC",
+      "amount": -89,
+      "category": "Utilities",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-06-08",
+      "description": "[OP]ONLINE PURCHASE  4JUN2026PLAYNOW.COM 877706678 BC",
+      "merchant": ".COM 877706678 BC",
+      "amount": -10,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-09",
+      "description": "[CW] TF 0722#3986-980",
+      "merchant": "TF 0722#3986-980",
+      "amount": -40,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-10",
+      "description": "[PR]MCDONALD'S #2784         CRANBROOK     BC                    CAN",
+      "merchant": "MCDONALD'S #2784 CRANBROOK BC CAN",
+      "amount": -5.86,
+      "category": "Dining",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-11",
+      "description": "[OP]ONLINE PURCHASE  9JUN2026PLAYNOW.COM 877706678 BC",
+      "merchant": ".COM 877706678 BC",
+      "amount": -10,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-15",
+      "description": "[DN]YELLOWHEAD HELI PAY/PAY",
+      "merchant": "YELLOWHEAD HELI PAY/PAY",
+      "amount": 2714.39,
+      "category": "Income",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-15",
+      "description": "[CW] TF 0722#3950-136",
+      "merchant": "TF 0722#3950-136",
+      "amount": -185,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-15",
+      "description": "[CW] TF 0000000022195856593",
+      "merchant": "TF 0000000022195856593",
+      "amount": -400,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-15",
+      "description": "[DS]EDWARD JONES    MSP/DIV",
+      "merchant": "EDWARD JONES MSP/DIV",
+      "amount": -500,
+      "category": "Investments",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-15",
+      "description": "[CW] TF 0722#3172-901",
+      "merchant": "TF 0722#3172-901",
+      "amount": 1600,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-15",
+      "description": "[CW] TF 0005524890094470549",
+      "merchant": "TF 0005524890094470549",
+      "amount": -3775.55,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-15",
+      "description": "[OP]ONLINE PURCHASE 12JUN2026PLAYNOW.COM 877706678 BC",
+      "merchant": ".COM 877706678 BC",
+      "amount": -10,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-16",
+      "description": "[CW] TF 0722#3986-980",
+      "merchant": "TF 0722#3986-980",
+      "amount": -40,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-16",
+      "description": "[CW]INTERAC ETRNSFR SENT     MARINE OUTFITTERS        20261671640JQJG4S",
+      "merchant": "INTERAC ETRNSFR SENT MARINE OUTFITTERS 20261671640JQJG4S",
+      "amount": -95.3,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-19",
+      "description": "[DN]PROVINCE OF B.C PAY/PAY",
+      "merchant": "PROVINCE OF B.C PAY/PAY",
+      "amount": 2573.66,
+      "category": "Income",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-19",
+      "description": "[CW] TF 0722#3172-901",
+      "merchant": "TF 0722#3172-901",
+      "amount": -600,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-22",
+      "description": "[CW]INTERAC ETRNSFR AD RECVD JESSE STEELE EWASIUK     202617113362XUGTH",
+      "merchant": "INTERAC ETRNSFR AD RECVD JESSE STEELE EWASIUK 202617113362XUGTH",
+      "amount": 800,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-22",
+      "description": "[CW] TF 0005524890094470549",
+      "merchant": "TF 0005524890094470549",
+      "amount": -4051.44,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-22",
+      "description": "[OP]ONLINE PURCHASE 18JUN2026PLAYNOW.COM 877706678 BC",
+      "merchant": ".COM 877706678 BC",
+      "amount": -10,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-24",
+      "description": "[DN]WCB OF BC       WCB/CST",
+      "merchant": "WCB OF BC WCB/CST",
+      "amount": 1352.34,
+      "category": "Income",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-24",
+      "description": "[SO]AP    0000000022195856593",
+      "merchant": "AP 0000000022195856593",
+      "amount": -103.97,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-29",
+      "description": "[CW]CRANBROOK UTIL",
+      "merchant": "CRANBROOK UTIL",
+      "amount": -69.5,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-29",
+      "description": "[DS]EDWARD JONES    MSP/DIV",
+      "merchant": "EDWARD JONES MSP/DIV",
+      "amount": -500,
+      "category": "Investments",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-29",
+      "description": "[OP]ONLINE PURCHASE 27JUN2026PLAYNOW.COM 877706678 BC",
+      "merchant": ".COM 877706678 BC",
+      "amount": -10,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-30",
+      "description": "[DN]YELLOWHEAD HELI PAY/PAY",
+      "merchant": "YELLOWHEAD HELI PAY/PAY",
+      "amount": 2875.64,
+      "category": "Income",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-30",
+      "description": "[DN]BMO INV INC.    INV/PLA",
+      "merchant": "BMO INV INC. INV/PLA",
+      "amount": -300,
+      "category": "Income",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-06-30",
+      "description": "[SC]PERFORMANCE PLAN",
+      "merchant": "PERFORMANCE PLAN",
+      "amount": -17.95,
+      "category": "Needs Review",
+      "include": "Yes",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-06-30",
+      "description": "[SC]O/D PROTECTION - STD FEE",
+      "merchant": "O/D PROTECTION - STD FEE",
+      "amount": -5,
+      "category": "Bank Fees",
+      "include": "Yes",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-02",
+      "description": "[CW] TF 0000000022195856593",
+      "merchant": "TF 0000000022195856593",
+      "amount": -400,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-02",
+      "description": "[DS]SUN LIFE        INS/ASS",
+      "merchant": "SUN LIFE INS/ASS",
+      "amount": -50.85,
+      "category": "Investments",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-02",
+      "description": "[DS]ASSOMPTION VIE  MSP/DIV",
+      "merchant": "ASSOMPTION VIE MSP/DIV",
+      "amount": -52.01,
+      "category": "Investments",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-02",
+      "description": "[DS]CGHLI           LNS/PRE",
+      "merchant": "CGHLI LNS/PRE",
+      "amount": -184.86,
+      "category": "Investments",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-02",
+      "description": "[DS]EDWARD JONES    MSP/DIV",
+      "merchant": "EDWARD JONES MSP/DIV",
+      "amount": -650,
+      "category": "Investments",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-03",
+      "description": "[DN]PROVINCE OF B.C PAY/PAY",
+      "merchant": "PROVINCE OF B.C PAY/PAY",
+      "amount": 2557.3,
+      "category": "Income",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-03",
+      "description": "[CW] TF 0722#3172-901",
+      "merchant": "TF 0722#3172-901",
+      "amount": -600,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-03",
+      "description": "[CW] TF 0005524890094470549",
+      "merchant": "TF 0005524890094470549",
+      "amount": -2800,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-03",
+      "description": "[CW] TF 0722#3986-980",
+      "merchant": "TF 0722#3986-980",
+      "amount": -25,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-07",
+      "description": "[CW] TF 0722#3986-980",
+      "merchant": "TF 0722#3986-980",
+      "amount": -75,
+      "category": "Transfers",
+      "include": "No",
+      "confidence": "high"
+    },
+    {
+      "date": "2026-07-08",
+      "description": "[DS]FORTISBC ENERGY BPY/FAC",
+      "merchant": "FORTISBC ENERGY BPY/FAC",
+      "amount": -89,
+      "category": "Utilities",
+      "include": "Yes",
+      "confidence": "medium"
+    },
+    {
+      "date": "2026-07-13",
+      "description": "[DS]EDWARD JONES    MSP/DIV",
+      "merchant": "EDWARD JONES MSP/DIV",
+      "amount": -500,
+      "category": "Investments",
+      "include": "No",
+      "confidence": "high"
+    }
+  ],
+  "rules": [
+    {
+      "keyword": "YELLOWHEAD",
+      "category": "Income",
+      "include": "No"
+    },
+    {
+      "keyword": "PROVINCE",
+      "category": "Income",
+      "include": "No"
+    },
+    {
+      "keyword": "WCB",
+      "category": "Income",
+      "include": "No"
+    },
+    {
+      "keyword": "SAVE ON",
+      "category": "Groceries",
+      "include": "Yes"
+    },
+    {
+      "keyword": "SAFEWAY",
+      "category": "Groceries",
+      "include": "Yes"
+    },
+    {
+      "keyword": "TIM HORTONS",
+      "category": "Dining",
+      "include": "Yes"
+    },
+    {
+      "keyword": "MCDONALD",
+      "category": "Dining",
+      "include": "Yes"
+    },
+    {
+      "keyword": "SHELL",
+      "category": "Transportation",
+      "include": "Yes"
+    },
+    {
+      "keyword": "PETRO",
+      "category": "Transportation",
+      "include": "Yes"
+    },
+    {
+      "keyword": "HOME DEPOT",
+      "category": "Home & Garden",
+      "include": "Yes"
+    },
+    {
+      "keyword": "ROGERS",
+      "category": "Utilities",
+      "include": "Yes"
+    },
+    {
+      "keyword": "SHAW",
+      "category": "Utilities",
+      "include": "Yes"
+    },
+    {
+      "keyword": "NETFLIX",
+      "category": "Subscriptions",
+      "include": "Yes"
+    },
+    {
+      "keyword": "SPOTIFY",
+      "category": "Subscriptions",
+      "include": "Yes"
+    },
+    {
+      "keyword": "AMZN",
+      "category": "Shopping & Personal",
+      "include": "Yes"
+    },
+    {
+      "keyword": "LIQUOR",
+      "category": "Alcohol",
+      "include": "Yes"
+    },
+    {
+      "keyword": "WESTJET",
+      "category": "Travel",
+      "include": "Yes"
+    },
+    {
+      "keyword": "EXPEDIA",
+      "category": "Travel",
+      "include": "Yes"
+    },
+    {
+      "keyword": "LOC",
+      "category": "Debt",
+      "include": "No"
+    },
+    {
+      "keyword": "TRANSFER",
+      "category": "Transfers",
+      "include": "No"
+    },
+    {
+      "keyword": "WOODLAND CONVENIENCE CRANBROOK BC",
+      "category": "Groceries",
+      "include": "Yes"
+    },
+    {
+      "keyword": "CHV40149 CRANBROOK CHE CRANBROOK BC",
+      "category": "Vehicle",
+      "include": "Yes"
+    },
+    {
+      "keyword": "GOOGLE *POKEMON GO HALIFAX NS",
+      "category": "Subscriptions",
+      "include": "Yes"
+    },
+    {
+      "keyword": "WLOKA FARMS FRUIT STAN CRESTON BC",
+      "category": "Groceries",
+      "include": "Yes"
+    },
+    {
+      "keyword": "REDS BREAD & BAKERY CRAWFORD BAY BC",
+      "category": "Groceries",
+      "include": "Yes"
+    },
+    {
+      "keyword": "CRAWFORD BAY MARKET CRAWFORD BAY BC",
+      "category": "Groceries",
+      "include": "Yes"
+    },
+    {
+      "keyword": "NEW KEYS PLACE CRAWFORD BAY BC",
+      "category": "Dining",
+      "include": "Yes"
+    },
+    {
+      "keyword": "CHATTERS SALON 125 CRANBROOK BC",
+      "category": "Shopping & Personal",
+      "include": "Yes"
+    },
+    {
+      "keyword": "ARBY'S CRANBROOK CRANBROOK BC",
+      "category": "Dining",
+      "include": "Yes"
+    },
+    {
+      "keyword": "DOLLAR TREE CANADA #40 CRANBROOK BC",
+      "category": "Shopping & Personal",
+      "include": "Yes"
+    },
+    {
+      "keyword": "QUEEN NAILS BAR CRANBROOK BC",
+      "category": "Shopping & Personal",
+      "include": "Yes"
+    },
+    {
+      "keyword": "EASTERN WOK CRANBROOK BC",
+      "category": "Dining",
+      "include": "Yes"
+    },
+    {
+      "keyword": "AIRALO AMSTERDAM NH",
+      "category": "Travel",
+      "include": "Yes"
+    },
+    {
+      "keyword": "#5119 SPORT CHEK CRANBROOK BC",
+      "category": "Shopping & Personal",
+      "include": "Yes"
+    },
+    {
+      "keyword": "LIVRARIA LELLO SA CIDADE PRT",
+      "category": "Travel",
+      "include": "Yes"
+    },
+    {
+      "keyword": "AIR TRANSAICE00M MONTREAL QC",
+      "category": "Travel",
+      "include": "Yes"
+    },
+    {
+      "keyword": "WAL-MART #3183 CRANBROOK BC",
+      "category": "Shopping & Personal",
+      "include": "Yes"
+    },
+    {
+      "keyword": "3732_YUL_MAISON_DE_LA_ DORVAL QC",
+      "category": "Travel",
+      "include": "Yes"
+    },
+    {
+      "keyword": "PORTER AIR TORONTO ON",
+      "category": "Travel",
+      "include": "Yes"
+    },
+    {
+      "keyword": "ARCHIBALD DORVAL QC",
+      "category": "Travel",
+      "include": "Yes"
+    },
+    {
+      "keyword": "JUGO JUICE - 2240 CALGARY AB",
+      "category": "Travel",
+      "include": "Yes"
+    },
+    {
+      "keyword": "LAGOCASTICO - LDA PORTO PRT",
+      "category": "Travel",
+      "include": "Yes"
+    },
+    {
+      "keyword": "O FORNO DOS CLERIGOS PORTO PRT",
+      "category": "Travel",
+      "include": "Yes"
+    },
+    {
+      "keyword": "HUDSON ST 2181 CALGARY AB",
+      "category": "Travel",
+      "include": "Yes"
+    },
+    {
+      "keyword": "CORNER CLERIGOS PORTO PRT",
+      "category": "Travel",
+      "include": "Yes"
+    },
+    {
+      "keyword": "SERVICE BC - CRANBROOK CRANBROOK BC",
+      "category": "Shopping & Personal",
+      "include": "Yes"
+    },
+    {
+      "keyword": "TIME OUT MARKET PORTO PRT",
+      "category": "Travel",
+      "include": "Yes"
+    }
+  ],
+  "review": {
+    "month": "2026-07",
+    "notes": "",
+    "lastBackup": "2026-07-14T21:15:26.117Z"
+  },
+  "netWorthHistory": [],
+  "optimizerExtra": 0,
+  "reportMonth": "2026-07",
+  "categorizationVersion": 25
+}
