@@ -1,9 +1,9 @@
 {
-  "name": "RyanOS 5.3.22",
+  "name": "RyanOS 5.3.23",
   "short_name": "RyanOS",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f4f7fb",
   "theme_color": "#17365d",
-  "description": "RyanOS with a retirement validation console and milestone audit."
+  "description": "RyanOS with independent known-outcome retirement formula tests."
 }
