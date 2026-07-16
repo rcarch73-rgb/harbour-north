@@ -1,9 +1,9 @@
 {
-  "name": "RyanOS 5.3.30",
+  "name": "RyanOS 5.3.31",
   "short_name": "RyanOS",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f4f7fb",
   "theme_color": "#17365d",
-  "description": "RyanOS annual retirement cash flow ledger."
+  "description": "RyanOS retirement ledger validation tests."
 }
