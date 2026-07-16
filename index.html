@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 5.4.0</title>
+<title>RyanOS 5.4.1</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -832,11 +832,21 @@ details.section-card[open]>summary:after{content:"−"}
 @media(max-width:760px){.final-banner-grid,.final-checklist{grid-template-columns:1fr 1fr}}
 @media(max-width:520px){.final-banner-grid,.final-checklist{grid-template-columns:1fr}}
 
+
+.bank-import-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.bank-import-card{border:1px solid var(--border);border-radius:12px;padding:12px;background:#fff}
+.bank-import-card .label{font-size:.72rem;text-transform:uppercase;font-weight:900;color:var(--muted)}
+.bank-import-card .value{font-size:1.05rem;font-weight:900;color:var(--brand);margin-top:4px}
+.bank-import-actions{display:flex;gap:8px;align-items:end;flex-wrap:wrap}
+.import-history{display:grid;gap:8px;margin-top:12px}
+.import-history-row{display:grid;grid-template-columns:1.2fr .8fr .8fr .8fr;gap:8px;padding:10px;border:1px solid var(--border);border-radius:10px;background:#fff}
+@media(max-width:700px){.bank-import-grid{grid-template-columns:1fr}.import-history-row{grid-template-columns:1fr 1fr}}
+
 </style>
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>5.4.0 — Final Test Candidate</small></div>
+  <div><h1>RyanOS</h1><small>5.4.1 — Bank File Import</small></div>
   <div class="header-actions"><button class="mode-toggle" id="modeToggle" type="button">Simple mode</button><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -861,7 +871,7 @@ details.section-card[open]>summary:after{content:"−"}
 "use strict";
 
 var STORAGE_KEY="ryanos2-data";
-var defaults={appVersion:"5.4.0",dataSchemaVersion:40,
+var defaults={appVersion:"5.4.1",dataSchemaVersion:41,
  settings:{
   setupComplete:0,setupStep:0,interfaceMode:1,demoData:0,spouseAge:40,taxFreeIncomeEndAge:65,hasUserFhsa:0,hasSpouseFhsa:0,hasNonRegistered:0,
   userPensionEnabled:0,userPensionType:1,userPensionMonthly:0,userPensionStartAge:65,userPensionIndexed:0,userPensionIndexRate:0,userPensionBridgeMonthly:0,userPensionBridgeEndAge:65,
@@ -887,6 +897,7 @@ var defaults={appVersion:"5.4.0",dataSchemaVersion:40,
  backupHistory:[],
  lastBackupAt:"",
  transactions:[],
+ importHistory:[],
  rules:[
   {keyword:"PAYROLL",category:"Income",include:"No"},
   {keyword:"GROCERY",category:"Groceries",include:"Yes"},
@@ -948,8 +959,8 @@ function migrate(raw){
  if(raw.travelPlanner&&typeof raw.travelPlanner==="object")out.travelPlanner=clone(raw.travelPlanner);
  if(raw.healthcarePlanner&&typeof raw.healthcarePlanner==="object")out.healthcarePlanner=clone(raw.healthcarePlanner);
  if(!out.settings.spouseAge&&isFinite(Number(out.settings.age))&&isFinite(Number(out.settings.wifeAgeDiff)))out.settings.spouseAge=Number(out.settings.age)-Number(out.settings.wifeAgeDiff);
- out.appVersion="5.4.0";
- out.dataSchemaVersion=40;
+ out.appVersion="5.4.1";
+ out.dataSchemaVersion=41;
  if(raw&&raw.settings&&Number(raw.settings.age)===52&&!raw.settings.currentAgePrecisionCorrected){
  out.settings.age=52.96;
  out.settings.currentAgePrecisionCorrected=1;
@@ -977,6 +988,7 @@ if(!data.reportMonth)data.reportMonth=data.review.month||new Date().toISOString(
 if(!data.review||typeof data.review!=="object")data.review={month:new Date().toISOString().slice(0,7),notes:"",lastBackup:""};
 if(!data.review.month)data.review.month=new Date().toISOString().slice(0,7);
 if(!Array.isArray(data.transactions))data.transactions=[];
+if(!Array.isArray(data.importHistory))data.importHistory=[];
 data.transactions=data.transactions.filter(function(t){return t&&typeof t==="object";}).map(function(t){
  return{
   date:t.date||"",
@@ -985,7 +997,13 @@ data.transactions=data.transactions.filter(function(t){return t&&typeof t==="obj
   amount:Number(t.amount||0),
   category:t.category||t.cat||"Needs Review",
   include:t.include||t.inc||"Yes",
-  confidence:t.confidence||""
+  confidence:t.confidence||"",
+  account:t.account||"",
+  notes:t.notes||"",
+  sourceFile:t.sourceFile||"",
+  sourceType:t.sourceType||"",
+  importedAt:t.importedAt||"",
+  fitid:t.fitid||""
  };
 });
 if(!Array.isArray(data.rules))data.rules=[];
@@ -1423,8 +1441,8 @@ function loadDemoData(){
  demo.travelPlanner=null;
  demo.healthcarePlanner=null;
  demo.optimizerExtra=0;
- demo.appVersion="5.4.0";
- demo.dataSchemaVersion=40;
+ demo.appVersion="5.4.1";
+ demo.dataSchemaVersion=41;
  data=demo;
  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
  nav();render();showPage("home");
@@ -2145,6 +2163,88 @@ function parseCsv(text){
  });
  return imported;
 }
+
+function normalizeImportedDate(v){
+ var s=String(v||"").trim();
+ if(!s)return"";
+ var m;
+ if((m=s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/)))return m[1]+"-"+String(m[2]).padStart(2,"0")+"-"+String(m[3]).padStart(2,"0");
+ if((m=s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/)))return m[3]+"-"+String(m[1]).padStart(2,"0")+"-"+String(m[2]).padStart(2,"0");
+ if((m=s.match(/^(\d{4})(\d{2})(\d{2})/)))return m[1]+"-"+m[2]+"-"+m[3];
+ var d=new Date(s);return isNaN(d.getTime())?"":d.toISOString().slice(0,10);
+}
+function importedTxKey(t){
+ return [String(t.fitid||""),String(t.date||""),String(t.description||"").trim().toUpperCase(),Number(t.amount||0).toFixed(2),String(t.account||"").toUpperCase()].join("|");
+}
+function parseBankCsv(text,sourceFile,accountName){
+ var saved=data.transactions,rows;
+ data.transactions=[];
+ try{rows=parseCsv(text);}finally{data.transactions=saved;}
+ var now=new Date().toISOString();
+ return rows.map(function(t){
+  t.date=normalizeImportedDate(t.date);t.account=accountName||"";
+  t.sourceFile=sourceFile||"";t.sourceType="CSV";t.importedAt=now;t.notes=t.notes||"";t.fitid=t.fitid||"";
+  return t;
+ });
+}
+function ofxTag(block,tag){
+ var re=new RegExp("<"+tag+">([^<\\r\\n]+)","i"),m=String(block||"").match(re);
+ return m?String(m[1]).trim():"";
+}
+function parseOfxTransactions(text,sourceFile,accountOverride){
+ var raw=String(text||"").replace(/\r/g,""),now=new Date().toISOString(),items=[];
+ var account=accountOverride||ofxTag(raw,"ACCTID")||ofxTag(raw,"ACCTTYPE")||"Imported account";
+ var blocks=raw.match(/<STMTTRN>[\s\S]*?(?:<\/STMTTRN>|(?=<STMTTRN>|<\/BANKTRANLIST>|$))/gi)||[];
+ blocks.forEach(function(b){
+  var amount=parseAmount(ofxTag(b,"TRNAMT")),date=normalizeImportedDate(ofxTag(b,"DTPOSTED"));
+  var name=ofxTag(b,"NAME"),memo=ofxTag(b,"MEMO"),type=ofxTag(b,"TRNTYPE"),fitid=ofxTag(b,"FITID");
+  var desc=[name,memo].filter(Boolean).join(" — ")||type||"Imported transaction";
+  var r=categorize(desc);
+  items.push({date:date,description:desc,merchant:cleanDescription(name||memo||desc),amount:amount,category:r.category,include:r.include,confidence:r.confidence,account:account,notes:"",sourceFile:sourceFile||"",sourceType:"OFX/QFX",importedAt:now,fitid:fitid});
+ });
+ return items;
+}
+function detectBankFileType(file,text){
+ var name=String(file&&file.name||"").toLowerCase();
+ if(/\.(ofx|qfx)$/.test(name)||/<OFX>|<STMTTRN>/i.test(String(text||"")))return"OFX";
+ return"CSV";
+}
+function importBankRecords(text,file,accountName){
+ var type=detectBankFileType(file,text),parsed=type==="OFX"?parseOfxTransactions(text,file.name,accountName):parseBankCsv(text,file.name,accountName);
+ var existing={};(data.transactions||[]).forEach(function(t){existing[importedTxKey(t)]=true;});
+ var added=[],duplicates=0,invalid=0;
+ parsed.forEach(function(t){
+  if(!t.date||!t.description||!isFinite(Number(t.amount))){invalid++;return;}
+  var key=importedTxKey(t);
+  if(existing[key]){duplicates++;return;}
+  existing[key]=true;added.push(t);
+ });
+ added.forEach(function(t){data.transactions.push(t);});
+ data.importHistory.unshift({file:file.name||"Imported file",type:type,account:accountName||((added[0]&&added[0].account)||""),added:added.length,duplicates:duplicates,invalid:invalid,date:new Date().toISOString()});
+ data.importHistory=data.importHistory.slice(0,20);
+ return{type:type,added:added.length,duplicates:duplicates,invalid:invalid,total:parsed.length};
+}
+function runBankImportTests(){
+ var original=data,results=[];
+ function add(ok,name,actual,expected){results.push({ok:!!ok,name:name,actual:actual,expected:expected});}
+ try{
+  data=clone(defaults);data.transactions=[];data.importHistory=[];
+  var csv='Date,Description,Amount\n2026-01-02,GROCERY STORE,-54.20\n2026-01-03,PAYROLL,2000.00';
+  var a=importBankRecords(csv,{name:"sample.csv"},"Chequing");
+  add(a.added===2,"CSV rows imported",a.added,2);
+  add(data.transactions[0].account==="Chequing","CSV account applied",data.transactions[0].account,"Chequing");
+  var b=importBankRecords(csv,{name:"sample.csv"},"Chequing");
+  add(b.duplicates===2&&b.added===0,"CSV duplicates blocked",b.duplicates,2);
+  var ofx='<OFX><BANKACCTFROM><ACCTID>1234</BANKACCTFROM><BANKTRANLIST><STMTTRN><TRNTYPE>DEBIT<DTPOSTED>20260201120000<TRNAMT>-25.75<FITID>ABC1<NAME>COFFEE SHOP<MEMO>LATTE</STMTTRN></BANKTRANLIST></OFX>';
+  var c=importBankRecords(ofx,{name:"sample.qfx"},"");
+  add(c.added===1&&c.type==="OFX","QFX row imported",c.added,1);
+  add(data.transactions[2].fitid==="ABC1","OFX FITID retained",data.transactions[2].fitid,"ABC1");
+  add(data.transactions[2].date==="2026-02-01","OFX date normalized",data.transactions[2].date,"2026-02-01");
+  add(data.importHistory.length===3,"Import history recorded",data.importHistory.length,3);
+ }catch(err){add(false,"Bank import execution",err.message||String(err),"No error");}
+ finally{data=original;}
+ return{tests:results,pass:results.filter(function(x){return x.ok;}).length,total:results.length};
+}
 function allCategories(){
  var set={};
  data.budget.forEach(function(x){if(x&&x[0])set[String(x[0])]=true;});
@@ -2189,11 +2289,12 @@ function renderTransactions(){
  '<div class="page-intro"><div><h2>Transactions</h2><p>Import, categorize and review the transactions that drive your spending picture.</p></div><span class="status-pill '+(uncategorized?'warn':'good')+'">'+(uncategorized?uncategorized+' uncategorized':'Categories complete')+'</span></div>'+
 
  '<div class="section-card"><h3>Add a transaction manually</h3><div class="manual-tx-grid"><label>Date<input id="manualTxDate" type="date" value="'+new Date().toISOString().slice(0,10)+'"></label><label>Description<input id="manualTxDesc" placeholder="Store or payment"></label><label>Amount<input id="manualTxAmount" type="number" step="0.01"></label><label>Category<select id="manualTxCategory">'+data.budget.map(function(b){return'<option>'+esc(b[0])+'</option>';}).join("")+'<option>Income</option><option>Transfer</option></select></label><button id="addManualTx" type="button">Add transaction</button></div></div>'+
- '<div class="section-card"><h3>Import CSV</h3><div class="tx-filter-row">'+
-  '<label>CSV file<input type="file" id="csvFile" accept=".csv,text/csv"></label>'+
-  '<button id="importCsv" type="button">Import selected CSV</button>'+
-  '<button id="clearTx" class="danger" type="button">Clear all transactions</button>'+
- '</div><div class="notice">Use a CSV exported from a bank or credit-card account. RyanOS will try to detect the date, description and amount columns automatically.</div><div id="importStatus"></div></div>'+
+ '<div class="section-card"><div class="page-intro"><div><h3>Import records from a financial institution</h3><p>Download a CSV, OFX or QFX file from your bank, credit card or investment provider and import it locally.</p></div><span class="status-pill good">Private and local</span></div>'+
+ '<div class="bank-import-actions"><label>Bank file<input type="file" id="bankFile" accept=".csv,.ofx,.qfx,text/csv,application/x-ofx"></label><label>Account name<input id="bankAccountName" placeholder="Chequing, Visa, RRSP…"></label><button id="importBankFile" type="button">Import bank file</button><button id="clearTx" class="danger" type="button">Clear all transactions</button></div>'+
+ '<div class="notice"><strong>No bank login is required.</strong> The file is read inside your browser and is not uploaded to a server. Duplicate records are skipped automatically.</div><div id="importStatus"></div>'+
+ '<div class="bank-import-grid"><div class="bank-import-card"><div class="label">Supported</div><div class="value">CSV · OFX · QFX</div></div><div class="bank-import-card"><div class="label">Transactions stored</div><div class="value">'+all.length+'</div></div><div class="bank-import-card"><div class="label">Import sessions</div><div class="value">'+Number((data.importHistory||[]).length)+'</div></div></div>'+
+ ((data.importHistory||[]).length?'<div class="import-history">'+data.importHistory.slice(0,5).map(function(h){return'<div class="import-history-row"><strong>'+esc(h.file)+'</strong><span>'+esc(h.type)+'</span><span>'+Number(h.added||0)+' added</span><span>'+Number(h.duplicates||0)+' duplicates</span></div>';}).join("")+'</div>':'')+
+ '</div>'+
 
  '<div class="section-card"><div class="tx-filter-row">'+
   '<label>Month<input id="transactionMonth" type="month" value="'+esc(selectedMonth)+'"></label>'+
@@ -2270,23 +2371,21 @@ function renderTransactions(){
  document.getElementById("clearTx").onclick=function(){
   if(confirm("Clear all imported transactions?")){data.transactions=[];save();}
  };
- document.getElementById("importCsv").onclick=function(){
-  var f=document.getElementById("csvFile").files[0];
-  if(!f){document.getElementById("importStatus").innerHTML='<div class="notice bad">Choose a CSV file first.</div>';return;}
+ document.getElementById("importBankFile").onclick=function(){
+  var f=document.getElementById("bankFile").files[0],status=document.getElementById("importStatus");
+  if(!f){status.innerHTML='<div class="notice bad">Choose a CSV, OFX or QFX file first.</div>';return;}
   var reader=new FileReader();
   reader.onload=function(e){
    try{
-    var rows=parseCSV(String(e.target.result||""));
-    var parsed=normalizeImportedTransactions(rows);
-    if(!parsed.length)throw new Error("No usable transaction rows were found.");
-    parsed.forEach(function(t){data.transactions.push(t);});
+    var result=importBankRecords(String(e.target.result||""),f,document.getElementById("bankAccountName").value.trim());
     localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
-    document.getElementById("importStatus").innerHTML='<div class="notice good">'+parsed.length+' transactions imported.</div>';
-    render();
+    status.innerHTML='<div class="notice good"><strong>'+result.added+' new records imported.</strong> '+result.duplicates+' duplicates skipped; '+result.invalid+' invalid rows skipped.</div>';
+    renderTransactions();
    }catch(err){
-    document.getElementById("importStatus").innerHTML='<div class="notice bad">Import failed: '+esc(err.message||String(err))+'</div>';
+    status.innerHTML='<div class="notice bad">Import failed: '+esc(err.message||String(err))+'</div>';
    }
   };
+  reader.onerror=function(){status.innerHTML='<div class="notice bad">The selected file could not be read.</div>';};
   reader.readAsText(f);
  };
  applyView();
@@ -3439,12 +3538,12 @@ function renderRetirementLedger(rows){
 }
 
 function finalCandidateStatus(rows){
- var core=runKnownScenarioTests(),survivor=runSurvivorScenarioTests(),tax=runTaxValidationTests(),ledger=runLedgerValidationTests(),integrated=runIntegratedTaxEngineTests();
- var allPass=core.pass===core.total&&survivor.pass===survivor.total&&tax.pass===tax.total&&ledger.pass===ledger.total&&integrated.pass===integrated.total;
+ var core=runKnownScenarioTests(),survivor=runSurvivorScenarioTests(),tax=runTaxValidationTests(),ledger=runLedgerValidationTests(),integrated=runIntegratedTaxEngineTests(),bank=runBankImportTests();
+ var allPass=core.pass===core.total&&survivor.pass===survivor.total&&tax.pass===tax.total&&ledger.pass===ledger.total&&integrated.pass===integrated.total&&bank.pass===bank.total;
  var last=rows[rows.length-1]||{},shortfall=rows.find(function(r){return Number(r.unfunded||0)>1;});
  return{
-  allPass:allPass,testsPassed:core.pass+survivor.pass+tax.pass+ledger.pass+integrated.pass,
-  testsTotal:core.total+survivor.total+tax.total+ledger.total+integrated.total,
+  allPass:allPass,testsPassed:core.pass+survivor.pass+tax.pass+ledger.pass+integrated.pass+bank.pass,
+  testsTotal:core.total+survivor.total+tax.total+ledger.total+integrated.total+bank.total,
   endingBalance:Number(last.endBalance||0),shortfallAge:shortfall?shortfall.age:null,
   reconciliationMax:rows.reduce(function(m,r){return Math.max(m,Math.abs(Number(r.reconciliationDifference||0)));},0)
  };
@@ -4680,7 +4779,7 @@ function backupCompatibilityAudit(){
  add(Number(migratedOld.settings.userFhsaBalance||0)===0&&Number(migratedOld.settings.spouseFhsaBalance||0)===0,"Missing FHSA fields default safely","Older backups without FHSA data open with zero balances.");
  add(Number(migratedOld.settings.userPensionEnabled||0)===0,"Missing user pension defaults safely","Older backups do not invent a user pension.");
  var current=migrate(data);
- add(Number(current.dataSchemaVersion||0)===40,"Current schema version","Migrated data is tagged with schema version 40.");
+ add(Number(current.dataSchemaVersion||0)===41,"Current schema version","Migrated data is tagged with schema version 41.");
  add(Array.isArray(current.netWorthHistory),"Net worth history preserved","Existing net worth snapshots remain available.");
  add(Array.isArray(current.backupHistory),"Recovery history preserved","Recovery points remain attached to the profile.");
  add(!!current.purchasePlanner&&!!current.vehiclePlanner&&!!current.travelPlanner&&!!current.healthcarePlanner,"Planner data preserved","All four planning tools survive migration.");
@@ -4720,6 +4819,8 @@ function fullRegressionAudit(){
   var ledgerSample=retirementLedgerRows(rows);
   add(ledgerSample.length===rows.length,"Retirement ledger row count","The ledger contains one row for every projection period.");
   add(ledgerSample.every(function(r){return isFinite(r.endingBalance)&&isFinite(r.reconciliation);}),"Retirement ledger values finite","Ledger balances and reconciliation values are valid.");
+  var bankImportSuite=runBankImportTests();
+  add(bankImportSuite.pass===bankImportSuite.total,"Bank-file import tests pass","CSV, OFX/QFX, duplicate detection and import history pass.");
   var finalStatus=finalCandidateStatus(rows);
   add(finalStatus.testsPassed===finalStatus.testsTotal,"Final candidate automated tests","All automated test suites pass.");
   add(isFinite(finalStatus.endingBalance)&&finalStatus.reconciliationMax<1,"Final candidate projection stable","Ending balance is finite and reconciliation remains within one dollar.");
@@ -4752,7 +4853,7 @@ function fullRegressionAudit(){
   add(rows.every(function(r){return isFinite(Number(r.rrifMinimumGross||0));}),"RRIF minimum rows valid","Mandatory RRIF withdrawals return finite values.");
   add(typeof pensionIncomeAudit==="function"&&pensionIncomeAudit(rows).rows.length>0,"Pension timeline audit available","Milestone income rows are generated.");
   add(typeof validateBackupObject==="function"&&validateBackupObject(data).length===0,"Current backup validates","Current saved data passes backup validation.");
-  add(Number(data.dataSchemaVersion||0)===40,"Current schema version","Data is tagged with schema version 40.");
+  add(Number(data.dataSchemaVersion||0)===41,"Current schema version","Data is tagged with schema version 41.");
  }catch(err){
   add(false,"Regression audit execution","Audit stopped because: "+(err.message||String(err)));
  }
@@ -4767,7 +4868,7 @@ function renderSimpleSettings(){
   '<div class="mode-note"><strong>Simple mode hides technical controls.</strong><div>All calculations and saved information remain available. Switch to Advanced mode for detailed assumptions, withdrawal strategies and diagnostic tables.</div></div>'+
   '<div class="section-card"><h3>Guided setup</h3><p>Review household income, accounts, pensions and retirement assumptions.</p><button id="simpleRunSetup" type="button">Run Setup Wizard</button></div>'+  '<div class="section-card"><h3>Start or explore</h3><div class="clean-start-grid"><div class="clean-start-card"><h4>Use my own information</h4><p>Start with empty balances and build your plan through Guided Setup.</p><button id="simpleCleanStart" type="button">Start clean</button></div><div class="clean-start-card"><h4>Explore with sample data</h4><p>Load a fictional Canadian household to see how RyanOS works.</p><button id="simpleLoadDemo" class="secondary" type="button">Load demo</button></div></div></div>'+
   '<div class="section-card"><h3>Backup and recovery</h3><p>Export a backup before making major changes or moving to another device.</p><div class="simple-actions"><button id="simpleExport" type="button">Export backup</button><button id="simpleAdvancedSettings" class="secondary" type="button">Open advanced settings</button></div></div>'+
-  '<div class="section-card"><h3>Data health</h3><div class="simple-next-grid"><div class="simple-next-card"><div class="label">Compatibility checks</div><div class="value">'+c.pass+'/'+c.total+'</div></div><div class="simple-next-card"><div class="label">Schema</div><div class="value">40</div></div><div class="simple-next-card"><div class="label">Storage</div><div class="value">This device</div></div></div></div>'+
+  '<div class="section-card"><h3>Data health</h3><div class="simple-next-grid"><div class="simple-next-card"><div class="label">Compatibility checks</div><div class="value">'+c.pass+'/'+c.total+'</div></div><div class="simple-next-card"><div class="label">Schema</div><div class="value">41</div></div><div class="simple-next-card"><div class="label">Storage</div><div class="value">This device</div></div></div></div>'+
   '<div class="trust-banner"><strong>Privacy reminder</strong>RyanOS stores data in this browser. Keep exported backups in a secure location.</div>';
  document.getElementById("simpleRunSetup").onclick=function(){data.settings.setupStep=0;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));showPage("setup");};
  document.getElementById("simpleCleanStart").onclick=clearAllData;
@@ -4824,7 +4925,7 @@ function renderSettings(){
  '<div class="section-card"><h3>Data health</h3><div class="notice '+(health.length?'bad':'good')+'">'+(health.length?health.map(function(x){return'• '+x;}).join('<br>'):'No major data problems detected.')+'</div></div>'+
  (function(){var audit=foundationAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Foundation audit</h3><p>Automated checks for the calculations and data connections RyanOS depends on.</p></div><span class="status-pill '+(audit.passed===audit.total?'good':audit.passed>=audit.total-2?'warn':'bad')+'">'+audit.passed+' of '+audit.total+' passed</span></div><div class="audit-grid">'+audit.checks.map(function(x){return'<div class="audit-card '+(x.ok?'pass':'fail')+'"><div class="audit-title">'+(x.ok?'✓ ':'⚠ ')+esc(x.name)+'</div><div class="audit-copy">'+esc(x.copy)+'</div></div>';}).join("")+'</div><div class="quick-actions" style="margin-top:12px"><button id="runFoundationAudit" type="button">Run audit again</button></div></div>';})()+
  '<div class="section-card"><div class="page-intro"><div><h3>Calculation scope</h3><p>What RyanOS currently calculates and what still requires professional confirmation.</p></div><span class="estimate-tag">Planning estimate</span></div><div class="method-grid"><div class="method-card"><div class="label">Included</div><div class="value">Cash flow, account growth, pensions, CPP/OAS, stress scenarios and year-by-year balances</div></div><div class="method-card"><div class="label">Simplified</div><div class="value">Income tax, non-registered taxation and withdrawal sequencing</div></div><div class="method-card"><div class="label">Not included yet</div><div class="value">Full federal/provincial tax, RRIF minimums, survivor and estate calculations</div></div></div></div>'+
- (function(){var r=fullRegressionAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Full regression test</h3><p>Checks the primary pages, financial engines, planners, backup system and retirement calculations together.</p></div><span class="status-pill '+(r.failed===0?'good':'bad')+'">'+r.pass+' of '+r.total+' passed</span></div><div class="regression-grid"><div class="regression-card"><div class="label">Schema version</div><div class="value">40</div></div><div class="regression-card"><div class="label">Tests</div><div class="value">'+r.total+'</div></div><div class="regression-card"><div class="label">Passed</div><div class="value">'+r.pass+'</div></div><div class="regression-card"><div class="label">Failed</div><div class="value">'+r.failed+'</div></div></div><div class="regression-list">'+r.tests.map(function(x){return'<div class="regression-item '+(x.ok?'pass':'fail')+'"><div>'+(x.ok?'✓':'!')+'</div><div><strong>'+esc(x.name)+'</strong><div class="tx-muted">'+esc(x.copy)+'</div></div></div>';}).join("")+'</div><div class="quick-actions" style="margin-top:12px"><button id="runRegressionAudit" type="button">Run regression test again</button></div></div>';})()+
+ (function(){var r=fullRegressionAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Full regression test</h3><p>Checks the primary pages, financial engines, planners, backup system and retirement calculations together.</p></div><span class="status-pill '+(r.failed===0?'good':'bad')+'">'+r.pass+' of '+r.total+' passed</span></div><div class="regression-grid"><div class="regression-card"><div class="label">Schema version</div><div class="value">41</div></div><div class="regression-card"><div class="label">Tests</div><div class="value">'+r.total+'</div></div><div class="regression-card"><div class="label">Passed</div><div class="value">'+r.pass+'</div></div><div class="regression-card"><div class="label">Failed</div><div class="value">'+r.failed+'</div></div></div><div class="regression-list">'+r.tests.map(function(x){return'<div class="regression-item '+(x.ok?'pass':'fail')+'"><div>'+(x.ok?'✓':'!')+'</div><div><strong>'+esc(x.name)+'</strong><div class="tx-muted">'+esc(x.copy)+'</div></div></div>';}).join("")+'</div><div class="quick-actions" style="margin-top:12px"><button id="runRegressionAudit" type="button">Run regression test again</button></div></div>';})()+
  (function(){var c=backupCompatibilityAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Backup migration compatibility</h3><p>Checks whether older RyanOS data can be upgraded without losing important information.</p></div><span class="status-pill '+(c.pass===c.total?'good':'warn')+'">'+c.pass+' of '+c.total+' passed</span></div><div class="compat-grid"><div class="compat-card"><div class="label">Schema version</div><div class="value">9</div></div><div class="compat-card"><div class="label">Compatibility tests</div><div class="value">'+c.total+'</div></div><div class="compat-card"><div class="label">Passed</div><div class="value">'+c.pass+'</div></div><div class="compat-card"><div class="label">Warnings</div><div class="value">'+(c.total-c.pass)+'</div></div></div><div class="compat-list">'+c.tests.map(function(x){return'<div class="compat-item '+(x.ok?'pass':'warn')+'"><div>'+(x.ok?'✓':'!')+'</div><div><strong>'+esc(x.name)+'</strong><div class="tx-muted">'+esc(x.copy)+'</div></div></div>';}).join("")+'</div></div>';})()+
  '<div class="section-card"><div class="page-intro"><div><h3>Guided setup</h3><p>Run the question-and-answer setup again without deleting transactions, net worth history or backups.</p></div><button id="rerunSetup" type="button">Run Setup Wizard</button></div></div>'+
  '<div class="pension-grid">'+pensionEditor("user","Your workplace pension")+pensionEditor("spouse","Spouse workplace pension")+'</div>'+
