@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17365d">
-<title>RyanOS 5.3.25</title>
+<title>RyanOS 5.3.26</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--navy:#17365d;--blue:#1f4e78;--bg:#f3f6fa;--card:#fff;--text:#1f2937;--muted:#667085;--border:#d9e2ec;--good:#138a4b;--bad:#b42318;--warn:#fff2cc}
@@ -741,11 +741,22 @@ details.section-card[open]>summary:after{content:"−"}
 .validation-test .icon{font-weight:900;font-size:1.1rem}
 @media(max-width:700px){.validation-summary-grid{grid-template-columns:1fr 1fr}}
 
+
+.tax-audit-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.tax-audit-card{border:1px solid var(--border);border-radius:12px;padding:12px;background:#fff}
+.tax-audit-card .label{font-size:.73rem;text-transform:uppercase;font-weight:900;color:var(--muted)}
+.tax-audit-card .value{font-size:1.08rem;font-weight:900;color:var(--brand);margin-top:4px}
+.tax-audit-table-wrap{overflow:auto;-webkit-overflow-scrolling:touch;margin-top:12px}
+.tax-audit-table{width:100%;min-width:1000px;border-collapse:collapse}
+.tax-audit-table th,.tax-audit-table td{padding:8px;border-bottom:1px solid var(--border);font-size:.82rem;text-align:right;white-space:nowrap}
+.tax-audit-table th:first-child,.tax-audit-table td:first-child{text-align:left;position:sticky;left:0;background:#fff;z-index:1}
+@media(max-width:700px){.tax-audit-grid{grid-template-columns:1fr 1fr}}
+
 </style>
 </head>
 <body>
 <header>
-  <div><h1>RyanOS</h1><small>5.3.25 — Complete HTML Shell Repair</small></div>
+  <div><h1>RyanOS</h1><small>5.3.26 — Annual Tax Estimate Audit</small></div>
   <div class="header-actions"><button class="mode-toggle" id="modeToggle" type="button">Simple mode</button><button class="secondary" id="exportBtn">Export</button></div>
 </header>
 <div class="shell">
@@ -770,7 +781,7 @@ details.section-card[open]>summary:after{content:"−"}
 "use strict";
 
 var STORAGE_KEY="ryanos2-data";
-var defaults={appVersion:"5.3.25",dataSchemaVersion:25,
+var defaults={appVersion:"5.3.26",dataSchemaVersion:26,
  settings:{
   setupComplete:0,setupStep:0,interfaceMode:1,demoData:0,spouseAge:40,taxFreeIncomeEndAge:65,hasUserFhsa:0,hasSpouseFhsa:0,hasNonRegistered:0,
   userPensionEnabled:0,userPensionType:1,userPensionMonthly:0,userPensionStartAge:65,userPensionIndexed:0,userPensionIndexRate:0,userPensionBridgeMonthly:0,userPensionBridgeEndAge:65,
@@ -857,8 +868,8 @@ function migrate(raw){
  if(raw.travelPlanner&&typeof raw.travelPlanner==="object")out.travelPlanner=clone(raw.travelPlanner);
  if(raw.healthcarePlanner&&typeof raw.healthcarePlanner==="object")out.healthcarePlanner=clone(raw.healthcarePlanner);
  if(!out.settings.spouseAge&&isFinite(Number(out.settings.age))&&isFinite(Number(out.settings.wifeAgeDiff)))out.settings.spouseAge=Number(out.settings.age)-Number(out.settings.wifeAgeDiff);
- out.appVersion="5.3.25";
- out.dataSchemaVersion=25;
+ out.appVersion="5.3.26";
+ out.dataSchemaVersion=26;
  if(raw&&raw.settings&&Number(raw.settings.age)===52&&!raw.settings.currentAgePrecisionCorrected){
  out.settings.age=52.96;
  out.settings.currentAgePrecisionCorrected=1;
@@ -1328,8 +1339,8 @@ function loadDemoData(){
  demo.travelPlanner=null;
  demo.healthcarePlanner=null;
  demo.optimizerExtra=0;
- demo.appVersion="5.3.25";
- demo.dataSchemaVersion=25;
+ demo.appVersion="5.3.26";
+ demo.dataSchemaVersion=26;
  data=demo;
  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
  nav();render();showPage("home");
@@ -2658,60 +2669,67 @@ function progressiveTax(income,brackets){
  var taxable=Math.max(0,Number(income||0)),tax=0,previous=0;
  brackets.forEach(function(b){
   if(taxable<=previous)return;
-  var upper=b[0],rate=b[1];
-  var slice=(upper===Infinity?taxable:Math.min(taxable,upper))-previous;
+  var upper=b[0],rate=b[1],slice=(upper===Infinity?taxable:Math.min(taxable,upper))-previous;
   if(slice>0)tax+=slice*rate;
   previous=upper;
  });
  return tax;
 }
-function estimatedBcFederalTax(taxableIncome,age){
- var s=data.settings;
- var years=Math.max(0,Number(age)-Number(s.age));
+function estimatedBcFederalTax(taxableIncome,age,eligiblePensionIncome){
+ var s=data.settings,years=Math.max(0,Number(age)-Number(s.age||age));
  var index=Math.pow(1+Number(s.inflation||0)/100,years);
- var federal=[
-  [58523*index,.14],[117045*index,.205],[181440*index,.26],[258482*index,.29],[Infinity,.33]
- ];
- var bc=[
-  [50363*index,.056],[100728*index,.077],[115648*index,.105],[140430*index,.1229],
-  [190405*index,.147],[265545*index,.168],[Infinity,.205]
- ];
- var grossFederal=progressiveTax(taxableIncome,federal);
- var grossBc=progressiveTax(taxableIncome,bc);
- var federalCredit=Number(s.federalBasicPersonalAmount||16452)*index*.14;
- var bcCredit=Number(s.bcBasicPersonalAmount||13216)*index*.056;
+ var federal=[[58523*index,.14],[117045*index,.205],[181440*index,.26],[258482*index,.29],[Infinity,.33]];
+ var bc=[[50363*index,.056],[100728*index,.077],[115648*index,.105],[140430*index,.1229],[190405*index,.147],[265545*index,.168],[Infinity,.205]];
+ var income=Math.max(0,Number(taxableIncome||0));
+ var grossFederal=progressiveTax(income,federal),grossBc=progressiveTax(income,bc);
+ var federalBpa=Number(s.federalBasicPersonalAmount||16452)*index;
+ var bcBpa=Number(s.bcBasicPersonalAmount||13216)*index;
+ var pensionCreditBase=Math.min(2000*index,Math.max(0,Number(eligiblePensionIncome||0)));
+ var federalCredits=(federalBpa+pensionCreditBase)*.14;
+ var bcCredits=bcBpa*.056;
+ var federal=Math.max(0,grossFederal-federalCredits),bcTax=Math.max(0,grossBc-bcCredits);
+ return{federal:federal,bc:bcTax,total:federal+bcTax,grossFederal:grossFederal,grossBc:grossBc,federalCredits:federalCredits,bcCredits:bcCredits,taxableIncome:income};
+}
+function annualTaxEstimateForRow(r){
+ var s=data.settings,split=Math.max(0,Math.min(.5,Number(s.pensionSplitPercent||0)/100));
+ var spouseEmploymentGross=Number(r.wifeEmployment||0)>0?
+  Number(s.wifeEmploymentAnnual||0)*Math.pow(1+Number(s.wifeEmploymentGrowth||0)/100,Math.max(0,Number(r.wifeAge)-Number(s.spouseAge||r.wifeAge))):0;
+ var userPension=Number(r.userPension||0),spousePension=Number(r.spousePension||0);
+ var eligibleSplit=Math.min(spousePension*split,spousePension);
+ var userTaxable=Number(r.cpp||0)+Number(r.oas||0)+Number(r.rrspWithdrawal||0)+Number(r.strategicRrspWithdrawal||0)+userPension+eligibleSplit;
+ var spouseTaxable=spouseEmploymentGross+Number(r.wcpp||0)+Number(r.woas||0)+Number(r.wifeRrspWithdrawal||0)+Math.max(0,spousePension-eligibleSplit);
+ var userEligiblePension=userPension+eligibleSplit+Number(r.userRrifMinimum||0);
+ var spouseEligiblePension=Math.max(0,spousePension-eligibleSplit)+Number(r.spouseRrifMinimum||0);
+ var userTax=estimatedBcFederalTax(userTaxable,r.age,userEligiblePension);
+ var spouseTax=estimatedBcFederalTax(spouseTaxable,r.wifeAge,spouseEligiblePension);
+ var oasRecoveryThreshold=Number(s.oasRecoveryThreshold2026||93454)*Math.pow(1+Number(s.inflation||0)/100,Math.max(0,Number(r.age)-Number(s.age||r.age)));
+ var userRecovery=Math.min(Number(r.oas||0),Math.max(0,userTaxable-oasRecoveryThreshold)*.15);
+ var spouseRecovery=Math.min(Number(r.woas||0),Math.max(0,spouseTaxable-oasRecoveryThreshold)*.15);
  return{
-  federal:Math.max(0,grossFederal-federalCredit),
-  bc:Math.max(0,grossBc-bcCredit),
-  total:Math.max(0,grossFederal-federalCredit)+Math.max(0,grossBc-bcCredit)
+  userTaxable:userTaxable,spouseTaxable:spouseTaxable,pensionTransferred:eligibleSplit,
+  userTax:userTax,spouseTax:spouseTax,userOasRecovery:userRecovery,spouseOasRecovery:spouseRecovery,
+  totalTax:userTax.total+spouseTax.total+userRecovery+spouseRecovery,
+  flatTax:Number(r.withdrawalTax||0)+(userPension+spousePension+Number(r.cpp||0)+Number(r.wcpp||0)+Number(r.oas||0)+Number(r.woas||0))*Math.max(0,Math.min(.6,Number(s.retirementTaxRate||0)/100))
  };
 }
+
 function spouseTaxAuditRow(r){
- var s=data.settings;
- var split=Math.max(0,Math.min(.5,Number(s.pensionSplitPercent||0)/100));
- var grossSpousePension=Number(r.pension||0);
- var pensionTransferred=grossSpousePension*split;
- var wifeEmploymentGross=r.age<Number(s.wifeWorkUntilUserAge)?
-  Number(s.wifeEmploymentAnnual||0)*Math.pow(1+Number(s.wifeEmploymentGrowth||0)/100,Math.max(0,r.age-Number(s.age))):0;
-
- var userTaxableBeforeSplit=Number(r.cpp||0)+Number(r.oas||0)+Number(r.rrspWithdrawal||0)+Number(r.strategicRrspWithdrawal||0);
- var wifeTaxableBeforeSplit=wifeEmploymentGross+grossSpousePension+Number(r.wcpp||0)+Number(r.woas||0)+Number(r.wifeRrspWithdrawal||0);
-
- var userTaxable=userTaxableBeforeSplit+pensionTransferred;
- var wifeTaxable=Math.max(0,wifeTaxableBeforeSplit-pensionTransferred);
-
- var userTax=estimatedBcFederalTax(userTaxable,r.age);
- var wifeTax=estimatedBcFederalTax(wifeTaxable,r.age);
-
+ var t=annualTaxEstimateForRow(r);
  return{
-  grossSpousePension:grossSpousePension,
-  userTaxableBeforeSplit:userTaxableBeforeSplit,
-  wifeTaxableBeforeSplit:wifeTaxableBeforeSplit,
-  userTaxable:userTaxable,wifeTaxable:wifeTaxable,pensionTransferred:pensionTransferred,
-  userTax:userTax,wifeTax:wifeTax,totalTax:userTax.total+wifeTax.total,
-  flatTax:Number(r.withdrawalTax||0)+(grossSpousePension+Number(r.cpp||0)+Number(r.wcpp||0)+Number(r.oas||0)+Number(r.woas||0))*Math.max(0,Math.min(.6,Number(s.retirementTaxRate||0)/100))
+  age:r.age,
+  grossSpousePension:Number(r.spousePension||0),
+  userTaxableBeforeSplit:t.userTaxable-t.pensionTransferred,
+  wifeTaxableBeforeSplit:t.spouseTaxable+t.pensionTransferred,
+  userTaxable:t.userTaxable,
+  wifeTaxable:t.spouseTaxable,
+  pensionTransferred:t.pensionTransferred,
+  userTax:t.userTax,
+  wifeTax:t.spouseTax,
+  totalTax:t.totalTax,
+  flatTax:t.flatTax
  };
 }
+
 function retirementPlanAtAge(retireAge,returnRate){
  var original=data.settings.retireAge;
  data.settings.retireAge=Number(retireAge);
@@ -2906,6 +2924,24 @@ function renderRetirementValidationConsole(rows){
   '</tbody></table></div>'+
   '<div class="validation-tests">'+audit.tests.map(function(t){return'<div class="validation-test"><div class="icon '+(t.ok?'validation-pass':'validation-fail')+'">'+(t.ok?'✓':'!')+'</div><div><strong>'+esc(t.name)+'</strong><div class="tx-muted">'+esc(t.copy)+'</div></div></div>';}).join("")+'</div>'+
  '</div>';
+}
+
+function renderAnnualTaxAudit(rows){
+ var milestones=retirementMilestoneRows(rows),estimates=milestones.map(function(x){return{name:x.name,row:x.row,tax:annualTaxEstimateForRow(x.row)};});
+ var peak=estimates.reduce(function(best,x){return Number(x.tax.totalTax)>Number(best.tax.totalTax)?x:best;},estimates[0]||{tax:{totalTax:0},row:{}});
+ var totalEstimated=rows.reduce(function(a,r){return a+annualTaxEstimateForRow(r).totalTax;},0);
+ var totalFlat=rows.reduce(function(a,r){return a+annualTaxEstimateForRow(r).flatTax;},0);
+ return'<div class="section-card"><div class="page-intro"><div><h3>Annual Canadian tax estimate</h3><p>2026 federal and British Columbia brackets, indexed forward with the plan inflation rate.</p></div><span class="estimate-tag">Estimate v1</span></div>'+
+  '<div class="tax-audit-grid">'+
+   '<div class="tax-audit-card"><div class="label">Estimated lifetime tax</div><div class="value">'+money(totalEstimated)+'</div></div>'+
+   '<div class="tax-audit-card"><div class="label">Flat-rate model total</div><div class="value">'+money(totalFlat)+'</div></div>'+
+   '<div class="tax-audit-card"><div class="label">Largest estimated year</div><div class="value">'+money(peak.tax.totalTax||0)+'</div><div class="tx-muted">At your age '+Number((peak.row||{}).age||0).toFixed(1)+'</div></div>'+
+   '<div class="tax-audit-card"><div class="label">Pension split assumption</div><div class="value">'+Number(data.settings.pensionSplitPercent||0).toFixed(0)+'%</div></div>'+
+  '</div>'+
+  '<div class="tax-audit-table-wrap"><table class="tax-audit-table"><thead><tr><th>Milestone</th><th>Your taxable income</th><th>Spouse taxable income</th><th>Pension transferred</th><th>Your federal/BC tax</th><th>Spouse federal/BC tax</th><th>OAS recovery</th><th>Total estimate</th><th>Current flat estimate</th></tr></thead><tbody>'+
+  estimates.map(function(x){var t=x.tax;return'<tr><td>'+esc(x.name)+'</td><td>'+money(t.userTaxable)+'</td><td>'+money(t.spouseTaxable)+'</td><td>'+money(t.pensionTransferred)+'</td><td>'+money(t.userTax.total)+'</td><td>'+money(t.spouseTax.total)+'</td><td>'+money(t.userOasRecovery+t.spouseOasRecovery)+'</td><td>'+money(t.totalTax)+'</td><td>'+money(t.flatTax)+'</td></tr>';}).join("")+
+  '</tbody></table></div>'+
+  '<div class="trust-banner"><strong>Important limitation</strong>This is a planning estimate, not a tax return. It does not yet include every deduction, credit, medical expense, investment-income inclusion rule, spouse transfer, provincial surtax or exact pension-splitting eligibility rule.</div></div>';
 }
 function renderRetirementCore(){
  var s=data.settings,expected=retirementPlan(s.returnRate),conservative=retirementPlan(s.conservativeReturn),optimistic=retirementPlan(s.optimisticReturn);
@@ -3256,6 +3292,7 @@ function renderSimpleRetirement(){
    '<div class="plain-card"><div class="question">What may remain later?</div><div class="answer">'+money(Number(x.last.endBalance||0))+'</div><div class="explain">Estimated portfolio at the end of the plan.</div></div>'+
   '</div>'+
   '<div class="section-card"><h3>Calculation checks</h3><p>'+retirementValidationAudit(rows).pass+' of '+retirementValidationAudit(rows).total+' current-plan checks passed. '+runKnownScenarioTests().pass+' of '+runKnownScenarioTests().total+' independent formula tests passed.</p><div class="simple-actions"><button id="simpleOpenValidation" class="secondary" type="button">View validation details</button></div></div>'+
+  '<div class="section-card"><h3>Tax estimate</h3><p>Advanced Retirement now compares the current flat tax assumption with a 2026 federal and B.C. bracket estimate.</p></div>'+
   '<div class="section-card"><h3>What should I do next?</h3><div class="action-priority">'+esc(x.action)+'</div><div class="simple-actions"><button id="simpleOpenSetup" type="button">Review my information</button><button id="simpleAdvancedRetirement" class="secondary" type="button">Show advanced analysis</button></div></div>'+
   '<details class="retirement-section-toggle"><summary>Where does retirement income come from?</summary><div class="toggle-body"><p>RyanOS combines workplace pensions, the official CPP estimates entered from My Service Canada Account, OAS, spouse employment income, WCB or other support, and withdrawals from investments.</p><div class="simple-next-grid"><div class="simple-next-card"><div class="label">Spouse salary while working</div><div class="value">'+money(Number(s.wifeEmploymentNetAnnual||0))+'/yr</div><div class="tx-muted">Included until spouse age '+Number(s.wifeRetireAge||0).toFixed(0)+'</div></div><div class="simple-next-card"><div class="label">Workplace pensions</div><div class="value">'+money(Number(s.userPensionMonthly||0)+Number(s.spousePensionMonthly||0))+'/mo</div></div><div class="simple-next-card"><div class="label">Your CPP start</div><div class="value">Age '+Number(s.userCppStart||0).toFixed(0)+'</div></div><div class="simple-next-card"><div class="label">Spouse CPP start</div><div class="value">Age '+Number(s.wifeCppStart||0).toFixed(0)+'</div></div></div></div></details>'+
   '<details class="retirement-section-toggle"><summary>What do these terms mean?</summary><div class="toggle-body"><p><strong>Funded under assumptions:</strong> the projected portfolio does not run out using the entered values.</p><p><strong>Portfolio withdrawal:</strong> money taken from RRSPs, TFSAs, FHSAs or non-registered investments.</p><p><strong>Ending portfolio:</strong> the estimated amount remaining at the end of the plan. It is not an estate calculation.</p></div></details>'+
@@ -3307,7 +3344,7 @@ function renderRetirement(){
   (function(){
    var first=rows[0]||{},last=rows[rows.length-1]||{};
    return'<div class="section-card"><div class="page-intro"><div><h3>Retirement-age calculation audit</h3><p>The projection starts at the exact retirement age and advances in one-year periods.</p></div><span class="estimate-tag">Audited</span></div><div class="age-audit-grid"><div class="age-audit-card"><div class="label">Exact retirement age</div><div class="value">'+Number(s.retireAge||0).toFixed(2)+'</div></div><div class="age-audit-card"><div class="label">Spouse age then</div><div class="value">'+Number(first.wifeAge||0).toFixed(2)+'</div></div><div class="age-audit-card"><div class="label">First period ends</div><div class="value">'+Number(first.endAge||0).toFixed(2)+'</div></div><div class="age-audit-card"><div class="label">Plan ends at</div><div class="value">'+Number(last.endAge||0).toFixed(2)+'</div></div></div><p class="tx-muted">CPP, OAS, pensions, tax-free income and spouse salary are prorated monthly when they begin or end during a projection period.</p></div>';
-  })()+renderRetirementValidationConsole(rows)+renderKnownScenarioTests()+
+  })()+renderRetirementValidationConsole(rows)+renderKnownScenarioTests()+renderAnnualTaxAudit(rows)+
   (function(){
    var firstUser=rows.find(function(r){return Number(r.userRrifMinimum||0)>0;});
    var firstSpouse=rows.find(function(r){return Number(r.spouseRrifMinimum||0)>0;});
@@ -4104,7 +4141,7 @@ function backupCompatibilityAudit(){
  add(Number(migratedOld.settings.userFhsaBalance||0)===0&&Number(migratedOld.settings.spouseFhsaBalance||0)===0,"Missing FHSA fields default safely","Older backups without FHSA data open with zero balances.");
  add(Number(migratedOld.settings.userPensionEnabled||0)===0,"Missing user pension defaults safely","Older backups do not invent a user pension.");
  var current=migrate(data);
- add(Number(current.dataSchemaVersion||0)===25,"Current schema version","Migrated data is tagged with schema version 25.");
+ add(Number(current.dataSchemaVersion||0)===26,"Current schema version","Migrated data is tagged with schema version 26.");
  add(Array.isArray(current.netWorthHistory),"Net worth history preserved","Existing net worth snapshots remain available.");
  add(Array.isArray(current.backupHistory),"Recovery history preserved","Recovery points remain attached to the profile.");
  add(!!current.purchasePlanner&&!!current.vehiclePlanner&&!!current.travelPlanner&&!!current.healthcarePlanner,"Planner data preserved","All four planning tools survive migration.");
@@ -4139,6 +4176,8 @@ function fullRegressionAudit(){
   add(rows.length>0&&Math.abs(Number(rows[rows.length-1].endAge)-Number(data.settings.retirementEndAge||95))<.0001,"Plan end age preserved","The final period ends at the selected plan-through age.");
   add(rows.every(function(r){return Math.abs(Number(r.wifeAge)-spouseAgeAtUserAge(Number(r.age)))<.0001;}),"Spouse age progression aligned","Spouse age advances from the two current ages rather than a stale age-difference field.");
   add(Array.isArray(rows)&&rows.length>0,"Retirement plan generated","The year-by-year retirement model returns rows.");
+  var taxSample=rows.length?annualTaxEstimateForRow(rows[0]):null;
+  add(!taxSample||isFinite(Number(taxSample.totalTax)),"Annual tax estimate finite","The bracket-based annual tax estimate returns a valid number.");
   var knownSuite=runKnownScenarioTests();
   add(knownSuite.pass===knownSuite.total,"Independent formula tests pass","All fixed known-outcome scenarios pass.");
   var validationAudit=retirementValidationAudit(rows);
@@ -4158,7 +4197,7 @@ function fullRegressionAudit(){
   add(rows.every(function(r){return isFinite(Number(r.rrifMinimumGross||0));}),"RRIF minimum rows valid","Mandatory RRIF withdrawals return finite values.");
   add(typeof pensionIncomeAudit==="function"&&pensionIncomeAudit(rows).rows.length>0,"Pension timeline audit available","Milestone income rows are generated.");
   add(typeof validateBackupObject==="function"&&validateBackupObject(data).length===0,"Current backup validates","Current saved data passes backup validation.");
-  add(Number(data.dataSchemaVersion||0)===25,"Current schema version","Data is tagged with schema version 25.");
+  add(Number(data.dataSchemaVersion||0)===26,"Current schema version","Data is tagged with schema version 26.");
  }catch(err){
   add(false,"Regression audit execution","Audit stopped because: "+(err.message||String(err)));
  }
@@ -4173,7 +4212,7 @@ function renderSimpleSettings(){
   '<div class="mode-note"><strong>Simple mode hides technical controls.</strong><div>All calculations and saved information remain available. Switch to Advanced mode for detailed assumptions, withdrawal strategies and diagnostic tables.</div></div>'+
   '<div class="section-card"><h3>Guided setup</h3><p>Review household income, accounts, pensions and retirement assumptions.</p><button id="simpleRunSetup" type="button">Run Setup Wizard</button></div>'+  '<div class="section-card"><h3>Start or explore</h3><div class="clean-start-grid"><div class="clean-start-card"><h4>Use my own information</h4><p>Start with empty balances and build your plan through Guided Setup.</p><button id="simpleCleanStart" type="button">Start clean</button></div><div class="clean-start-card"><h4>Explore with sample data</h4><p>Load a fictional Canadian household to see how RyanOS works.</p><button id="simpleLoadDemo" class="secondary" type="button">Load demo</button></div></div></div>'+
   '<div class="section-card"><h3>Backup and recovery</h3><p>Export a backup before making major changes or moving to another device.</p><div class="simple-actions"><button id="simpleExport" type="button">Export backup</button><button id="simpleAdvancedSettings" class="secondary" type="button">Open advanced settings</button></div></div>'+
-  '<div class="section-card"><h3>Data health</h3><div class="simple-next-grid"><div class="simple-next-card"><div class="label">Compatibility checks</div><div class="value">'+c.pass+'/'+c.total+'</div></div><div class="simple-next-card"><div class="label">Schema</div><div class="value">25</div></div><div class="simple-next-card"><div class="label">Storage</div><div class="value">This device</div></div></div></div>'+
+  '<div class="section-card"><h3>Data health</h3><div class="simple-next-grid"><div class="simple-next-card"><div class="label">Compatibility checks</div><div class="value">'+c.pass+'/'+c.total+'</div></div><div class="simple-next-card"><div class="label">Schema</div><div class="value">26</div></div><div class="simple-next-card"><div class="label">Storage</div><div class="value">This device</div></div></div></div>'+
   '<div class="trust-banner"><strong>Privacy reminder</strong>RyanOS stores data in this browser. Keep exported backups in a secure location.</div>';
  document.getElementById("simpleRunSetup").onclick=function(){data.settings.setupStep=0;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));showPage("setup");};
  document.getElementById("simpleCleanStart").onclick=clearAllData;
@@ -4230,7 +4269,7 @@ function renderSettings(){
  '<div class="section-card"><h3>Data health</h3><div class="notice '+(health.length?'bad':'good')+'">'+(health.length?health.map(function(x){return'• '+x;}).join('<br>'):'No major data problems detected.')+'</div></div>'+
  (function(){var audit=foundationAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Foundation audit</h3><p>Automated checks for the calculations and data connections RyanOS depends on.</p></div><span class="status-pill '+(audit.passed===audit.total?'good':audit.passed>=audit.total-2?'warn':'bad')+'">'+audit.passed+' of '+audit.total+' passed</span></div><div class="audit-grid">'+audit.checks.map(function(x){return'<div class="audit-card '+(x.ok?'pass':'fail')+'"><div class="audit-title">'+(x.ok?'✓ ':'⚠ ')+esc(x.name)+'</div><div class="audit-copy">'+esc(x.copy)+'</div></div>';}).join("")+'</div><div class="quick-actions" style="margin-top:12px"><button id="runFoundationAudit" type="button">Run audit again</button></div></div>';})()+
  '<div class="section-card"><div class="page-intro"><div><h3>Calculation scope</h3><p>What RyanOS currently calculates and what still requires professional confirmation.</p></div><span class="estimate-tag">Planning estimate</span></div><div class="method-grid"><div class="method-card"><div class="label">Included</div><div class="value">Cash flow, account growth, pensions, CPP/OAS, stress scenarios and year-by-year balances</div></div><div class="method-card"><div class="label">Simplified</div><div class="value">Income tax, non-registered taxation and withdrawal sequencing</div></div><div class="method-card"><div class="label">Not included yet</div><div class="value">Full federal/provincial tax, RRIF minimums, survivor and estate calculations</div></div></div></div>'+
- (function(){var r=fullRegressionAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Full regression test</h3><p>Checks the primary pages, financial engines, planners, backup system and retirement calculations together.</p></div><span class="status-pill '+(r.failed===0?'good':'bad')+'">'+r.pass+' of '+r.total+' passed</span></div><div class="regression-grid"><div class="regression-card"><div class="label">Schema version</div><div class="value">25</div></div><div class="regression-card"><div class="label">Tests</div><div class="value">'+r.total+'</div></div><div class="regression-card"><div class="label">Passed</div><div class="value">'+r.pass+'</div></div><div class="regression-card"><div class="label">Failed</div><div class="value">'+r.failed+'</div></div></div><div class="regression-list">'+r.tests.map(function(x){return'<div class="regression-item '+(x.ok?'pass':'fail')+'"><div>'+(x.ok?'✓':'!')+'</div><div><strong>'+esc(x.name)+'</strong><div class="tx-muted">'+esc(x.copy)+'</div></div></div>';}).join("")+'</div><div class="quick-actions" style="margin-top:12px"><button id="runRegressionAudit" type="button">Run regression test again</button></div></div>';})()+
+ (function(){var r=fullRegressionAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Full regression test</h3><p>Checks the primary pages, financial engines, planners, backup system and retirement calculations together.</p></div><span class="status-pill '+(r.failed===0?'good':'bad')+'">'+r.pass+' of '+r.total+' passed</span></div><div class="regression-grid"><div class="regression-card"><div class="label">Schema version</div><div class="value">26</div></div><div class="regression-card"><div class="label">Tests</div><div class="value">'+r.total+'</div></div><div class="regression-card"><div class="label">Passed</div><div class="value">'+r.pass+'</div></div><div class="regression-card"><div class="label">Failed</div><div class="value">'+r.failed+'</div></div></div><div class="regression-list">'+r.tests.map(function(x){return'<div class="regression-item '+(x.ok?'pass':'fail')+'"><div>'+(x.ok?'✓':'!')+'</div><div><strong>'+esc(x.name)+'</strong><div class="tx-muted">'+esc(x.copy)+'</div></div></div>';}).join("")+'</div><div class="quick-actions" style="margin-top:12px"><button id="runRegressionAudit" type="button">Run regression test again</button></div></div>';})()+
  (function(){var c=backupCompatibilityAudit();return'<div class="section-card"><div class="page-intro"><div><h3>Backup migration compatibility</h3><p>Checks whether older RyanOS data can be upgraded without losing important information.</p></div><span class="status-pill '+(c.pass===c.total?'good':'warn')+'">'+c.pass+' of '+c.total+' passed</span></div><div class="compat-grid"><div class="compat-card"><div class="label">Schema version</div><div class="value">9</div></div><div class="compat-card"><div class="label">Compatibility tests</div><div class="value">'+c.total+'</div></div><div class="compat-card"><div class="label">Passed</div><div class="value">'+c.pass+'</div></div><div class="compat-card"><div class="label">Warnings</div><div class="value">'+(c.total-c.pass)+'</div></div></div><div class="compat-list">'+c.tests.map(function(x){return'<div class="compat-item '+(x.ok?'pass':'warn')+'"><div>'+(x.ok?'✓':'!')+'</div><div><strong>'+esc(x.name)+'</strong><div class="tx-muted">'+esc(x.copy)+'</div></div></div>';}).join("")+'</div></div>';})()+
  '<div class="section-card"><div class="page-intro"><div><h3>Guided setup</h3><p>Run the question-and-answer setup again without deleting transactions, net worth history or backups.</p></div><button id="rerunSetup" type="button">Run Setup Wizard</button></div></div>'+
  '<div class="pension-grid">'+pensionEditor("user","Your workplace pension")+pensionEditor("spouse","Spouse workplace pension")+'</div>'+
