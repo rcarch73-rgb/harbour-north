@@ -1,7 +1,7 @@
 {
   "name": "Harbour North",
   "short_name": "Harbour North",
-  "description": "Canadian household financial and retirement planning.",
+  "description": "Canadian household financial and retirement planning. RC63 reliability build.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
