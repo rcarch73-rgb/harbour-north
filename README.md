@@ -1,15 +1,18 @@
-# Harbour North RC63
+# Harbour North 2.0 Alpha 1
 
-## Upload to GitHub
-Upload the **contents of this folder** to the root of your repository:
+Controlled rebuild foundation.
 
-- `index.html`
-- `manifest.json`
-- `icon-192.png`
-- `icon-512.png`
-- `.nojekyll`
+## Included
+- Modular HTML, CSS and JavaScript files
+- Durable local browser storage
+- Automatic save
+- Validated JSON backup export/import
+- Recovery copy before imports
+- In-memory backup health test
+- Simple setup and dashboard
 
-Do not upload only the ZIP file if you want GitHub Pages to run the app.
+## Run locally
+Open `index.html` in a browser. For the most reliable testing, serve the folder from a small web server.
 
 ## GitHub Pages
-In the repository, open **Settings → Pages**, choose **Deploy from a branch**, select the `main` branch and `/ (root)`, then save.
+Upload the contents of this folder to the root of a repository, then enable GitHub Pages from the `main` branch and `/ (root)`.
