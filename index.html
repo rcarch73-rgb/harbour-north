@@ -7190,13 +7190,14 @@ function renderSettingsCore(){
   reader.onload=function(e){
    try{
     var obj=JSON.parse(String(e.target.result||""));
+    // Prevent oversized nested recovery history from exhausting browser memory during import.
+    if(obj && typeof obj==="object")obj.backupHistory=[];
     var errors=validateBackupObject(obj),sm=backupSummary(obj);
     box.innerHTML='<div class="section-card"><h3>Import preview</h3><table><tbody><tr><td>Transactions</td><td>'+sm.transactions+'</td><td>Debts</td><td>'+sm.debts+'</td></tr><tr><td>Goals</td><td>'+sm.goals+'</td><td>Future expenses</td><td>'+sm.futureExpenses+'</td></tr><tr><td>Investments</td><td>'+money(sm.investments)+'</td><td>Retirement age</td><td>'+sm.retireAge+'</td></tr></tbody></table><div class="notice '+(errors.length?'bad':'good')+'">'+(errors.length?errors.map(function(x){return'• '+x;}).join('<br>'):'Backup passed validation.')+'</div>'+(errors.length?'':'<button id="confirmImportBackup" type="button">Import this backup</button>')+'</div>';
     if(!errors.length)document.getElementById("confirmImportBackup").onclick=function(){
      if(!confirm("Import this backup? Current data will be saved as a recovery point first."))return;
      snapshotCurrentData("Before backup import");data.lastAutoRecoveryAt=new Date().toISOString();
-     var history=data.backupHistory.slice();
-     data=migrate(obj);data.backupHistory=history;data.lastBackupAt=new Date().toISOString();
+     data=migrate(obj);data.backupHistory=[];data.lastBackupAt=new Date().toISOString();
      localStorage.setItem(STORAGE_KEY,JSON.stringify(data));render();
     };
    }catch(err){box.innerHTML='<div class="notice bad">Could not read backup: '+esc(err.message||String(err))+'</div>';}
